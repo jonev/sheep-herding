@@ -6,7 +6,7 @@
 # TODO se på en bedre løsning
 appsettings.*
 **/build/
-**/wwwroot/
+**/wwwroot/lib
 /backup/*
 # User-specific files
 *.rsuser
