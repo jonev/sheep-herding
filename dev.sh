@@ -1,1 +1,1 @@
-dotnet watch run --project SignalRDraw.csproj
+dotnet watch run --project SheepHerding.csproj

@@ -26,41 +26,46 @@ public class Worker : BackgroundService
 
     private async Task DoWork(CancellationToken cancellationToken)
     {
-        var d = new Drone(200, 200);
-        var s1 = new Sheep(200, 200, null, d);
-        var s2 = new Sheep(200, 200, null, d);
-        var s3 = new Sheep(200, 200, null, d);
-        var s4 = new Sheep(200, 200, null, d);
-        var s5 = new Sheep(200, 200, null, d);
-        s1.Set(new Coordinate(400, 400));
-        s2.Set(new Coordinate(450, 400));
-        s3.Set(new Coordinate(500, 400));
-        s4.Set(new Coordinate(550, 400));
-        s5.Set(new Coordinate(600, 400));
-        
-        
         while (!cancellationToken.IsCancellationRequested)
         {
-            // Read coorodinates
-            d.Set(_service.MousePosition);
+            var listOfSheeps = new List<Sheep>();
+            var d = new Drone(200, 200);
+            for (int i = 0; i < _service.NrOfSheeps; i++)
+            {
+                var sheep = new Sheep(400, 400, null, d);
+                sheep.Set(new Coordinate(400 + ((i%10)* 20 ), 400 + ((i%3) * 20)));
+                listOfSheeps.Add(sheep);
+            }
 
-            // Calculate new coordinates
-            s1.UpdatePosition();
-            s2.UpdatePosition();
-            s3.UpdatePosition();
-            s4.UpdatePosition();
-            s5.UpdatePosition();
-            
-            // Send coordinates
-            var coordinates = CoordinatePrinter.ToString(new List<Coordinate> {d.Position, s1.Position, s2.Position, s3.Position, s4.Position, s5.Position});
-            var vectors = VectorPrinter.ToString(new Collection<Vector> {s1.Force, s2.Force, s3.Force, s4.Force, s5.Force});
-            var message = $"{coordinates}!{vectors}";
-            _logger.LogDebug($"Sending cooridnates; {message}");
-            await _hubContext.Clients.All.SendAsync("ReceiveMessage", "admin", message,
-                cancellationToken: cancellationToken);
 
-            // Wait
-            await Task.Delay(100);
+            while (!cancellationToken.IsCancellationRequested && _service.Reset == false)
+            {
+                
+                // Read coorodinates
+                d.Set(_service.MousePosition);
+
+                // Calculate new coordinates
+                foreach (var sheep in listOfSheeps)
+                {
+                    sheep.UpdatePosition();
+                }
+
+                // Send coordinates
+                var print = new List<Coordinate>();
+                print.Add(d.Position);
+                print.AddRange(listOfSheeps.Select(s => s.Position).ToList());
+                var coordinates = CoordinatePrinter.ToString(print);
+                
+                var vectors = VectorPrinter.ToString(listOfSheeps.Select(s => s.Force).ToList());
+                var message = $"{coordinates}!{vectors}";
+                _logger.LogDebug($"Sending cooridnates; {message}");
+                await _hubContext.Clients.All.SendAsync("ReceiveMessage", "admin", message,
+                    cancellationToken: cancellationToken);
+
+                // Wait
+                await Task.Delay(10);
+            }
+            _service.Reset = false;
         }
     }
 

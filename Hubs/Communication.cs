@@ -23,4 +23,10 @@ public class Communication : Hub
        var splitted = position.Split(",");
        _service.MousePosition.Update(Int32.Parse(splitted[0]), Int32.Parse(splitted[1]));
     }
+    
+    public async Task Reset(string nr)
+    {
+        _service.NrOfSheeps = Convert.ToInt32(nr);
+        _service.Reset = true;
+    }
 }
