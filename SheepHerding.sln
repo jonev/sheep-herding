@@ -1,0 +1,28 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 16
+VisualStudioVersion = 16.0.30114.105
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SheepHerding.Api", "Api\SheepHerding.Api.csproj", "{EA99C2FF-1C6E-4885-9280-A293B4E1C2BE}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SheepHerding.Api.Tests", "Api.Tests\SheepHerding.Api.Tests.csproj", "{7C56EBC7-DE58-4C61-9021-CB22F3DF312E}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{EA99C2FF-1C6E-4885-9280-A293B4E1C2BE}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{EA99C2FF-1C6E-4885-9280-A293B4E1C2BE}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{EA99C2FF-1C6E-4885-9280-A293B4E1C2BE}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{EA99C2FF-1C6E-4885-9280-A293B4E1C2BE}.Release|Any CPU.Build.0 = Release|Any CPU
+		{7C56EBC7-DE58-4C61-9021-CB22F3DF312E}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{7C56EBC7-DE58-4C61-9021-CB22F3DF312E}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{7C56EBC7-DE58-4C61-9021-CB22F3DF312E}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{7C56EBC7-DE58-4C61-9021-CB22F3DF312E}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+EndGlobal

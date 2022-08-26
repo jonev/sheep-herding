@@ -1,1 +1,1 @@
-dotnet watch run --project SheepHerding.csproj
+dotnet watch run --project ./Api/SheepHerding.Api.csproj

@@ -63,7 +63,7 @@ public class Worker : BackgroundService
                     cancellationToken: cancellationToken);
 
                 // Wait
-                await Task.Delay(10);
+                await Task.Delay(1000);
             }
             _service.Reset = false;
         }
