@@ -1,9 +1,10 @@
-using System.Collections.ObjectModel;
 using Microsoft.AspNetCore.SignalR;
-using SignalRDraw.Hubs;
-using SignalRDraw.Services;
+using SheepHerding.Api.Entities;
+using SheepHerding.Api.Helpers;
+using SheepHerding.Api.Hubs;
+using SheepHerding.Api.Services;
 
-namespace SignalRDraw.Workers;
+namespace SheepHerding.Api.Workers;
 
 public class Worker : BackgroundService
 {
@@ -26,17 +27,17 @@ public class Worker : BackgroundService
 
     private async Task DoWork(CancellationToken cancellationToken)
     {
+        var dt = 10;
         while (!cancellationToken.IsCancellationRequested)
         {
             var listOfSheeps = new List<Sheep>();
-            var d = new Drone(200, 200);
+            var d = new Drone(200, 200, dt);
             for (int i = 0; i < _service.NrOfSheeps; i++)
             {
-                var sheep = new Sheep(400, 400, null, d);
-                sheep.Set(new Coordinate(400 + ((i%10)* 20 ), 400 + ((i%3) * 20)));
+                var sheep = new Sheep(200, 200, i, listOfSheeps, d);
+                sheep.Set(new Coordinate(100 + ((i%10)* 20 ), 100 + ((i%3) * 20)));
                 listOfSheeps.Add(sheep);
             }
-
 
             while (!cancellationToken.IsCancellationRequested && _service.Reset == false)
             {
@@ -44,10 +45,13 @@ public class Worker : BackgroundService
                 // Read coorodinates
                 d.Set(_service.MousePosition);
 
+                // Calculate centroid of sheeps
+                var (x,y) = Calculator.Centroid(listOfSheeps.Select(x => x.Position).ToList());
+                
                 // Calculate new coordinates
                 foreach (var sheep in listOfSheeps)
                 {
-                    sheep.UpdatePosition();
+                    sheep.UpdatePosition(new Coordinate(x, y), dt);
                 }
 
                 // Send coordinates
@@ -56,14 +60,14 @@ public class Worker : BackgroundService
                 print.AddRange(listOfSheeps.Select(s => s.Position).ToList());
                 var coordinates = CoordinatePrinter.ToString(print);
                 
-                var vectors = VectorPrinter.ToString(listOfSheeps.Select(s => s.Force).ToList());
-                var message = $"{coordinates}!{vectors}";
-                _logger.LogDebug($"Sending cooridnates; {message}");
+                var vectors = VectorPrinter.ToString(listOfSheeps);
+                var message = $"{x},{y}!{coordinates}!{vectors}";
+                // _logger.LogDebug($"Sending cooridnates; {message}");
                 await _hubContext.Clients.All.SendAsync("ReceiveMessage", "admin", message,
                     cancellationToken: cancellationToken);
 
                 // Wait
-                await Task.Delay(1000);
+                await Task.Delay(dt);
             }
             _service.Reset = false;
         }

@@ -1,6 +1,6 @@
-using SignalRDraw.Workers;
+using SheepHerding.Api.Entities;
 
-namespace SignalRDraw.Services;
+namespace SheepHerding.Api.Services;
 
 public class PositionService
 {

@@ -1,6 +1,6 @@
-using SignalRDraw.Hubs;
-using SignalRDraw.Services;
-using SignalRDraw.Workers;
+using SheepHerding.Api.Hubs;
+using SheepHerding.Api.Services;
+using SheepHerding.Api.Workers;
 
 
 var builder = WebApplication.CreateBuilder(args);

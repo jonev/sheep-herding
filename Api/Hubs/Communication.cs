@@ -1,7 +1,7 @@
 using Microsoft.AspNetCore.SignalR;
-using SignalRDraw.Services;
+using SheepHerding.Api.Services;
 
-namespace SignalRDraw.Hubs;
+namespace SheepHerding.Api.Hubs;
 
 public class Communication : Hub
 {

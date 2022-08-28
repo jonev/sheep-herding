@@ -1,6 +1,6 @@
 using System.Text;
 
-namespace SignalRDraw.Workers;
+namespace SheepHerding.Api.Entities;
 
 public class Coordinate
 {

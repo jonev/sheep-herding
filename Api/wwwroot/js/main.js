@@ -11,12 +11,14 @@ var colors = ['red', 'yellow'];
 
 
 connection.on("ReceiveMessage", function (user, message) {
-    // console.log(message)
+    console.log(message)
     var objects = message.split("!")
-    var coordinatesCollection = objects[0].split(";");
-    var vectorCollection = objects[1].split(";");
+    var centroid = objects[0].split(",");
+    var coordinatesCollection = objects[1].split(";");
+    var vectorCollection = objects[2].split(";");
     // console.log(coordinatesCollection, vectorCollection)
     clearCanvas();
+    draw(centroid[0], centroid[1], 'pink')
     
     for (let i = 0; i < coordinatesCollection.length - 1; i++) {
         let coordinates = coordinatesCollection[i].split(",")
