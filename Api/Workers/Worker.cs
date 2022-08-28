@@ -1,3 +1,4 @@
+using System.Diagnostics;
 using Microsoft.AspNetCore.SignalR;
 using SheepHerding.Api.Entities;
 using SheepHerding.Api.Helpers;
@@ -11,6 +12,7 @@ public class Worker : BackgroundService
     private readonly ILogger<Worker> _logger;
     private readonly IHubContext<Communication> _hubContext;
     private readonly PositionService _service;
+    private readonly IList<Score> _scoreBoard = new List<Score>();
 
     public Worker(ILogger<Worker> logger, IHubContext<Communication> hubContext, PositionService service)
     {
@@ -30,6 +32,10 @@ public class Worker : BackgroundService
         var dt = 10;
         while (!cancellationToken.IsCancellationRequested)
         {
+            await _hubContext.Clients.All.SendAsync("Scoreboard", _scoreBoard.OrderBy(s => s.Time), cancellationToken: cancellationToken);
+   
+            Stopwatch stopwatch = new Stopwatch();   
+            var finished = false;
             var listOfSheeps = new List<Sheep>();
             var d = new Drone(200, 200, dt);
             for (int i = 0; i < _service.NrOfSheeps; i++)
@@ -39,7 +45,8 @@ public class Worker : BackgroundService
                 listOfSheeps.Add(sheep);
             }
 
-            while (!cancellationToken.IsCancellationRequested && _service.Reset == false)
+            stopwatch.Start();
+            while (!cancellationToken.IsCancellationRequested && _service.Reset == false && finished == false)
             {
                 
                 // Read coorodinates
@@ -66,9 +73,18 @@ public class Worker : BackgroundService
                 await _hubContext.Clients.All.SendAsync("ReceiveMessage", "admin", message,
                     cancellationToken: cancellationToken);
 
+                // Finished?
+                finished = listOfSheeps.All(s => s.Position.X > 850 && s.Position.Y > 750);
+                if (finished)
+                {
+                    stopwatch.Stop();
+                    _scoreBoard.Add(new Score(_service.Name, _service.NrOfSheeps, stopwatch.Elapsed.TotalSeconds));
+                    await _hubContext.Clients.All.SendAsync("Scoreboard", _scoreBoard.OrderBy(s => s.Time), cancellationToken: cancellationToken);
+                }
                 // Wait
                 await Task.Delay(dt);
             }
+
             _service.Reset = false;
         }
     }

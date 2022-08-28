@@ -11,7 +11,7 @@ var colors = ['red', 'yellow'];
 
 
 connection.on("ReceiveMessage", function (user, message) {
-    console.log(message)
+    // console.log(message)
     var objects = message.split("!")
     var centroid = objects[0].split(",");
     var coordinatesCollection = objects[1].split(";");
@@ -33,12 +33,39 @@ connection.on("ReceiveMessage", function (user, message) {
     }
 });
 
+connection.on("Scoreboard", function (list) {
+    console.log(list)
+    let htmlList = document.getElementById("scoreboard");
+    htmlList.innerHTML = ""
+    for (let i = 0; i < list.length; i++) {
+        var li = document.createElement("li");
+        li.appendChild(document.createTextNode(list[i].name + " sheeps: " + list[i].nrOfSheeps + " time: " + list[i].time));
+        htmlList.appendChild(li);
+    }
+});
+
 function reset(){
     var nr = document.getElementById("nrOfSheeps").value;
     console.log("Reset, number of sheeps: ", nr)
     connection.invoke("Reset", nr).catch(function (err) {
         return console.error(err.toString());
     });
+}
+
+function saveName(){
+    var name = document.getElementById("player").value;
+    console.log("Player: ", name)
+    connection.invoke("SetName", name).catch(function (err) {
+        return console.error(err.toString());
+    });
+}
+
+function addFeedback(){
+    let htmlList = document.getElementById("feedbacks");
+    let feedback = document.getElementById("feedbackInput").value;
+    let li = document.createElement("li");
+    li.appendChild(document.createTextNode(feedback));
+    htmlList.appendChild(li);
 }
 
 connection.start().then(function () {
