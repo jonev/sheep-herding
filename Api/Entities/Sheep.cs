@@ -8,7 +8,7 @@ public class Sheep : Point
     private readonly IList<Sheep> _friendlies;
     private readonly Drone _enemy;
     internal Vector2 Force = Vector2.Zero;
-    private double _closeThreshold = 20.0;
+    private double _closeThreshold = 10.0;
 
     public Sheep(double maxX, double maxY, int id, IList<Sheep> friendlies, Drone enemy) : base(maxX, maxY, id)
     {
@@ -21,7 +21,6 @@ public class Sheep : Point
         var force = new Vector2(0, 0);
         var sheepVenemy = new Vector2(Convert.ToSingle(Position.X - _enemy.Position.X), Convert.ToSingle(Position.Y - _enemy.Position.Y));
         var sheepVcentroid = new Vector2(Convert.ToSingle(Position.X - sheepCentroid.X), Convert.ToSingle(Position.Y - sheepCentroid.Y));
-        var sheepVenemyReduced = Vector2.Divide(sheepVenemy, 10);
         var sheepVcentroidReduced = Vector2.Divide(sheepVcentroid, 10);
         
         var close = _friendlies.Where(s => s.Id != Id &&
@@ -33,8 +32,7 @@ public class Sheep : Point
             var closeCentroid = Calculator.Centroid(list);
             var sheepVclose = new Vector2(Convert.ToSingle(Position.X - closeCentroid.x), 
                 Convert.ToSingle(Position.Y - closeCentroid.y));
-            var sheepVcloseReduced = Vector2.Divide(sheepVclose, 10);
-            force = Vector2.Add(force, sheepVcloseReduced);
+            force = Vector2.Add(force, sheepVclose);
         }
 
         if (sheepVcentroid.Length() > 50.0)
@@ -45,10 +43,12 @@ public class Sheep : Point
         
         if (sheepVenemy.Length() <= 100.0)
         {
-            force = Vector2.Add(force, sheepVenemyReduced);
+            var flipped = Calculator.FlipLength(sheepVenemy, 100.0);
+            var flippedReduced = Vector2.Divide(flipped, 10);
+            force = Vector2.Add(force, flippedReduced);
         }
 
-        Force = Vector2.Multiply(force, 100); // For visualization purposes only
+        Force = Vector2.Multiply(force, 10); // For visualization purposes only
         Position.Update(Position.X + (force.X * (dt/100)), Position.Y + (force.Y * (dt/100)));
     }
     

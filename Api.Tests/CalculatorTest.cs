@@ -46,4 +46,28 @@ public class CalculatorTest
         result.X.Should().BeApproximately(0.5f, 0.000001f);
         result.Y.Should().BeApproximately(1.0f, 0.000001f);
     }
+    
+    [Fact]
+    public void FlipVector1Test()
+    {
+        var v1 = new Vector2(4, 0);
+        var result = Calculator.FlipLength(v1, 5.0);
+        result.Length().Should().BeApproximately(1.0f, 0.001f);
+    }
+    
+    [Fact]
+    public void FlipVector2Test()
+    {
+        var v1 = new Vector2(0, 4);
+        var result = Calculator.FlipLength(v1, 5.0);
+        result.Length().Should().BeApproximately(1.0f, 0.001f);
+    }
+    
+    [Fact]
+    public void FlipVector3Test()
+    {
+        var v1 = new Vector2(4, 4);
+        var result = Calculator.FlipLength(v1, 6.0);
+        result.Length().Should().BeApproximately(0.343145f, 0.001f);
+    }
 }

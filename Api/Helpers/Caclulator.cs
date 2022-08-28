@@ -1,3 +1,4 @@
+using System.Numerics;
 using SheepHerding.Api.Entities;
 
 namespace SheepHerding.Api.Helpers;
@@ -29,5 +30,13 @@ public static class Calculator
         var sumX = coordinates.Select(c => c.X).Sum();
         var sumY = coordinates.Select(c => c.Y).Sum();
         return (sumX / coordinates.Count, sumY / coordinates.Count);
+    }
+    
+    public static Vector2 FlipLength(Vector2 vector, double maxValue)
+    {
+        var norm = Vector2.Normalize(vector);
+        var length = maxValue - vector.Length();
+        if (length < 0.0) throw new Exception();
+        return Vector2.Multiply(norm, (float)length);
     }
 }
