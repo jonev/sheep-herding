@@ -6,14 +6,7 @@
     <link rel="stylesheet" href="css/Index.css">
 </head>
 
-<text style="position: absolute;left: 10;top: 10; color: red">Use reset before start</text>
-
-
-<text style="position: absolute;left: 1001;top: 100;">Feedbacks</text>
-<input id="feedbackInput" type="text" value="Please write" style="position: absolute;left: 1001;top: 130;"/>
-<button onclick="addFeedback()" style="position: absolute;left: 1001;top: 150;">Submit</button>
-
-<ol style="position: absolute;left: 1001;top: 160;" id="feedbacks"></ol>
+<text style="position: absolute;left: 10;top: 10; color: red; background-color: black;z-index: 100">Herd the sheeps into the red square using the mouse. Use the start/reset button in the bottom left corner.</text>
 
 <canvas id="canvas" height="900" width="1000" class="canvas-style" style="position: absolute;left: 0;top: 0;z-index: -1">
 </canvas>
@@ -66,8 +59,10 @@
   <line x1="850" y1="750" x2="850" y2="900" style="stroke:rgb(255,0,0);stroke-width:2" />
 </svg>
 <br/>
-<button onclick="reset()" style="position: absolute;left: 0;top: 901;">Reset</button>
-<input id="nrOfSheeps" min="1" max="30" value="3"  type="number" style="position: absolute;left: 50;top: 901;"/>
+<button onclick="reset()" style="position: absolute;left: 0;top: 901;">Start/Reset</button>
+
+<text style="position: absolute;left: 90;top:901;">Nr of sheeps (min 3, max 30)</text>
+<input id="nrOfSheeps" min="1" max="30" value="3"  type="number" style="position: absolute;left: 300;top: 901;"/>
 
 <text style="position: absolute;left: 1001;top:10;">Player name:</text>
 <input id="player" type="text" value="Unknown" style="position: absolute;left: 1001;top: 30;"/>

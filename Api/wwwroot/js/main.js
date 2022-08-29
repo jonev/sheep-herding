@@ -60,14 +60,6 @@ function saveName(){
     });
 }
 
-function addFeedback(){
-    let htmlList = document.getElementById("feedbacks");
-    let feedback = document.getElementById("feedbackInput").value;
-    let li = document.createElement("li");
-    li.appendChild(document.createTextNode(feedback));
-    htmlList.appendChild(li);
-}
-
 connection.start().then(function () {
     console.log("Connection started")
 }).catch(function (err) {

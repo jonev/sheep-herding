@@ -11,14 +11,13 @@ public class Worker : BackgroundService
 {
     private readonly ILogger<Worker> _logger;
     private readonly IHubContext<Communication> _hubContext;
-    private readonly PositionService _service;
-    private readonly IList<Score> _scoreBoard = new List<Score>();
+    private readonly DataSharingService _data;
 
-    public Worker(ILogger<Worker> logger, IHubContext<Communication> hubContext, PositionService service)
+    public Worker(ILogger<Worker> logger, IHubContext<Communication> hubContext, DataSharingService data)
     {
         _logger = logger;
         _hubContext = hubContext;
-        _service = service;
+        _data = data;
     }
 
     protected override async Task ExecuteAsync(CancellationToken stoppingToken)
@@ -32,13 +31,13 @@ public class Worker : BackgroundService
         var dt = 10;
         while (!cancellationToken.IsCancellationRequested)
         {
-            await _hubContext.Clients.All.SendAsync("Scoreboard", _scoreBoard.OrderBy(s => s.Time), cancellationToken: cancellationToken);
+            await _hubContext.Clients.All.SendAsync("Scoreboard", _data.ScoreBoard.OrderBy(s => s.Time), cancellationToken: cancellationToken);
    
             Stopwatch stopwatch = new Stopwatch();   
             var finished = false;
             var listOfSheeps = new List<Sheep>();
             var d = new Drone(200, 200, dt);
-            for (int i = 0; i < _service.NrOfSheeps; i++)
+            for (int i = 0; i < _data.NrOfSheeps; i++)
             {
                 var sheep = new Sheep(200, 200, i, listOfSheeps, d);
                 sheep.Set(new Coordinate(100 + ((i%10)* 20 ), 100 + ((i%3) * 20)));
@@ -46,11 +45,11 @@ public class Worker : BackgroundService
             }
 
             stopwatch.Start();
-            while (!cancellationToken.IsCancellationRequested && _service.Reset == false && finished == false)
+            while (!cancellationToken.IsCancellationRequested && _data.Reset == false && finished == false)
             {
                 
                 // Read coorodinates
-                d.Set(_service.MousePosition);
+                d.Set(_data.MousePosition);
 
                 // Calculate centroid of sheeps
                 var (x,y) = Calculator.Centroid(listOfSheeps.Select(x => x.Position).ToList());
@@ -78,14 +77,14 @@ public class Worker : BackgroundService
                 if (finished)
                 {
                     stopwatch.Stop();
-                    _scoreBoard.Add(new Score(_service.Name, _service.NrOfSheeps, stopwatch.Elapsed.TotalSeconds));
-                    await _hubContext.Clients.All.SendAsync("Scoreboard", _scoreBoard.OrderBy(s => s.Time), cancellationToken: cancellationToken);
+                    _data.ScoreBoard.Add(new Score(_data.Name, _data.NrOfSheeps, stopwatch.Elapsed.TotalSeconds));
+                    await _hubContext.Clients.All.SendAsync("Scoreboard", _data.ScoreBoard.OrderBy(s => s.Time), cancellationToken: cancellationToken);
                 }
                 // Wait
                 await Task.Delay(dt);
             }
 
-            _service.Reset = false;
+            _data.Reset = false;
         }
     }
 
