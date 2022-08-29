@@ -33,20 +33,41 @@ public class Communication : Hub
     {
         await Clients.All.SendAsync("ReceiveMessage", user, message);
     }
-
-    public void MousePosition(string position)
+    
+    public void StartStop()
     {
-       var splitted = position.Split(",");
-       _data.MousePosition.Update(Int32.Parse(splitted[0]), Int32.Parse(splitted[1]));
+        if (_data.Start)
+        {
+            _data.Start = false;
+        }
+        else
+        {
+            _data.Start = true;
+        }
     }
     
-    public void Reset(string nr)
+    public void Reset(string nr, string herderThreshold, string oversightThreshold, string oversightSpeed)
     {
         int nrOfSheeps = Convert.ToInt32(nr);
         if (nrOfSheeps < 3) nrOfSheeps = 3;
         if (nrOfSheeps > 30) nrOfSheeps = 30;
         _data.NrOfSheeps = nrOfSheeps;
         _data.Reset = true;
+        
+        int h = Convert.ToInt32(herderThreshold);
+        if (h < 0) h = 0;
+        if (h > 500) h = 500;
+        _data.HerderPersonalSpaceThreshold = h;
+        
+        h = Convert.ToInt32(oversightThreshold);
+        if (h < 0) h = 0;
+        if (h > 500) h = 500;
+        _data.HerderOversightThreshold = h;
+        
+        h = Convert.ToInt32(oversightSpeed);
+        if (h < 0) h = 0;
+        if (h > 500) h = 500;
+        _data.HerderOversightSpeed = h;
     }
     
     public void SetName(string name)

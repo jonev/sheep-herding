@@ -36,7 +36,7 @@ public static class Calculator
     {
         var norm = Vector2.Normalize(vector);
         var length = maxValue - vector.Length();
-        if (length < 0.0) throw new Exception();
+        if (length < 0.0) return Vector2.Zero;
         return Vector2.Multiply(norm, (float)length);
     }
 }

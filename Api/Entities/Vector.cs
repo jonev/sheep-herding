@@ -47,11 +47,11 @@ public static class VectorPrinter
 
         return sb.ToString();
     }
-    
-    public static string ToString(IList<Sheep> sheeps)
+
+    public static string ToString(IList<Point> points)
     {
         var sb = new StringBuilder();
-        foreach (var sheep in sheeps)
+        foreach (var sheep in points)
         {
             sb.Append($"{sheep.Position.X},{sheep.Position.Y},{sheep.Position.X + sheep.Force.X},{sheep.Position.Y + sheep.Force.Y};");
         }

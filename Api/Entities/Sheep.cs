@@ -6,22 +6,18 @@ namespace SheepHerding.Api.Entities;
 public class Sheep : Point
 {
     private readonly IList<Sheep> _friendlies;
-    private readonly Drone _enemy;
-    internal Vector2 Force = Vector2.Zero;
+    private readonly IList<DroneHerder> _enemies;
     private double _closeThreshold = 10.0;
 
-    public Sheep(double maxX, double maxY, int id, IList<Sheep> friendlies, Drone enemy) : base(maxX, maxY, id)
+    public Sheep(double maxX, double maxY, int id, IList<Sheep> friendlies, IList<DroneHerder> enemies, DroneOversight oversight) : base(maxX, maxY, id)
     {
         _friendlies = friendlies;
-        _enemy = enemy;
+        _enemies = enemies;
     }
 
-    public override void UpdatePosition(Coordinate sheepCentroid, double dt)
+    public override void UpdatePosition(Coordinate sheepCentroid, double dt, double[] settings)
     {
         var force = new Vector2(0, 0);
-        var sheepVenemy = new Vector2(Convert.ToSingle(Position.X - _enemy.Position.X), Convert.ToSingle(Position.Y - _enemy.Position.Y));
-        var sheepVcentroid = new Vector2(Convert.ToSingle(Position.X - sheepCentroid.X), Convert.ToSingle(Position.Y - sheepCentroid.Y));
-        var sheepVcentroidReduced = Vector2.Divide(sheepVcentroid, 10);
         
         var close = _friendlies.Where(s => s.Id != Id &&
             (Math.Abs(s.Position.X - Position.X) <= _closeThreshold) && (Math.Abs(s.Position.Y - Position.Y) <= _closeThreshold)).ToList();
@@ -35,17 +31,27 @@ public class Sheep : Point
             force = Vector2.Add(force, sheepVclose);
         }
 
+        var sheepVcentroid = new Vector2(Convert.ToSingle(Position.X - sheepCentroid.X), Convert.ToSingle(Position.Y - sheepCentroid.Y));
+        var sheepVcentroidReduced = Vector2.Divide(sheepVcentroid, 10);
         if (sheepVcentroid.Length() > 50.0)
         {
             var negated = Vector2.Negate(sheepVcentroidReduced);
             force = Vector2.Add(force, negated);
         }
-        
-        if (sheepVenemy.Length() <= 100.0)
+
+        var sheepVenemy = _enemies.Select(e 
+            => new Vector2(Convert.ToSingle(Position.X - e.Position.X),
+            Convert.ToSingle(Position.Y - e.Position.Y)));
+        var minLenght = sheepVenemy.Select(v => v.Length()).Min();
+        var maxLenght = sheepVenemy.Select(v => v.Length()).Max();
+        if (minLenght <= 100.0)
         {
-            var flipped = Calculator.FlipLength(sheepVenemy, 100.0);
-            var flippedReduced = Vector2.Divide(flipped, 10);
-            force = Vector2.Add(force, flippedReduced);
+            foreach (var enemy in sheepVenemy) // TODO this is not working
+            {
+                var flipped = Calculator.FlipLength(enemy, 100.0);
+                var flippedReduced = Vector2.Divide(flipped, 10);
+                force = Vector2.Add(force, flippedReduced);
+            }
         }
 
         Force = Vector2.Multiply(force, 10); // For visualization purposes only
@@ -53,23 +59,12 @@ public class Sheep : Point
     }
     
 }
-public class Drone : Point
-{
-    public Drone(double maxX, double maxY, int dt) : base(maxX, maxY, dt)
-    {
-    }
-
-    public override void UpdatePosition(Coordinate sheepCentroid, double dt)
-    {
-        throw new NotImplementedException();
-    }
-}
 
 public abstract class Point
 {
     internal readonly int Id;
     internal readonly Coordinate Position;
-    internal readonly Vector2 Heading = Vector2.Zero;
+    internal Vector2 Force = Vector2.Zero;
     private readonly double _maxX;
     private readonly double _maxY;
 
@@ -81,7 +76,7 @@ public abstract class Point
         Id = id;
     }
 
-    public abstract void UpdatePosition(Coordinate sheepCentroid, double dt);
+    public abstract void UpdatePosition(Coordinate sheepCentroid, double dt, double[] settings);
 
     public void Set(Coordinate next)
     {

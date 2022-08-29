@@ -7,7 +7,7 @@ var mouseY = 0;
 var lastMouseX = 0;
 var lastMouseY = 0;
 
-var colors = ['red', 'yellow'];
+var colors = ['green', 'red', 'red', 'red', 'yellow'];
 
 
 connection.on("ReceiveMessage", function (user, message) {
@@ -46,8 +46,18 @@ connection.on("Scoreboard", function (list) {
 
 function reset(){
     var nr = document.getElementById("nrOfSheeps").value;
-    console.log("Reset, number of sheeps: ", nr)
-    connection.invoke("Reset", nr).catch(function (err) {
+    var herderThreshold = document.getElementById("herderThreshold").value;
+    var oversightThreshold = document.getElementById("oversightThreshold").value;
+    var oversightSpeed = document.getElementById("oversightSpeed").value;
+    console.log("Reset, number of sheeps: ", nr, herderThreshold, oversightThreshold, oversightThreshold)
+    connection.invoke("Reset", nr, herderThreshold, oversightThreshold, oversightSpeed).catch(function (err) {
+        return console.error(err.toString());
+    });
+}
+
+function startStop(){
+    console.log("StartStop")
+    connection.invoke("StartStop").catch(function (err) {
         return console.error(err.toString());
     });
 }
@@ -113,12 +123,12 @@ function drawVector(x1, y1, x2, y2, color) {
     ctx.stroke();
 }
 
-function mousemove(event){
-    mouseX = event.clientX;
-    mouseY = event.clientY;
-    if(mouseX > (lastMouseX + 10) || mouseX < (lastMouseX - 10) || mouseY > (lastMouseY + 10) || mouseY > (lastMouseY + 10)){
-        sendMousePosition(mouseX, mouseY)
-    }
-}
-
-window.addEventListener('mousemove', mousemove);
+// function mousemove(event){
+//     mouseX = event.clientX;
+//     mouseY = event.clientY;
+//     if(mouseX > (lastMouseX + 10) || mouseX < (lastMouseX - 10) || mouseY > (lastMouseY + 10) || mouseY > (lastMouseY + 10)){
+//         sendMousePosition(mouseX, mouseY)
+//     }
+// }
+//
+// window.addEventListener('mousemove', mousemove);
