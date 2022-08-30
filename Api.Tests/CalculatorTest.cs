@@ -70,4 +70,31 @@ public class CalculatorTest
         var result = Calculator.FlipLength(v1, 6.0);
         result.Length().Should().BeApproximately(0.343145f, 0.001f);
     }
+    
+    [Fact]
+    public void RotateVector1Test()
+    {
+        var v1 = new Vector2(4, 0);
+        var result = Calculator.RotateVector(v1, Math.PI);
+        result.X.Should().BeApproximately(-4, 0.001f);
+        result.Y.Should().BeApproximately(0, 0.001f);
+    }
+    
+    [Fact]
+    public void RotateVector2Test()
+    {
+        var v1 = new Vector2(4, 0);
+        var result = Calculator.RotateVector(v1, Math.PI/2);
+        result.X.Should().BeApproximately(0, 0.001f);
+        result.Y.Should().BeApproximately(4, 0.001f);
+    }
+    
+    [Fact]
+    public void RotateVector3Test()
+    {
+        var v1 = new Vector2(4, 4);
+        var result = Calculator.RotateVector(v1, Math.PI/2);
+        result.X.Should().BeApproximately(-4, 0.001f);
+        result.Y.Should().BeApproximately(4, 0.001f);
+    }
 }

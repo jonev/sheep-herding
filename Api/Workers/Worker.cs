@@ -1,3 +1,4 @@
+using System.Collections.Concurrent;
 using System.Diagnostics;
 using Microsoft.AspNetCore.SignalR;
 using SheepHerding.Api.Entities;
@@ -40,9 +41,9 @@ public class Worker : BackgroundService
             var droneOversight = new DroneOversight(200, 200, dt, 950, 850);
 
             var herdSettings = new double[3];
-            herdSettings[0] = _data.HerderPersonalSpaceThreshold;
-            herdSettings[1] = _data.HerderOversightThreshold;
-            herdSettings[2] = _data.HerderOversightSpeed;
+            herdSettings[0] = _data.HerdRadius;
+            herdSettings[1] = Calculator.AngleToRadians(_data.HerdAngleInDegrees);
+            herdSettings[2] = _data.OversightSpeed;
             
             for (int i = 0; i < 3; i++)
             {
@@ -64,6 +65,7 @@ public class Worker : BackgroundService
                 if (!_data.Start)
                 {
                     await Task.Delay(1000);
+                    _data.Reset = true;
                     continue;
                 }
                 // Calculate centroid of sheeps
@@ -94,7 +96,8 @@ public class Worker : BackgroundService
                 cast.Add(droneOversight);
                 cast.AddRange(listOfHerders);
                 var vectors = VectorPrinter.ToString(cast);
-                var message = $"{x},{y}!{coordinates}!{vectors}";
+                var circle = $"{droneOversight.Position.X};{droneOversight.Position.Y};{droneOversight.GetHerdingCircleRadius()}";
+                var message = $"{x},{y}!{coordinates}!{vectors}!{circle}";
                 // _logger.LogDebug($"Sending cooridnates; {message}");
                 await _hubContext.Clients.All.SendAsync("ReceiveMessage", "admin", message,
                     cancellationToken: cancellationToken);
@@ -104,8 +107,15 @@ public class Worker : BackgroundService
                 if (finished)
                 {
                     stopwatch.Stop();
-                    _data.ScoreBoard.Add(new Score(_data.Name, _data.NrOfSheeps, stopwatch.Elapsed.TotalSeconds));
+                    AddScore(stopwatch.Elapsed.TotalSeconds);
                     await _hubContext.Clients.All.SendAsync("Scoreboard", _data.ScoreBoard.OrderBy(s => s.Time), cancellationToken: cancellationToken);
+                    _data.Start = false;
+                }
+                // Timout
+                if (stopwatch.Elapsed.TotalSeconds > 200.0)
+                {
+                    _data.Start = false;
+                    _data.Reset = false;
                 }
                 // Wait
                 await Task.Delay(dt);
@@ -113,6 +123,17 @@ public class Worker : BackgroundService
 
             _data.Reset = false;
         }
+    }
+
+    private void AddScore(double timeInSeconds)
+    {
+        if (_data.ScoreBoard.Count > 999)
+        {
+            var slowest = _data.ScoreBoard.OrderByDescending(s => s.Time).FirstOrDefault();
+            _data.ScoreBoard = new ConcurrentBag<Score>(_data.ScoreBoard.Where(s => s.Time != slowest.Time).ToList());
+        }
+        _data.ScoreBoard.Add(new Score(_data.Name, _data.NrOfSheeps, timeInSeconds));
+
     }
 
     public override Task StopAsync(CancellationToken cancellationToken)

@@ -14,29 +14,36 @@ public static class Calculator
     {
         return Math.Atan2(y2 - y1, x2 - x1) * 180.0 / Math.PI;
     }
-    
+
     public static double AngleInRadians(double x1, double y1, double x2, double y2)
     {
         return Math.Atan2(y2 - y1, x2 - x1);
     }
-    
+
     public static double Length(double x1, double y1, double x2, double y2)
     {
-        return Math.Sqrt((Math.Pow(x2- x1, 2) + Math.Pow(y2 - y1, 2)));
+        return Math.Sqrt((Math.Pow(x2 - x1, 2) + Math.Pow(y2 - y1, 2)));
     }
-    
+
     public static (double x, double y) Centroid(IList<Coordinate> coordinates)
     {
         var sumX = coordinates.Select(c => c.X).Sum();
         var sumY = coordinates.Select(c => c.Y).Sum();
         return (sumX / coordinates.Count, sumY / coordinates.Count);
     }
-    
+
     public static Vector2 FlipLength(Vector2 vector, double maxValue)
     {
         var norm = Vector2.Normalize(vector);
         var length = maxValue - vector.Length();
         if (length < 0.0) return Vector2.Zero;
-        return Vector2.Multiply(norm, (float)length);
+        return Vector2.Multiply(norm, (float) length);
+    }
+
+    public static Vector2 RotateVector(Vector2 vector, double anglesInRadians)
+    {
+        var newX = vector.X * Math.Cos(anglesInRadians) - vector.Y * Math.Sin(anglesInRadians);
+        var newY = vector.X * Math.Sin(anglesInRadians) + vector.Y * Math.Cos(anglesInRadians);
+        return new Vector2((float) newX, (float) newY);
     }
 }

@@ -8,11 +8,11 @@ public class DataSharingService
     public Coordinate MousePosition { get; set; } = new Coordinate(0, 0);
     public bool Start { get; set; } = false;
     public bool Reset { get; set; } = false;
-    public int NrOfSheeps { get; set; } = 3;
+    public int NrOfSheeps { get; set; } = 20;
     public string Name { get; set; } = "Unknown";
     public ConcurrentBag<Score> ScoreBoard = new ConcurrentBag<Score>();
-    
-    public int HerderPersonalSpaceThreshold { get; set; }
-    public int HerderOversightThreshold { get; set; }
-    public int HerderOversightSpeed { get; set; }
+
+    public int HerdRadius { get; set; } = 0;
+    public int HerdAngleInDegrees { get; set; } = 0;
+    public int OversightSpeed { get; set; } = 0;
 }

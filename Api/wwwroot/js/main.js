@@ -1,12 +1,6 @@
 "use strict";
 
-var connection = new signalR.HubConnectionBuilder().withUrl("/chatHub").build();
-var mouseX = 0;
-var mouseY = 0;
-
-var lastMouseX = 0;
-var lastMouseY = 0;
-
+var connection = new signalR.HubConnectionBuilder().withUrl("/communication").build();
 var colors = ['green', 'red', 'red', 'red', 'yellow'];
 
 
@@ -16,14 +10,15 @@ connection.on("ReceiveMessage", function (user, message) {
     var centroid = objects[0].split(",");
     var coordinatesCollection = objects[1].split(";");
     var vectorCollection = objects[2].split(";");
+    var circle = objects[3].split(";");
     // console.log(coordinatesCollection, vectorCollection)
     clearCanvas();
-    draw(centroid[0], centroid[1], 'pink')
-    
+    drawPoint(centroid[0], centroid[1], 'pink')
+    drawCircle(circle[0], circle[1], circle[2], "pink")
     for (let i = 0; i < coordinatesCollection.length - 1; i++) {
         let coordinates = coordinatesCollection[i].split(",")
         // console.log("X: " + coordinates[0] + " Y: " + coordinates[1])
-        draw(coordinates[0], coordinates[1], colors[i])
+        drawPoint(coordinates[0], coordinates[1], colors[i])
     }
 
     for (let i = 0; i < vectorCollection.length - 1; i++) {
@@ -46,11 +41,11 @@ connection.on("Scoreboard", function (list) {
 
 function reset(){
     var nr = document.getElementById("nrOfSheeps").value;
-    var herderThreshold = document.getElementById("herderThreshold").value;
-    var oversightThreshold = document.getElementById("oversightThreshold").value;
-    var oversightSpeed = document.getElementById("oversightSpeed").value;
-    console.log("Reset, number of sheeps: ", nr, herderThreshold, oversightThreshold, oversightThreshold)
-    connection.invoke("Reset", nr, herderThreshold, oversightThreshold, oversightSpeed).catch(function (err) {
+    var s1 = document.getElementById("setting1").value;
+    var s2 = document.getElementById("setting2").value;
+    var s3 = document.getElementById("setting3").value;
+    console.log("Reset, number of sheeps: ", nr)
+    connection.invoke("Reset", nr, s1, s2, s3).catch(function (err) {
         return console.error(err.toString());
     });
 }
@@ -70,19 +65,16 @@ function saveName(){
     });
 }
 
+connection.on("SendName", function (name) {
+    console.log("Player playing: ", name)
+    document.getElementById("player").value = name;
+});
+
 connection.start().then(function () {
     console.log("Connection started")
 }).catch(function (err) {
     return console.error(err.toString());
 });
-
-function sendMousePosition(x,y){
-    lastMouseX = x;
-    lastMouseY = y;
-    connection.invoke("MousePosition", x+","+y).catch(function (err) {
-        return console.error(err.toString());
-    });
-}
 
 function clearCanvas() {
     const canvas = document.querySelector('#canvas');
@@ -94,8 +86,7 @@ function clearCanvas() {
     ctx.clearRect(0, 0, canvas.width, canvas.height);
 }
 
-function draw(x, y, color) {
-    // https://www.javascripttutorial.net/web-apis/javascript-draw-line/
+function drawPoint(x, y, color) {
     const canvas = document.querySelector('#canvas');
 
     if (!canvas.getContext) {
@@ -123,12 +114,16 @@ function drawVector(x1, y1, x2, y2, color) {
     ctx.stroke();
 }
 
-// function mousemove(event){
-//     mouseX = event.clientX;
-//     mouseY = event.clientY;
-//     if(mouseX > (lastMouseX + 10) || mouseX < (lastMouseX - 10) || mouseY > (lastMouseY + 10) || mouseY > (lastMouseY + 10)){
-//         sendMousePosition(mouseX, mouseY)
-//     }
-// }
-//
-// window.addEventListener('mousemove', mousemove);
+function drawCircle(x, y, radius, color) {
+    const canvas = document.querySelector('#canvas');
+
+    if (!canvas.getContext) {
+        return;
+    }
+    const ctx = canvas.getContext('2d');
+    // ctx.clearRect(0, 0, canvas.width, canvas.height);
+    ctx.strokeStyle = color;
+    ctx.beginPath();
+    ctx.arc(x, y, radius, 0, 2 * Math.PI);
+    ctx.stroke();
+}

@@ -7,7 +7,9 @@ public class Sheep : Point
 {
     private readonly IList<Sheep> _friendlies;
     private readonly IList<DroneHerder> _enemies;
-    private double _closeThreshold = 10.0;
+    private readonly double _neighborToCloseStartMoveThreshold = 10.0;
+    private readonly double _centroidOfHerdToFarStartMoveThreshold = 50.0;
+    private readonly double _enemyToCloseStartMoveThreshold = 100.0;
 
     public Sheep(double maxX, double maxY, int id, IList<Sheep> friendlies, IList<DroneHerder> enemies, DroneOversight oversight) : base(maxX, maxY, id)
     {
@@ -20,7 +22,7 @@ public class Sheep : Point
         var force = new Vector2(0, 0);
         
         var close = _friendlies.Where(s => s.Id != Id &&
-            (Math.Abs(s.Position.X - Position.X) <= _closeThreshold) && (Math.Abs(s.Position.Y - Position.Y) <= _closeThreshold)).ToList();
+            (Math.Abs(s.Position.X - Position.X) <= _neighborToCloseStartMoveThreshold) && (Math.Abs(s.Position.Y - Position.Y) <= _neighborToCloseStartMoveThreshold)).ToList();
         if (close.Any())
         {
             var list = close.Select(s => s.Position).ToList();
@@ -33,7 +35,7 @@ public class Sheep : Point
 
         var sheepVcentroid = new Vector2(Convert.ToSingle(Position.X - sheepCentroid.X), Convert.ToSingle(Position.Y - sheepCentroid.Y));
         var sheepVcentroidReduced = Vector2.Divide(sheepVcentroid, 10);
-        if (sheepVcentroid.Length() > 50.0)
+        if (sheepVcentroid.Length() > _centroidOfHerdToFarStartMoveThreshold)
         {
             var negated = Vector2.Negate(sheepVcentroidReduced);
             force = Vector2.Add(force, negated);
@@ -44,7 +46,7 @@ public class Sheep : Point
             Convert.ToSingle(Position.Y - e.Position.Y)));
         var minLenght = sheepVenemy.Select(v => v.Length()).Min();
         var maxLenght = sheepVenemy.Select(v => v.Length()).Max();
-        if (minLenght <= 100.0)
+        if (minLenght <= _enemyToCloseStartMoveThreshold)
         {
             foreach (var enemy in sheepVenemy) // TODO this is not working
             {

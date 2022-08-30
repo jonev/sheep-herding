@@ -20,6 +20,8 @@ public class Communication : Hub
     {
         _logger.LogInformation($"Client connected: {Context.ConnectionId}");
         await Clients.All.SendAsync("Scoreboard", _data.ScoreBoard.OrderBy(s => s.Time));
+        await Clients.All.SendAsync("SendName", _data.Name);
+
     }
 
     public override Task OnDisconnectedAsync(Exception? exception)
@@ -46,32 +48,33 @@ public class Communication : Hub
         }
     }
     
-    public void Reset(string nr, string herderThreshold, string oversightThreshold, string oversightSpeed)
+    public void Reset(string nr, string s1, string s2, string s3)
     {
         int nrOfSheeps = Convert.ToInt32(nr);
-        if (nrOfSheeps < 3) nrOfSheeps = 3;
-        if (nrOfSheeps > 30) nrOfSheeps = 30;
+        if (nrOfSheeps < 100) nrOfSheeps = 100;
+        if (nrOfSheeps > 200) nrOfSheeps = 200;
         _data.NrOfSheeps = nrOfSheeps;
         _data.Reset = true;
         
-        int h = Convert.ToInt32(herderThreshold);
+        int h = Convert.ToInt32(s1);
         if (h < 0) h = 0;
         if (h > 500) h = 500;
-        _data.HerderPersonalSpaceThreshold = h;
+        _data.HerdRadius = h;
         
-        h = Convert.ToInt32(oversightThreshold);
+        h = Convert.ToInt32(s2);
         if (h < 0) h = 0;
         if (h > 500) h = 500;
-        _data.HerderOversightThreshold = h;
+        _data.HerdAngleInDegrees = h;
         
-        h = Convert.ToInt32(oversightSpeed);
+        h = Convert.ToInt32(s3);
         if (h < 0) h = 0;
         if (h > 500) h = 500;
-        _data.HerderOversightSpeed = h;
+        _data.OversightSpeed = h;
     }
     
-    public void SetName(string name)
+    public async Task SetName(string name)
     {
         _data.Name = name;
+        await Clients.All.SendAsync("SendName", name);
     }
 }
