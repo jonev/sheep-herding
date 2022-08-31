@@ -47,7 +47,7 @@ public class Worker : BackgroundService
             
             for (int i = 0; i < 3; i++)
             {
-                var h = new DroneHerder(200, 200, i, droneOversight, listOfHerders);
+                var h = new DroneHerder(200, 200, i, droneOversight);
                 h.Set(new Coordinate(i * 20, 10));
                 listOfHerders.Add(h);
             }
