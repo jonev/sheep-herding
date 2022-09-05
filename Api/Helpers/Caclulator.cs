@@ -5,14 +5,32 @@ namespace SheepHerding.Api.Helpers;
 
 public static class Calculator
 {
-    public static double AngleToRadians(double angle)
+    public static double DegreesToRadians(double angle)
     {
         return (Math.PI / 180) * angle;
+    }
+    
+    public static double RadiansToDegrees(double angle)
+    {
+        return (180/Math.PI) * angle;
     }
 
     public static double AngleInDegrees(double x1, double y1, double x2, double y2)
     {
         return Math.Atan2(y2 - y1, x2 - x1) * 180.0 / Math.PI;
+    }
+    
+    public static double AngleInDegrees(Vector2 a, Vector2 b)
+    {
+        return Math.Atan2(b.Y - a.Y, b.X - a.X) * 180.0 / Math.PI;
+    }
+    
+    public static double AngleInRadiansLimited(Vector2 a, Vector2 b)
+    {
+        var result = Math.Atan2(b.Y, b.X) - Math.Atan2(a.Y, a.X);
+        while (result < -Math.PI) result += 2*Math.PI;
+        while (result > Math.PI) result -= 2*Math.PI;
+        return result;
     }
 
     public static double AngleInRadians(double x1, double y1, double x2, double y2)

@@ -51,7 +51,7 @@ public class Communication : Hub
     public void Reset(string nr, string s1, string s2, string s3)
     {
         int nrOfSheeps = Convert.ToInt32(nr);
-        if (nrOfSheeps < 100) nrOfSheeps = 100;
+        if (nrOfSheeps < 10) nrOfSheeps = 10;
         if (nrOfSheeps > 200) nrOfSheeps = 200;
         _data.NrOfSheeps = nrOfSheeps;
         _data.Reset = true;

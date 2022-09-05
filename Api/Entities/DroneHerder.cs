@@ -11,7 +11,7 @@ public class DroneHerder : Point
         _oversight = oversight;
     }
 
-    public override void UpdatePosition(Coordinate sheepCentroid, double dt, double[] settings)
+    public void UpdatePosition(double dt)
     {
         var force = new Vector2(0, 0);
         

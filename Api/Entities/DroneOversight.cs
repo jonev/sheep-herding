@@ -1,53 +1,78 @@
 using System.Numerics;
 using SheepHerding.Api.Helpers;
+using SheepHerding.Api.Workers;
 
 namespace SheepHerding.Api.Entities;
 
 public class DroneOversight : Point
 {
-    private readonly double _finishX;
-    private readonly double _finishY;
+    private readonly ILogger<Worker> _logger;
     private double _speed = 10.0;
     private double _herdRadius = 75.0;
-    internal Coordinate[] HerdCommands = new []{new Coordinate(0,0), new Coordinate(0,0), new Coordinate(0,0)};
-    private double _herdAngle = Math.PI / 3;
+    internal Coordinate[] HerdCommands = new[] {new Coordinate(0, 0), new Coordinate(0, 0), new Coordinate(0, 0)};
+    private double _herdAngleInRadians = Math.PI / 3;
+    private int _pathIndex = 1; // TODO fix this
 
-    public DroneOversight(double maxX, double maxY, int id, double finishX, double finishY) : base(maxX, maxY, id)
+    public DroneOversight(ILogger<Worker> logger, double maxX, double maxY, int id) :
+        base(maxX, maxY, id)
     {
-        _finishX = finishX;
-        _finishY = finishY;
+        _logger = logger;
     }
 
-    public override void UpdatePosition(Coordinate sheepCentroid, double dt, double[] settings)
+    public int UpdatePosition(Coordinate sheepCentroid, double largestDistance, double dt, double[] settings,
+        List<Coordinate> path)
     {
-        _herdRadius = settings[0];
-        _herdAngle = settings[1];
+        _herdRadius = largestDistance; // settings[0];
+        _herdAngleInRadians = settings[1] == 0 ? _herdAngleInRadians : settings[1];
         _speed = settings[2];
         var force = new Vector2(0, 0);
-        var sheepVcentroid = new Vector2(Convert.ToSingle(Position.X - sheepCentroid.X), Convert.ToSingle(Position.Y - sheepCentroid.Y));
+        var sheepVcentroid = Converter.ToVector2(Position.X, Position.Y, sheepCentroid.X, sheepCentroid.Y); 
         var sheepVcentroidReduced = Vector2.Divide(sheepVcentroid, 5);
-        var negated = Vector2.Negate(sheepVcentroidReduced);
-        force = Vector2.Add(force, negated);
-        
-        
-        var sheepVfinish = new Vector2(Convert.ToSingle(Position.X - _finishX), Convert.ToSingle(Position.Y - _finishY));
-        var sheepVfinishNorm = Vector2.Normalize(sheepVfinish);
-        var sheepVfinishNormNegated = Vector2.Negate(sheepVfinishNorm);
-        force = Vector2.Add(force, Vector2.Multiply(sheepVfinishNormNegated, (float)_speed));
+        force = Vector2.Add(force, sheepVcentroidReduced);
 
+        // Path
+        var sheepVpath = Converter.ToVector2(Position.X, Position.Y, _pathIndex < path.Count ? path[_pathIndex].X : MaxX, _pathIndex < path.Count ? path[_pathIndex].Y : MaxY);
+        var sheepVpathNorm = Vector2.Normalize(sheepVpath);
+        var sheepVpathNormNegated = Vector2.Negate(sheepVpathNorm);
+        force = Vector2.Add(force, Vector2.Multiply(sheepVpathNorm, (float) _speed));
+        
+        if (sheepVpath.Length() < 50)
+        {
+            _pathIndex++;
+        }
+        
+        var pathAngle = 0.0;
+        if (sheepVpath.Length() < 100 && _pathIndex < path.Count - 1)
+        {
+            var sheepVpathNext = Converter.ToVector2(
+                path[_pathIndex].X,
+                path[_pathIndex].Y,
+                path[_pathIndex + 1].X,
+                path[_pathIndex + 1].Y);
+            
+            pathAngle = Calculator.AngleInRadiansLimited(sheepVpath, sheepVpathNext);
+            _logger.LogInformation(
+                $"{nameof(pathAngle)}: {pathAngle}" +
+                $"{nameof(sheepVpath)}: {sheepVpath}" +
+                $"{nameof(sheepVpathNext)}: {sheepVpathNext}"
+            );
+        }
 
         Force = Vector2.Multiply(force, 10); // For visualization purposes only
-        Position.Update(Position.X + (force.X * (dt/100)), Position.Y + (force.Y * (dt/100)));
-        
+        Position.Update(Position.X + (force.X * (dt / 100)), Position.Y + (force.Y * (dt / 100)));
+
         // After updating this position, update the herders
-        var h0 = Vector2.Multiply(sheepVfinishNorm, (float)_herdRadius);
-        var h1 = Calculator.RotateVector(h0, _herdAngle);
-        var h2 = Calculator.RotateVector(h0, -_herdAngle);
+        var sheepVpathNormNegatedRotated = Calculator.RotateVector(sheepVpathNormNegated, pathAngle/2.0);
+        var h0 = Vector2.Multiply(sheepVpathNormNegatedRotated, (float) _herdRadius);
+        // var h0 = Vector2.Multiply(sheepVfinishNorm, (float)_herdRadius);
+        var h1 = Calculator.RotateVector(h0, _herdAngleInRadians);
+        var h2 = Calculator.RotateVector(h0, -_herdAngleInRadians);
         
-            
-        HerdCommands[0] = new Coordinate(Position.X + h0.X, Position.Y + h0.Y);
-        HerdCommands[1] = new Coordinate(Position.X + h1.X, Position.Y + h1.Y);
-        HerdCommands[2] = new Coordinate(Position.X + h2.X, Position.Y + h2.Y);
+        
+        HerdCommands[0] = new Coordinate(sheepCentroid.X + h0.X, sheepCentroid.Y + h0.Y);
+        HerdCommands[1] = new Coordinate(sheepCentroid.X + h1.X, sheepCentroid.Y + h1.Y);
+        HerdCommands[2] = new Coordinate(sheepCentroid.X + h2.X, sheepCentroid.Y + h2.Y);
+        return _pathIndex;
     }
 
     public double GetHerdingCircleRadius()

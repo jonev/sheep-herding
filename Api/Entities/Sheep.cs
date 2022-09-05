@@ -17,10 +17,11 @@ public class Sheep : Point
         _enemies = enemies;
     }
 
-    public override void UpdatePosition(Coordinate sheepCentroid, double dt, double[] settings)
+    public void UpdatePosition(Coordinate sheepCentroid, double dt)
     {
         var force = new Vector2(0, 0);
         
+        // Personal space - dont have sheeps walk on top of each other
         var close = _friendlies.Where(s => s.Id != Id &&
             (Math.Abs(s.Position.X - Position.X) <= _neighborToCloseStartMoveThreshold) && (Math.Abs(s.Position.Y - Position.Y) <= _neighborToCloseStartMoveThreshold)).ToList();
         if (close.Any())
@@ -33,6 +34,7 @@ public class Sheep : Point
             force = Vector2.Add(force, sheepVclose);
         }
 
+        // Hold together as a herd
         var sheepVcentroid = new Vector2(Convert.ToSingle(Position.X - sheepCentroid.X), Convert.ToSingle(Position.Y - sheepCentroid.Y));
         var sheepVcentroidReduced = Vector2.Divide(sheepVcentroid, 10);
         if (sheepVcentroid.Length() > _centroidOfHerdToFarStartMoveThreshold)
@@ -41,6 +43,7 @@ public class Sheep : Point
             force = Vector2.Add(force, negated);
         }
 
+        // Enemies
         var sheepVenemy = _enemies.Select(e 
             => new Vector2(Convert.ToSingle(Position.X - e.Position.X),
             Convert.ToSingle(Position.Y - e.Position.Y)));
@@ -60,34 +63,4 @@ public class Sheep : Point
         Position.Update(Position.X + (force.X * (dt/100)), Position.Y + (force.Y * (dt/100)));
     }
     
-}
-
-public abstract class Point
-{
-    internal readonly int Id;
-    internal readonly Coordinate Position;
-    internal Vector2 Force = Vector2.Zero;
-    private readonly double _maxX;
-    private readonly double _maxY;
-
-    public Point(double maxX, double maxY, int id)
-    {
-        Position = new Coordinate(0, 0);
-        _maxX = maxX;
-        _maxY = maxY;
-        Id = id;
-    }
-
-    public abstract void UpdatePosition(Coordinate sheepCentroid, double dt, double[] settings);
-
-    public void Set(Coordinate next)
-    {
-        Position.Update(next);
-    }
-
-    public void SetRandomStartPosition()
-    {
-        var r = new Random();
-        Position.Update(r.NextDouble() * _maxX, r.NextDouble() * _maxY);
-    }
 }

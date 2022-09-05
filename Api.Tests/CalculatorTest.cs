@@ -6,10 +6,12 @@ using SheepHerding.Api.Helpers;
 namespace SheepHerding.Api.Tests;
 public class CalculatorTest
 {
+    private readonly List<Coordinate> _path = new List<Coordinate> {new(100, 100), new(800, 100), new(800, 300), new(200, 300), new(200, 600), new(800, 600), new(950, 850)};
+
     [Fact]
     public void AngleToRadiansTest()
     {
-        var result = Calculator.AngleToRadians(90.0);
+        var result = Calculator.DegreesToRadians(90.0);
         result.Should().BeApproximately(1.5708, 0.00001);
     }
     
@@ -97,4 +99,64 @@ public class CalculatorTest
         result.X.Should().BeApproximately(-4, 0.001f);
         result.Y.Should().BeApproximately(4, 0.001f);
     }
+    
+    [Fact]
+    public void GetAngle1Test()
+    {
+        int index = 0;
+        var v1 = Converter.ToVector2(_path[index].X, _path[index].Y, _path[index + 1].X, _path[index + 1].Y);
+        index++;
+        var v2 = Converter.ToVector2(_path[index].X, _path[index].Y, _path[index + 1].X, _path[index + 1].Y);
+        
+        var result = Calculator.AngleInRadiansLimited(v1, v2);
+        result.Should().BeApproximately(Math.PI/2, 0.0001f);
+    }
+    
+    [Fact]
+    public void GetAngle2Test()
+    {
+        int index = 1;
+        var v1 = Converter.ToVector2(_path[index].X, _path[index].Y, _path[index + 1].X, _path[index + 1].Y);
+        index++;
+        var v2 = Converter.ToVector2(_path[index].X, _path[index].Y, _path[index + 1].X, _path[index + 1].Y);
+
+        var result = Calculator.AngleInRadiansLimited(v1, v2);
+        result.Should().BeApproximately(Math.PI/2, 0.0001f);
+    }
+    
+    [Fact]
+    public void GetAngle3Test()
+    {
+        int index = 2;
+        var v1 = Converter.ToVector2(_path[index].X, _path[index].Y, _path[index + 1].X, _path[index + 1].Y);
+        index++;
+        var v2 = Converter.ToVector2(_path[index].X, _path[index].Y, _path[index + 1].X, _path[index + 1].Y);
+
+        var result = Calculator.AngleInRadiansLimited(v1, v2);
+        result.Should().BeApproximately(-Math.PI/2, 0.0001f);
+    }
+    
+    [Fact]
+    public void GetAngle4Test()
+    {
+        int index = 3;
+        var v1 = Converter.ToVector2(_path[index].X, _path[index].Y, _path[index + 1].X, _path[index + 1].Y);
+        index++;
+        var v2 = Converter.ToVector2(_path[index].X, _path[index].Y, _path[index + 1].X, _path[index + 1].Y);
+
+        var result = Calculator.AngleInRadiansLimited(v1, v2);
+        result.Should().BeApproximately(-Math.PI/2, 0.0001f);
+    }
+    
+    [Fact]
+    public void GetAngle5Test()
+    {
+
+        var v1 = new Vector2(-84.0f, -1.7f);
+        var v2 = new Vector2(0.0f, 300.0f);
+        var result = Calculator.AngleInRadiansLimited(v1, v2);
+        result.Should().BeApproximately(-1.5910316602361894, 0.0001f);// (ca pi/2)
+    }
+    
+    
 }

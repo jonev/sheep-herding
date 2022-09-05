@@ -7,10 +7,16 @@ var colors = ['green', 'red', 'red', 'red', 'yellow'];
 connection.on("ReceiveMessage", function (user, message) {
     // console.log(message)
     var objects = message.split("!")
-    var centroid = objects[0].split(",");
-    var coordinatesCollection = objects[1].split(";");
-    var vectorCollection = objects[2].split(";");
-    var circle = objects[3].split(";");
+    var elapsedTime = objects[0].split(",");
+    var centroid = objects[1].split(",");
+    var coordinatesCollection = objects[2].split(";");
+    var vectorCollection = objects[3].split(";");
+    var circle = objects[4].split(";");
+    var pathCoordinates = objects[5].split(";");
+    var pathCoordinatesAchieved = objects[6].split(";");
+    
+    printElapsedTime(elapsedTime);
+    
     // console.log(coordinatesCollection, vectorCollection)
     clearCanvas();
     drawPoint(centroid[0], centroid[1], 'pink')
@@ -24,7 +30,19 @@ connection.on("ReceiveMessage", function (user, message) {
     for (let i = 0; i < vectorCollection.length - 1; i++) {
         let vector = vectorCollection[i].split(",")
         // console.log("Vector X1: " + vector[0] + " Y1: " + vector[1] + " X2: " + vector[2] + " Y2: " + vector[3])
-        drawVector(vector[0], vector[1], vector[2], vector[3], 'red')
+        drawVector(vector[0], vector[1], vector[2], vector[3], 'red', 1)
+    }
+
+    for (let i = 0; i < pathCoordinates.length - 2; i++) {
+        let from = pathCoordinates[i].split(",")
+        let to = pathCoordinates[i+1].split(",")
+        drawVector(from[0], from[1], to[0], to[1], 'yellow', 5)
+    }
+
+    for (let i = 0; i < pathCoordinatesAchieved.length - 2; i++) {
+        let from = pathCoordinatesAchieved[i].split(",")
+        let to = pathCoordinatesAchieved[i+1].split(",")
+        drawVector(from[0], from[1], to[0], to[1], 'green', 5)
     }
 });
 
@@ -98,7 +116,7 @@ function drawPoint(x, y, color) {
     ctx.fillRect(x, y, 10, 10)
 }
 
-function drawVector(x1, y1, x2, y2, color) {
+function drawVector(x1, y1, x2, y2, color, lineWidth) {
     // https://www.javascripttutorial.net/web-apis/javascript-draw-line/
     const canvas = document.querySelector('#canvas');
 
@@ -108,6 +126,7 @@ function drawVector(x1, y1, x2, y2, color) {
     const ctx = canvas.getContext('2d');
     // ctx.clearRect(0, 0, canvas.width, canvas.height);
     ctx.strokeStyle = color;
+    ctx.lineWidth = lineWidth;
     ctx.beginPath();
     ctx.moveTo(x1, y1);
     ctx.lineTo(x2, y2);
@@ -126,4 +145,9 @@ function drawCircle(x, y, radius, color) {
     ctx.beginPath();
     ctx.arc(x, y, radius, 0, 2 * Math.PI);
     ctx.stroke();
+}
+
+function printElapsedTime(time) {
+    const text = document.querySelector('#elapsedTime');
+    text.innerHTML = time;
 }
