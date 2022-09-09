@@ -38,7 +38,7 @@ public class Worker : BackgroundService
         {
             try
             {
-                await _hubContext.Clients.All.SendAsync("Scoreboard", _data.ScoreBoard.OrderBy(s => s.Time),
+                await _hubContext.Clients.All.SendAsync("Scoreboard", _data.ScoreBoard.OrderBy(s => s.Points),
                     cancellationToken: cancellationToken);
 
                 Stopwatch stopwatch = new Stopwatch();
@@ -62,7 +62,7 @@ public class Worker : BackgroundService
                 for (int i = 0; i < _data.NrOfSheeps; i++)
                 {
                     var sheep = new Sheep(200, 200, i, listOfSheeps, listOfHerders, droneOversight);
-                    sheep.Set(new Coordinate(100 + ((i % 10) * 20), 100 + ((i % 3) * 20)));
+                    sheep.Set(new Coordinate(400 + ((i % 10) * 20), 100 + ((i % 3) * 20)));
                     listOfSheeps.Add(sheep);
                 }
 
@@ -121,7 +121,7 @@ public class Worker : BackgroundService
                     {
                         stopwatch.Stop();
                         AddScore(stopwatch.Elapsed.TotalSeconds);
-                        await _hubContext.Clients.All.SendAsync("Scoreboard", _data.ScoreBoard.OrderBy(s => s.Time),
+                        await _hubContext.Clients.All.SendAsync("Scoreboard", _data.ScoreBoard.OrderBy(s => s.Points),
                             cancellationToken: cancellationToken);
                         _data.Start = false;
                     }
@@ -152,8 +152,8 @@ public class Worker : BackgroundService
     {
         if (_data.ScoreBoard.Count > 999)
         {
-            var slowest = _data.ScoreBoard.OrderByDescending(s => s.Time).FirstOrDefault();
-            _data.ScoreBoard = new ConcurrentBag<Score>(_data.ScoreBoard.Where(s => s.Time != slowest.Time).ToList());
+            var lowest = _data.ScoreBoard.OrderByDescending(s => s.Points).FirstOrDefault();
+            _data.ScoreBoard = new ConcurrentBag<Score>(_data.ScoreBoard.Where(s => s.Time != lowest.Points).ToList());
         }
 
         _data.ScoreBoard.Add(new Score(_data.Name, _data.NrOfSheeps, timeInSeconds));

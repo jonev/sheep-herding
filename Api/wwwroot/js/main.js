@@ -52,7 +52,7 @@ connection.on("Scoreboard", function (list) {
     htmlList.innerHTML = ""
     for (let i = 0; i < list.length; i++) {
         var li = document.createElement("li");
-        li.appendChild(document.createTextNode(list[i].name + " sheeps: " + list[i].nrOfSheeps + " time: " + list[i].time));
+        li.appendChild(document.createTextNode(list[i].name + " sheeps: " + list[i].nrOfSheeps + " time: " + list[i].time + " adjusted time: " + list[i].points));
         htmlList.appendChild(li);
     }
 });

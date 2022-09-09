@@ -1,4 +1,5 @@
 using System.Numerics;
+using SheepHerding.Api.Helpers;
 
 namespace SheepHerding.Api.Entities;
 
@@ -14,8 +15,8 @@ public class DroneHerder : Point
     public void UpdatePosition(double dt)
     {
         var force = new Vector2(0, 0);
-        
-        var commandVector = Vector2.Negate(new Vector2(Convert.ToSingle(Position.X - _oversight.HerdCommands[Id].X), Convert.ToSingle(Position.Y - _oversight.HerdCommands[Id].Y)));
+
+        var commandVector = Converter.ToVector2(Position, _oversight.HerdCommands[Id]);
         var commandVectorReduced = Vector2.Divide(commandVector, 3);
 
         force = Vector2.Add(force, commandVectorReduced);

@@ -22,11 +22,11 @@ public class DroneOversight : Point
     public int UpdatePosition(Coordinate sheepCentroid, double largestDistance, double dt, double[] settings,
         List<Coordinate> path)
     {
-        _herdRadius = largestDistance; // settings[0];
+        _herdRadius = settings[0]; //largestDistance; // settings[0];
         _herdAngleInRadians = settings[1] == 0 ? _herdAngleInRadians : settings[1];
         _speed = settings[2];
         var force = new Vector2(0, 0);
-        var sheepVcentroid = Converter.ToVector2(Position.X, Position.Y, sheepCentroid.X, sheepCentroid.Y); 
+        var sheepVcentroid = Converter.ToVector2(Position, sheepCentroid); 
         var sheepVcentroidReduced = Vector2.Divide(sheepVcentroid, 5);
         force = Vector2.Add(force, sheepVcentroidReduced);
 
@@ -45,10 +45,8 @@ public class DroneOversight : Point
         if (sheepVpath.Length() < 100 && _pathIndex < path.Count - 1)
         {
             var sheepVpathNext = Converter.ToVector2(
-                path[_pathIndex].X,
-                path[_pathIndex].Y,
-                path[_pathIndex + 1].X,
-                path[_pathIndex + 1].Y);
+                path[_pathIndex],
+                path[_pathIndex + 1]);
             
             pathAngle = Calculator.AngleInRadiansLimited(sheepVpath, sheepVpathNext);
             _logger.LogInformation(

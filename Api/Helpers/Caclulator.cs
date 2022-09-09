@@ -57,11 +57,49 @@ public static class Calculator
         if (length < 0.0) return Vector2.Zero;
         return Vector2.Multiply(norm, (float) length);
     }
+    
+    public static Vector2 FlipExLength(Vector2 vector, double maxValue)
+    {
+        var norm = Vector2.Normalize(vector);
+        var length = ExponentialDecrease((vector.Length()/maxValue), 10.0);
+        if (length < 0.0) return Vector2.Zero;
+        return Vector2.Multiply(norm, (float) (length * maxValue));
+    }
+
+    public static double ExponentialDecrease(double x, double curve)
+    {
+        return -1 * ((Math.Pow(curve, x) - 1) / (curve - 1)) + 1;
+    }
+    
+    public static double ExponentialIncrease(double x, double curve)
+    {
+        return ((Math.Pow(curve, x) - 1) / (curve - 1));
+    }
 
     public static Vector2 RotateVector(Vector2 vector, double anglesInRadians)
     {
         var newX = vector.X * Math.Cos(anglesInRadians) - vector.Y * Math.Sin(anglesInRadians);
         var newY = vector.X * Math.Sin(anglesInRadians) + vector.Y * Math.Cos(anglesInRadians);
         return new Vector2((float) newX, (float) newY);
+    }
+    
+    public static Vector2 Pull(Vector2 v, double factor, double speed)
+    {
+        if (factor > 1.00) throw new ArgumentException();
+        if (factor < 0.0) throw new ArgumentException();
+        
+        var r = ExponentialIncrease(factor, 10.0);
+        var normalized = Vector2.Normalize(v);
+        return Vector2.Multiply(normalized, (float)(r*speed));
+    }
+    
+    public static Vector2 Push(Vector2 v, double factor, double speed)
+    {
+        if (factor > 1.00) throw new ArgumentException();
+        if (factor < 0.0) throw new ArgumentException();
+        
+        var r = ExponentialDecrease(factor, 10.0);
+        var normalized = Vector2.Normalize(v);
+        return Vector2.Multiply(normalized, (float)(r*speed));
     }
 }

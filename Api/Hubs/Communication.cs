@@ -19,7 +19,7 @@ public class Communication : Hub
     public override async Task OnConnectedAsync()
     {
         _logger.LogInformation($"Client connected: {Context.ConnectionId}");
-        await Clients.All.SendAsync("Scoreboard", _data.ScoreBoard.OrderBy(s => s.Time));
+        await Clients.All.SendAsync("Scoreboard", _data.ScoreBoard.OrderBy(s => s.Points));
         await Clients.All.SendAsync("SendName", _data.Name);
 
     }
@@ -51,24 +51,24 @@ public class Communication : Hub
     public void Reset(string nr, string s1, string s2, string s3)
     {
         int nrOfSheeps = Convert.ToInt32(nr);
-        if (nrOfSheeps < 10) nrOfSheeps = 10;
+        if (nrOfSheeps < 50) nrOfSheeps = 50;
         if (nrOfSheeps > 200) nrOfSheeps = 200;
         _data.NrOfSheeps = nrOfSheeps;
         _data.Reset = true;
         
         int h = Convert.ToInt32(s1);
-        if (h < 0) h = 0;
+        if (h < 1) h = 1;
         if (h > 500) h = 500;
         _data.HerdRadius = h;
         
         h = Convert.ToInt32(s2);
-        if (h < 0) h = 0;
+        if (h < 1) h = 1;
         if (h > 500) h = 500;
         _data.HerdAngleInDegrees = h;
         
         h = Convert.ToInt32(s3);
-        if (h < 0) h = 0;
-        if (h > 500) h = 500;
+        if (h < 1) h = 1;
+        if (h > 20) h = 20;
         _data.OversightSpeed = h;
     }
     

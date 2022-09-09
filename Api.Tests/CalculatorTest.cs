@@ -158,5 +158,20 @@ public class CalculatorTest
         result.Should().BeApproximately(-1.5910316602361894, 0.0001f);// (ca pi/2)
     }
     
+    [Fact]
+    public void ExponentialReduceTest()
+    {
+        var result = Calculator.ExponentialDecrease(0.0, 10.0);
+        result.Should().BeApproximately(1.0, 0.0001f);
+        
+        result = Calculator.ExponentialDecrease(0.14, 10.0);
+        result.Should().BeApproximately(0.957735, 0.0001f);
+        
+        result = Calculator.ExponentialDecrease(0.66, 10.0);
+        result.Should().BeApproximately(0.603235, 0.0001f);
+        
+        result = Calculator.ExponentialDecrease(1.0, 10.0);
+        result.Should().BeApproximately(0.0, 0.0001f);
+    }
     
 }

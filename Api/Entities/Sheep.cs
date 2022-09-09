@@ -8,8 +8,10 @@ public class Sheep : Point
     private readonly IList<Sheep> _friendlies;
     private readonly IList<DroneHerder> _enemies;
     private readonly double _neighborToCloseStartMoveThreshold = 10.0;
-    private readonly double _centroidOfHerdToFarStartMoveThreshold = 50.0;
+    private readonly double _centroidOfHerdToFarStartMoveThreshold = 10.0;
+    private readonly double _centroidOfHerdToFarEndMoveThreshold = 150.0;
     private readonly double _enemyToCloseStartMoveThreshold = 100.0;
+    private readonly double _maxSpeed = 100.0;
 
     public Sheep(double maxX, double maxY, int id, IList<Sheep> friendlies, IList<DroneHerder> enemies, DroneOversight oversight) : base(maxX, maxY, id)
     {
@@ -24,36 +26,32 @@ public class Sheep : Point
         // Personal space - dont have sheeps walk on top of each other
         var close = _friendlies.Where(s => s.Id != Id &&
             (Math.Abs(s.Position.X - Position.X) <= _neighborToCloseStartMoveThreshold) && (Math.Abs(s.Position.Y - Position.Y) <= _neighborToCloseStartMoveThreshold)).ToList();
+        
         if (close.Any())
         {
             var list = close.Select(s => s.Position).ToList();
             list.Add(Position);
             var closeCentroid = Calculator.Centroid(list);
-            var sheepVclose = new Vector2(Convert.ToSingle(Position.X - closeCentroid.x), 
-                Convert.ToSingle(Position.Y - closeCentroid.y));
-            force = Vector2.Add(force, sheepVclose);
+            var sheepVclose = Converter.ToVector2Negated(Position, new Coordinate(closeCentroid.x, closeCentroid.y));
+            force = Vector2.Multiply(Vector2.Add(force, sheepVclose), 4.0f);
         }
 
         // Hold together as a herd
-        var sheepVcentroid = new Vector2(Convert.ToSingle(Position.X - sheepCentroid.X), Convert.ToSingle(Position.Y - sheepCentroid.Y));
-        var sheepVcentroidReduced = Vector2.Divide(sheepVcentroid, 10);
-        if (sheepVcentroid.Length() > _centroidOfHerdToFarStartMoveThreshold)
+        var sheepVcentroid = Converter.ToVector2(Position, sheepCentroid);
+        if (sheepVcentroid.Length() > _centroidOfHerdToFarStartMoveThreshold && sheepVcentroid.Length() < _centroidOfHerdToFarEndMoveThreshold)
         {
-            var negated = Vector2.Negate(sheepVcentroidReduced);
-            force = Vector2.Add(force, negated);
+            force = Vector2.Add(force,
+                Calculator.Pull(sheepVcentroid, sheepVcentroid.Length() / _centroidOfHerdToFarEndMoveThreshold, 10.0));
         }
-
+        
         // Enemies
-        var sheepVenemy = _enemies.Select(e 
-            => new Vector2(Convert.ToSingle(Position.X - e.Position.X),
-            Convert.ToSingle(Position.Y - e.Position.Y)));
+        var sheepVenemy = _enemies.Select(e => Converter.ToVector2Negated(Position, e.Position));
         var minLenght = sheepVenemy.Select(v => v.Length()).Min();
-        var maxLenght = sheepVenemy.Select(v => v.Length()).Max();
         if (minLenght <= _enemyToCloseStartMoveThreshold)
         {
-            foreach (var enemy in sheepVenemy) // TODO this is not working
+            foreach (var enemy in sheepVenemy)
             {
-                var flipped = Calculator.FlipLength(enemy, 100.0);
+                var flipped = Calculator.FlipExLength(enemy, 100.0);
                 var flippedReduced = Vector2.Divide(flipped, 10);
                 force = Vector2.Add(force, flippedReduced);
             }
