@@ -68,7 +68,7 @@ public class Communication : Hub
         
         h = Convert.ToInt32(s3);
         if (h < 1) h = 1;
-        if (h > 20) h = 20;
+        if (h > 10) h = 10;
         _data.OversightSpeed = h;
     }
     
