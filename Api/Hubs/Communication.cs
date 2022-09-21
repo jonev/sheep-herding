@@ -48,10 +48,22 @@ public class Communication : Hub
         }
     }
     
+    public void StartStopDrones()
+    {
+        if (_data.StartDrones)
+        {
+            _data.StartDrones = false;
+        }
+        else
+        {
+            _data.StartDrones = true;
+        }
+    }
+    
     public void Reset(string nr, string s1, string s2, string s3)
     {
         int nrOfSheeps = Convert.ToInt32(nr);
-        if (nrOfSheeps < 50) nrOfSheeps = 50;
+        if (nrOfSheeps < 0) nrOfSheeps = 0;
         if (nrOfSheeps > 200) nrOfSheeps = 200;
         _data.NrOfSheeps = nrOfSheeps;
         _data.Reset = true;
@@ -76,5 +88,11 @@ public class Communication : Hub
     {
         _data.Name = name;
         await Clients.All.SendAsync("SendName", name);
+    }
+    
+    public void MousePosition(string position)
+    {
+        var splitted = position.Split(",");
+        _data.MousePosition.Update(Int32.Parse(splitted[0]), Int32.Parse(splitted[1]));
     }
 }
