@@ -36,8 +36,8 @@ public class CalculatorTest
         {
             new (2, 2), new (2, 4), new (4, 2), new (4, 4)
         });
-        result.x.Should().BeApproximately(3.0, 0.0001);
-        result.y.Should().BeApproximately(3.0, 0.0001);
+        result.X.Should().BeApproximately(3.0, 0.0001);
+        result.Y.Should().BeApproximately(3.0, 0.0001);
     }
     
     [Fact]
@@ -172,6 +172,51 @@ public class CalculatorTest
         
         result = Calculator.ExponentialDecrease(1.0, 10.0);
         result.Should().BeApproximately(0.0, 0.0001f);
+    }
+    
+    [Fact]
+    public void PullTest()
+    {
+        var max = 10;
+        var sheepVcentroid = new Vector2(1, 0);
+        var result = Calculator.Pull(sheepVcentroid, sheepVcentroid.Length() / max, 10.0);
+        result.X.Should().BeApproximately(0.287f, 0.001f);
+        
+        sheepVcentroid = new Vector2(2, 0);
+        result = Calculator.Pull(sheepVcentroid, sheepVcentroid.Length() / max, 10.0);
+        result.X.Should().BeApproximately(0.649f, 0.001f);
+        
+        sheepVcentroid = new Vector2(3, 0);
+        result = Calculator.Pull(sheepVcentroid, sheepVcentroid.Length() / max, 10.0);
+        result.X.Should().BeApproximately(1.105f, 0.001f);
+        
+        sheepVcentroid = new Vector2(4, 0);
+        result = Calculator.Pull(sheepVcentroid, sheepVcentroid.Length() / max, 10.0);
+        result.X.Should().BeApproximately(1.679f, 0.001f);
+        
+        sheepVcentroid = new Vector2(5, 0);
+        result = Calculator.Pull(sheepVcentroid, sheepVcentroid.Length() / max, 10.0);
+        result.X.Should().BeApproximately(2.402f, 0.001f);
+        
+        sheepVcentroid = new Vector2(6, 0);
+        result = Calculator.Pull(sheepVcentroid, sheepVcentroid.Length() / max, 10.0);
+        result.X.Should().BeApproximately(3.312f, 0.001f);
+        
+        sheepVcentroid = new Vector2(7, 0);
+        result = Calculator.Pull(sheepVcentroid, sheepVcentroid.Length() / max, 10.0);
+        result.X.Should().BeApproximately(4.457f, 0.001f);
+        
+        sheepVcentroid = new Vector2(8, 0);
+        result = Calculator.Pull(sheepVcentroid, sheepVcentroid.Length() / max, 10.0);
+        result.X.Should().BeApproximately(5.899f, 0.001f);
+        
+        sheepVcentroid = new Vector2(9, 0);
+        result = Calculator.Pull(sheepVcentroid, sheepVcentroid.Length() / max, 10.0);
+        result.X.Should().BeApproximately(7.714f, 0.001f);
+        
+        sheepVcentroid = new Vector2(10, 0);
+        result = Calculator.Pull(sheepVcentroid, sheepVcentroid.Length() / max, 10.0);
+        result.X.Should().BeApproximately(10.0f, 0.001f);
     }
     
 }

@@ -1,3 +1,4 @@
+using System.Numerics;
 using System.Text;
 
 namespace SheepHerding.Api.Entities;

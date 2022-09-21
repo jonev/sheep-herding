@@ -43,11 +43,11 @@ public static class Calculator
         return Math.Sqrt((Math.Pow(x2 - x1, 2) + Math.Pow(y2 - y1, 2)));
     }
 
-    public static (double x, double y) Centroid(IList<Coordinate> coordinates)
+    public static Coordinate Centroid(IList<Coordinate> coordinates)
     {
         var sumX = coordinates.Select(c => c.X).Sum();
         var sumY = coordinates.Select(c => c.Y).Sum();
-        return (sumX / coordinates.Count, sumY / coordinates.Count);
+        return new Coordinate(sumX / coordinates.Count, sumY / coordinates.Count);
     }
 
     public static Vector2 FlipLength(Vector2 vector, double maxValue)
@@ -101,5 +101,27 @@ public static class Calculator
         var r = ExponentialDecrease(factor, 10.0);
         var normalized = Vector2.Normalize(v);
         return Vector2.Multiply(normalized, (float)(r*speed));
+    }
+    
+    public static bool InRange(Coordinate a, Coordinate b, double under, double over)
+    {
+        var v = Converter.ToVector2(a, b);
+        return Math.Abs(v.Length()) < under && Math.Abs(v.Length()) > over;
+    }
+    
+    public static bool UnderWithHysteresis(bool value, Coordinate a, Coordinate b, double under, double hysteresis)
+    {
+        var lenght = Math.Abs(Converter.ToVector2(a, b).Length());
+        if (lenght < under)
+        {
+            return true;
+        }
+
+        if (lenght > under + hysteresis)
+        {
+            return false;
+        }
+
+        return value;
     }
 }

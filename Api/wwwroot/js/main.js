@@ -1,35 +1,38 @@
 "use strict";
 
 var connection = new signalR.HubConnectionBuilder().withUrl("/communication").build();
-var colors = ['green', 'red', 'red', 'red', 'yellow'];
+var colors = ['green', 'red', 'red', 'red', 'indigo', 'yellow'];
+var mouseX = 0;
+var mouseY = 0;
 
+var lastMouseX = 0;
+var lastMouseY = 0;
 
 connection.on("ReceiveMessage", function (user, message) {
-    // console.log(message)
+    console.log(message)
     var objects = message.split("!")
     var elapsedTime = objects[0].split(",");
-    var centroid = objects[1].split(",");
+    var centroidCollection = objects[1].split(";");
     var coordinatesCollection = objects[2].split(";");
     var vectorCollection = objects[3].split(";");
     var circle = objects[4].split(";");
     var pathCoordinates = objects[5].split(";");
     var pathCoordinatesAchieved = objects[6].split(";");
+    var currentCoordinate = objects[7].split(";");
+    var state = objects[8];
     
     printElapsedTime(elapsedTime);
-    
-    // console.log(coordinatesCollection, vectorCollection)
+    printState(state);
     clearCanvas();
-    drawPoint(centroid[0], centroid[1], 'pink')
+    
     drawCircle(circle[0], circle[1], circle[2], "pink")
     for (let i = 0; i < coordinatesCollection.length - 1; i++) {
         let coordinates = coordinatesCollection[i].split(",")
-        // console.log("X: " + coordinates[0] + " Y: " + coordinates[1])
         drawPoint(coordinates[0], coordinates[1], colors[i])
     }
 
     for (let i = 0; i < vectorCollection.length - 1; i++) {
         let vector = vectorCollection[i].split(",")
-        // console.log("Vector X1: " + vector[0] + " Y1: " + vector[1] + " X2: " + vector[2] + " Y2: " + vector[3])
         drawVector(vector[0], vector[1], vector[2], vector[3], 'red', 1)
     }
 
@@ -44,6 +47,21 @@ connection.on("ReceiveMessage", function (user, message) {
         let to = pathCoordinatesAchieved[i+1].split(",")
         drawVector(from[0], from[1], to[0], to[1], 'green', 5)
     }
+
+    for (let i = 0; i < centroidCollection.length - 1; i++) {
+        let coordinates = centroidCollection[i].split(",")
+        drawPoint(coordinates[0], coordinates[1], 'pink')
+    }
+
+    for (let i = 0; i < centroidCollection.length - 1; i++) {
+        let coordinates = centroidCollection[i].split(",")
+        drawPoint(coordinates[0], coordinates[1], 'black')
+    }
+
+    let coordinates = currentCoordinate[0].split(",")
+    drawPoint(coordinates[0], coordinates[1], 'pink')
+    coordinates = currentCoordinate[1].split(",")
+    drawPoint(coordinates[0], coordinates[1], 'purple')
 });
 
 connection.on("Scoreboard", function (list) {
@@ -71,6 +89,13 @@ function reset(){
 function startStop(){
     console.log("StartStop")
     connection.invoke("StartStop").catch(function (err) {
+        return console.error(err.toString());
+    });
+}
+
+function startStopDrones(){
+    console.log("StartStopDrones")
+    connection.invoke("StartStopDrones").catch(function (err) {
         return console.error(err.toString());
     });
 }
@@ -151,3 +176,26 @@ function printElapsedTime(time) {
     const text = document.querySelector('#elapsedTime');
     text.innerHTML = time;
 }
+
+function printState(state) {
+    const text = document.querySelector('#state');
+    text.innerHTML = state;
+}
+
+function sendMousePosition(x,y){
+    lastMouseX = x;
+    lastMouseY = y;
+    connection.invoke("MousePosition", x+","+y).catch(function (err) {
+        return console.error(err.toString());
+    });
+}
+
+function mousemove(event){
+    mouseX = event.clientX;
+    mouseY = event.clientY;
+    if(mouseX > (lastMouseX + 10) || mouseX < (lastMouseX - 10) || mouseY > (lastMouseY + 10) || mouseY > (lastMouseY + 10)){
+        sendMousePosition(mouseX, mouseY)
+    }
+}
+
+window.addEventListener('mousemove', mousemove);

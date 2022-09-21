@@ -5,19 +5,16 @@ namespace SheepHerding.Api.Entities;
 
 public class DroneHerder : Point
 {
-    private readonly DroneOversight _oversight;
-
-    public DroneHerder(double maxX, double maxY, int id, DroneOversight oversight) : base(maxX, maxY, id)
+    public DroneHerder(double maxX, double maxY, int id) : base(maxX, maxY, id)
     {
-        _oversight = oversight;
     }
 
-    public void UpdatePosition(double dt)
+    public void UpdatePosition(double dt, Coordinate command)
     {
         var force = new Vector2(0, 0);
 
-        var commandVector = Converter.ToVector2(Position, _oversight.HerdCommands[Id]);
-        var commandVectorReduced = Vector2.Divide(commandVector, 3);
+        var commandVector = Converter.ToVector2(Position, command);
+        var commandVectorReduced = Vector2.Divide(commandVector, 5);
 
         force = Vector2.Add(force, commandVectorReduced);
         

@@ -35,6 +35,22 @@ public class Coordinate
     }
 }
 
+public class AckableCoordinate : Coordinate
+{
+    public int PathIndex { get; set; }
+    public bool Accessed { get; set; }
+
+    public AckableCoordinate(int pathIndex, double x, double y) : base(x, y)
+    {
+        PathIndex = pathIndex;
+    }
+
+    public void Ack()
+    {
+        Accessed = true;
+    }
+}
+
 public static class CoordinatePrinter
 {
     public static string ToString(IList<Coordinate> coordinates)

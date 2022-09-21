@@ -1,6 +1,5 @@
 using System.Collections.Concurrent;
 using System.Diagnostics;
-using System.Numerics;
 using Microsoft.AspNetCore.SignalR;
 using SheepHerding.Api.Entities;
 using SheepHerding.Api.Helpers;
@@ -14,6 +13,7 @@ public class Worker : BackgroundService
     private readonly ILogger<Worker> _logger;
     private readonly IHubContext<Communication> _hubContext;
     private readonly DataSharingService _data;
+    private readonly Coordinate Finish = new Coordinate(870, 770);
 
     public Worker(ILogger<Worker> logger, IHubContext<Communication> hubContext, DataSharingService data)
     {
@@ -31,9 +31,18 @@ public class Worker : BackgroundService
     private async Task DoWork(CancellationToken cancellationToken)
     {
         var dt = 10;
-        var path = new List<Coordinate>
-            {new(100, 100), new(800, 100), new(800, 300), new(200, 300), new(200, 600), new(800, 600), new(950, 850)};
-        var pathString = CoordinatePrinter.ToString(path);
+        var path = new List<AckableCoordinate>
+        {
+            new(0, 100, 100),
+            new(1, 200, 150),
+            new(2, 300, 250),
+            new(3, 400, 450),
+            new(4, 600, 500),
+            new(5, 700, 600),
+            new(6, 850, 700),
+            new(7, 950, 850),
+        }; //, new(800, 300), new(200, 300), new(200, 600), new(800, 600), new(950, 850)};
+        var pathString = CoordinatePrinter.ToString(path.ToList<Coordinate>());
         while (!cancellationToken.IsCancellationRequested)
         {
             try
@@ -45,7 +54,7 @@ public class Worker : BackgroundService
                 var finished = false;
                 var listOfSheeps = new List<Sheep>();
                 var listOfHerders = new List<DroneHerder>();
-                var droneOversight = new DroneOversight(_logger, 1000, 800, dt);
+                var mouse = new DroneHerder(0, 0, -1);
 
                 var herdSettings = new double[3];
                 herdSettings[0] = _data.HerdRadius;
@@ -54,16 +63,32 @@ public class Worker : BackgroundService
 
                 for (int i = 0; i < 3; i++)
                 {
-                    var h = new DroneHerder(200, 200, i, droneOversight);
-                    h.Set(new Coordinate(i * 20, 10));
+                    var h = new DroneHerder(200, 200, i);
+                    h.Set(new Coordinate(100, 100));
                     listOfHerders.Add(h);
                 }
 
+                listOfHerders.Add(mouse);
+                var droneOversight = new DroneOversight(_logger, 1000, 800, dt, path, listOfHerders);
+                droneOversight.Set(new Coordinate(100, 100));
+
                 for (int i = 0; i < _data.NrOfSheeps; i++)
                 {
-                    var sheep = new Sheep(200, 200, i, listOfSheeps, listOfHerders, droneOversight);
-                    sheep.Set(new Coordinate(400 + ((i % 10) * 20), 100 + ((i % 3) * 20)));
+                    var sheep = new Sheep(200, 200, i, listOfSheeps, listOfHerders, Finish);
+                    sheep.Set(new Coordinate(600 + ((i % 10) * 20), 300 + ((i % 3) * 20)));
                     listOfSheeps.Add(sheep);
+                }
+
+                // for (int i = _data.NrOfSheeps/2; i < _data.NrOfSheeps; i++)
+                // {
+                //     var sheep = new Sheep(200, 200, i, listOfSheeps, listOfHerders, droneOversight);
+                //     sheep.Set(new Coordinate(400 + ((i % 10) * 20), 700 + ((i % 3) * 20)));
+                //     listOfSheeps.Add(sheep);
+                // }
+
+                foreach (var p in path)
+                {
+                    p.Accessed = false;
                 }
 
                 while (!cancellationToken.IsCancellationRequested && _data.Reset == false && finished == false)
@@ -77,24 +102,24 @@ public class Worker : BackgroundService
                     }
 
                     // Calculate centroid of sheeps
-                    var (x, y) = Calculator.Centroid(listOfSheeps.Select(x => x.Position).ToList());
-                    var largestDistance = listOfSheeps
-                        .Select(s => new Vector2((float) (x - s.Position.X), (float) (y - s.Position.Y)).Length())
-                        .Max();
+                    // var (x, y) = Calculator.Centroid(listOfSheeps.Select(x => x.Position).ToList());
+                    // var largestDistance = listOfSheeps
+                    // .Select(s => new Vector2((float) (x - s.Position.X), (float) (y - s.Position.Y)).Length())
+                    // .Max();
+
+                    // Mouse
+                    mouse.UpdatePosition(dt, _data.MousePosition);
 
                     // Calculate new coordinates
                     foreach (var sheep in listOfSheeps)
                     {
-                        sheep.UpdatePosition(new Coordinate(x, y), dt);
+                        sheep.UpdatePosition(dt);
                     }
 
-                    var pathIndex = droneOversight.UpdatePosition(new Coordinate(x, y), largestDistance, dt,
-                        herdSettings, path);
-
-                    foreach (var herder in listOfHerders)
-                    {
-                        herder.UpdatePosition(dt);
-                    }
+                    var (pathIndex, centroids, current, next, state, oversightPoints) =
+                        droneOversight.UpdatePosition(!_data.StartDrones, dt, herdSettings, listOfSheeps);
+                    // var pathIndex = droneOversight.UpdatePosition(new Coordinate(x, y), largestDistance, dt,
+                    //     herdSettings, path);
 
                     // Send coordinates
                     var print = new List<Coordinate>();
@@ -107,16 +132,17 @@ public class Worker : BackgroundService
                     cast.AddRange(listOfSheeps);
                     cast.Add(droneOversight);
                     cast.AddRange(listOfHerders);
+                    cast.AddRange(oversightPoints);
                     var vectors = VectorPrinter.ToString(cast);
-                    var circle = $"{x};{y};{droneOversight.GetHerdingCircleRadius()}";
+                    var circle = $"{droneOversight.Position.X};{droneOversight.Position.Y};{droneOversight.GetHerdingCircleRadius()}";
                     var message =
-                        $"{stopwatch.Elapsed.TotalSeconds}!{x},{y}!{coordinates}!{vectors}!{circle}!{pathString}!{CoordinatePrinter.ToString(path.Take(pathIndex + 1).ToList())}";
+                        $"{stopwatch.Elapsed.TotalSeconds}!{CoordinatePrinter.ToString(centroids)}!{coordinates}!{vectors}!{circle}!{pathString}!{CoordinatePrinter.ToString(path.ToList<Coordinate>().Take(pathIndex + 1).ToList())}!{CoordinatePrinter.ToString(new List<Coordinate> {current, next})}!{state}";
                     // _logger.LogDebug($"Sending cooridnates; {message}");
                     await _hubContext.Clients.All.SendAsync("ReceiveMessage", "admin", message,
                         cancellationToken: cancellationToken);
 
                     // Finished?
-                    finished = listOfSheeps.All(s => s.Position.X > 850 && s.Position.Y > 750);
+                    finished = listOfSheeps.All(s => s.IsInsideFinishZone());
                     if (finished)
                     {
                         stopwatch.Stop();

@@ -2,7 +2,7 @@ using System.Numerics;
 
 namespace SheepHerding.Api.Entities;
 
-public abstract class Point
+public class Point
 {
     internal readonly int Id;
     internal readonly Coordinate Position;
@@ -10,9 +10,9 @@ public abstract class Point
     internal readonly double MaxX;
     internal readonly double MaxY;
 
-    public Point(double maxX, double maxY, int id)
+    public Point(double maxX, double maxY, int id, double x = 0, double y = 0)
     {
-        Position = new Coordinate(0, 0);
+        Position = new Coordinate(x, y);
         MaxX = maxX;
         MaxY = maxY;
         Id = id;
