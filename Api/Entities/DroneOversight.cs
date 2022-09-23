@@ -1,7 +1,7 @@
 using System.Numerics;
 using SheepHerding.Api.Helpers;
+using SheepHerding.Api.Services;
 using SheepHerding.Api.StateMachine;
-using SheepHerding.Api.Workers;
 using Stateless;
 
 namespace SheepHerding.Api.Entities;
@@ -10,7 +10,7 @@ public class DroneOversight : Point
 {
     private readonly StateMachine<State,Trigger> _machine = new (State.FetchingFirstHerd);
 
-    private readonly ILogger<Worker> _logger;
+    private readonly ILogger _logger;
     private readonly List<AckableCoordinate> _predefinedPathPoints;
     private readonly List<DroneHerder> _herders;
     private double _speed = 10.0;
@@ -28,7 +28,7 @@ public class DroneOversight : Point
     private bool _commandInRange;
     private Vector2 _pathVector;
 
-    public DroneOversight(ILogger<Worker> logger, double maxX, double maxY, int id, 
+    public DroneOversight(ILogger logger, double maxX, double maxY, int id, 
         List<AckableCoordinate> predefinedPathPoints, List<DroneHerder> herders) :
         base(maxX, maxY, id)
     {

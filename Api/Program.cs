@@ -1,6 +1,5 @@
 using SheepHerding.Api.Hubs;
 using SheepHerding.Api.Services;
-using SheepHerding.Api.Workers;
 
 
 var builder = WebApplication.CreateBuilder(args);
@@ -9,7 +8,6 @@ var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddRazorPages();
 builder.Services.AddSignalR();
 builder.Services.AddSingleton<DataSharingService>();
-builder.Services.AddHostedService<Worker>();
 
 var app = builder.Build();
 

@@ -4,31 +4,44 @@ using Microsoft.AspNetCore.SignalR;
 using SheepHerding.Api.Entities;
 using SheepHerding.Api.Helpers;
 using SheepHerding.Api.Hubs;
-using SheepHerding.Api.Services;
 
-namespace SheepHerding.Api.Workers;
+namespace SheepHerding.Api.Services;
 
-public class Worker : BackgroundService
+public class HerdService : IDisposable
 {
-    private readonly ILogger<Worker> _logger;
-    private readonly IHubContext<Communication> _hubContext;
+    private readonly ILogger _logger;
+    private readonly IHubContext<Communication> _hub;
     private readonly DataSharingService _data;
-    private readonly Coordinate Finish = new Coordinate(870, 770);
-
-    public Worker(ILogger<Worker> logger, IHubContext<Communication> hubContext, DataSharingService data)
+    public string ClientId { get; }
+    private readonly Coordinate Finish = new (870, 770);
+    public Coordinate MousePosition { get; set; } = new (0, 0);
+    public bool Start { get; set; } = false;
+    public bool StartDrones { get; set; } = true;
+    public bool Reset { get; set; } = false;
+    public int NrOfSheeps { get; set; } = 10;
+    public string Name { get; set; } = "Unknown";
+    public int HerdRadius { get; set; } = 55;
+    public int HerdAngleInDegrees { get; set; } = 85;
+    public int OversightSpeed { get; set; } = 5;
+    public bool Connected { get; set; } = true;
+    
+    
+    public HerdService(ILogger logger, IHubContext<Communication> hub, string clientId, DataSharingService data)
     {
         _logger = logger;
-        _hubContext = hubContext;
+        _hub = hub;
         _data = data;
+        ClientId = clientId;
+        _logger.LogInformation($"Herd service init for: {clientId} --------------------");
     }
 
-    protected override async Task ExecuteAsync(CancellationToken stoppingToken)
+    public async Task ExecuteAsync()
     {
         _logger.LogInformation("Background Service running.");
-        await DoWork(stoppingToken);
+        await DoWork();
     }
 
-    private async Task DoWork(CancellationToken cancellationToken)
+    private async Task DoWork()
     {
         var dt = 10;
         var path = new List<AckableCoordinate>
@@ -43,13 +56,10 @@ public class Worker : BackgroundService
             new(7, 950, 850),
         }; //, new(800, 300), new(200, 300), new(200, 600), new(800, 600), new(950, 850)};
         var pathString = CoordinatePrinter.ToString(path.ToList<Coordinate>());
-        while (!cancellationToken.IsCancellationRequested)
+        while (Connected)
         {
             try
             {
-                await _hubContext.Clients.All.SendAsync("Scoreboard", _data.ScoreBoard.OrderBy(s => s.Points),
-                    cancellationToken: cancellationToken);
-
                 Stopwatch stopwatch = new Stopwatch();
                 var finished = false;
                 var listOfSheeps = new List<Sheep>();
@@ -57,9 +67,9 @@ public class Worker : BackgroundService
                 var mouse = new DroneHerder(0, 0, -1);
 
                 var herdSettings = new double[3];
-                herdSettings[0] = _data.HerdRadius;
-                herdSettings[1] = Calculator.DegreesToRadians(_data.HerdAngleInDegrees);
-                herdSettings[2] = _data.OversightSpeed;
+                herdSettings[0] = HerdRadius;
+                herdSettings[1] = Calculator.DegreesToRadians(HerdAngleInDegrees);
+                herdSettings[2] = OversightSpeed;
 
                 for (int i = 0; i < 3; i++)
                 {
@@ -72,14 +82,14 @@ public class Worker : BackgroundService
                 var droneOversight = new DroneOversight(_logger, 1000, 800, dt, path, listOfHerders);
                 droneOversight.Set(new Coordinate(100, 100));
 
-                for (int i = 0; i < _data.NrOfSheeps/2; i++)
+                for (int i = 0; i < NrOfSheeps/2; i++)
                 {
                     var sheep = new Sheep(200, 200, i, listOfSheeps, listOfHerders, Finish);
                     sheep.Set(new Coordinate(400 + ((i % 10) * 20), 200 + ((i % 3) * 20)));
                     listOfSheeps.Add(sheep);
                 }
 
-                // for (int i = _data.NrOfSheeps/2; i < _data.NrOfSheeps; i++)
+                // for (int i = NrOfSheeps/2; i < NrOfSheeps; i++)
                 // {
                 //     var sheep = new Sheep(200, 200, i, listOfSheeps, listOfHerders, Finish);
                 //     sheep.Set(new Coordinate(800 + ((i % 10) * 20), 300 + ((i % 3) * 20)));
@@ -91,24 +101,18 @@ public class Worker : BackgroundService
                     p.Accessed = false;
                 }
 
-                while (!cancellationToken.IsCancellationRequested && _data.Reset == false && finished == false)
+                while (Connected && Reset == false && finished == false)
                 {
-                    if (_data.Start) stopwatch.Start();
-                    if (!_data.Start)
+                    if (Start) stopwatch.Start();
+                    if (!Start)
                     {
                         stopwatch.Stop();
                         await Task.Delay(1000);
                         continue;
                     }
 
-                    // Calculate centroid of sheeps
-                    // var (x, y) = Calculator.Centroid(listOfSheeps.Select(x => x.Position).ToList());
-                    // var largestDistance = listOfSheeps
-                    // .Select(s => new Vector2((float) (x - s.Position.X), (float) (y - s.Position.Y)).Length())
-                    // .Max();
-
                     // Mouse
-                    mouse.UpdatePosition(dt, _data.MousePosition);
+                    mouse.UpdatePosition(dt, MousePosition);
 
                     // Calculate new coordinates
                     foreach (var sheep in listOfSheeps)
@@ -117,7 +121,7 @@ public class Worker : BackgroundService
                     }
 
                     var (pathIndex, centroids, current, next, state, oversightPoints) =
-                        droneOversight.UpdatePosition(!_data.StartDrones, dt, herdSettings, listOfSheeps);
+                        droneOversight.UpdatePosition(!StartDrones, dt, herdSettings, listOfSheeps);
                     // var pathIndex = droneOversight.UpdatePosition(new Coordinate(x, y), largestDistance, dt,
                     //     herdSettings, path);
 
@@ -138,8 +142,8 @@ public class Worker : BackgroundService
                     var message =
                         $"{stopwatch.Elapsed.TotalSeconds}!{CoordinatePrinter.ToString(centroids)}!{coordinates}!{vectors}!{circle}!{pathString}!{CoordinatePrinter.ToString(path.ToList<Coordinate>().Take(pathIndex + 1).ToList())}!{CoordinatePrinter.ToString(new List<Coordinate> {current, next})}!{state}";
                     // _logger.LogDebug($"Sending cooridnates; {message}");
-                    await _hubContext.Clients.All.SendAsync("ReceiveMessage", "admin", message,
-                        cancellationToken: cancellationToken);
+                    await _hub.Clients.Client(ClientId).SendAsync("ReceiveMessage", "admin", message,
+                        default(CancellationToken));
 
                     // Finished?
                     finished = listOfSheeps.All(s => s.IsInsideFinishZone());
@@ -147,31 +151,32 @@ public class Worker : BackgroundService
                     {
                         stopwatch.Stop();
                         AddScore(stopwatch.Elapsed.TotalSeconds);
-                        await _hubContext.Clients.All.SendAsync("Scoreboard", _data.ScoreBoard.OrderBy(s => s.Points),
-                            cancellationToken: cancellationToken);
-                        _data.Start = false;
+                        await _hub.Clients.All.SendAsync("Scoreboard", _data.ScoreBoard.OrderBy(s => s.Points),
+                            default);
+                        Start = false;
                     }
 
                     // Timout
                     if (stopwatch.Elapsed.TotalSeconds > 200.0)
                     {
-                        _data.Start = false;
-                        _data.Reset = false;
+                        Start = false;
+                        Reset = false;
                     }
 
                     // Wait
                     await Task.Delay(dt);
                 }
 
-                _data.Reset = false;
+                Reset = false;
             }
             catch (Exception e)
             {
                 _logger.LogError(e, "Worker loop failed");
-                _data.Reset = true;
-                _data.Start = false;
+                Reset = true;
+                Start = false;
             }
         }
+        _logger.LogInformation($"Shutting down {ClientId}");
     }
 
     private void AddScore(double timeInSeconds)
@@ -181,14 +186,14 @@ public class Worker : BackgroundService
             var lowest = _data.ScoreBoard.OrderByDescending(s => s.Points).FirstOrDefault();
             _data.ScoreBoard = new ConcurrentBag<Score>(_data.ScoreBoard.Where(s => s.Time != lowest.Points).ToList());
         }
-
-        _data.ScoreBoard.Add(new Score(_data.Name, _data.NrOfSheeps, timeInSeconds));
+    
+        _data.ScoreBoard.Add(new Score(Name, NrOfSheeps, timeInSeconds));
     }
 
-    public override Task StopAsync(CancellationToken cancellationToken)
+    public void Dispose()
     {
-        _logger.LogInformation("Timed Hosted Service is stopping.");
-
-        return Task.CompletedTask;
+        Start = false;
+        Connected = false;
+        _logger.LogInformation($"Disposing for client: {ClientId}");
     }
 }
