@@ -72,17 +72,17 @@ public class Worker : BackgroundService
                 var droneOversight = new DroneOversight(_logger, 1000, 800, dt, path, listOfHerders);
                 droneOversight.Set(new Coordinate(100, 100));
 
-                for (int i = 0; i < _data.NrOfSheeps; i++)
+                for (int i = 0; i < _data.NrOfSheeps/2; i++)
                 {
                     var sheep = new Sheep(200, 200, i, listOfSheeps, listOfHerders, Finish);
-                    sheep.Set(new Coordinate(600 + ((i % 10) * 20), 300 + ((i % 3) * 20)));
+                    sheep.Set(new Coordinate(400 + ((i % 10) * 20), 200 + ((i % 3) * 20)));
                     listOfSheeps.Add(sheep);
                 }
 
                 // for (int i = _data.NrOfSheeps/2; i < _data.NrOfSheeps; i++)
                 // {
-                //     var sheep = new Sheep(200, 200, i, listOfSheeps, listOfHerders, droneOversight);
-                //     sheep.Set(new Coordinate(400 + ((i % 10) * 20), 700 + ((i % 3) * 20)));
+                //     var sheep = new Sheep(200, 200, i, listOfSheeps, listOfHerders, Finish);
+                //     sheep.Set(new Coordinate(800 + ((i % 10) * 20), 300 + ((i % 3) * 20)));
                 //     listOfSheeps.Add(sheep);
                 // }
 

@@ -25,17 +25,6 @@ connection.on("ReceiveMessage", function (user, message) {
     printState(state);
     clearCanvas();
     
-    drawCircle(circle[0], circle[1], circle[2], "pink")
-    for (let i = 0; i < coordinatesCollection.length - 1; i++) {
-        let coordinates = coordinatesCollection[i].split(",")
-        drawPoint(coordinates[0], coordinates[1], colors[i])
-    }
-
-    for (let i = 0; i < vectorCollection.length - 1; i++) {
-        let vector = vectorCollection[i].split(",")
-        drawVector(vector[0], vector[1], vector[2], vector[3], 'red', 1)
-    }
-
     for (let i = 0; i < pathCoordinates.length - 2; i++) {
         let from = pathCoordinates[i].split(",")
         let to = pathCoordinates[i+1].split(",")
@@ -47,12 +36,18 @@ connection.on("ReceiveMessage", function (user, message) {
         let to = pathCoordinatesAchieved[i+1].split(",")
         drawVector(from[0], from[1], to[0], to[1], 'green', 5)
     }
-
-    for (let i = 0; i < centroidCollection.length - 1; i++) {
-        let coordinates = centroidCollection[i].split(",")
-        drawPoint(coordinates[0], coordinates[1], 'pink')
+    
+    drawCircle(circle[0], circle[1], circle[2], "pink")
+    for (let i = 0; i < coordinatesCollection.length - 1; i++) {
+        let coordinates = coordinatesCollection[i].split(",")
+        drawPoint(coordinates[0], coordinates[1], colors[i])
     }
 
+    for (let i = 0; i < vectorCollection.length - 1; i++) {
+        let vector = vectorCollection[i].split(",")
+        drawVector(vector[0], vector[1], vector[2], vector[3], 'red', 1)
+    }
+    
     for (let i = 0; i < centroidCollection.length - 1; i++) {
         let coordinates = centroidCollection[i].split(",")
         drawPoint(coordinates[0], coordinates[1], 'black')

@@ -26,6 +26,7 @@ public class DroneOversight : Point
     private MaxRateOfChange _mrcAngle = new ();
     private bool _pathAngleCalculationActivated = false;
     private bool _commandInRange;
+    private Vector2 _pathVector;
 
     public DroneOversight(ILogger<Worker> logger, double maxX, double maxY, int id, 
         List<AckableCoordinate> predefinedPathPoints, List<DroneHerder> herders) :
@@ -58,6 +59,7 @@ public class DroneOversight : Point
         _speed = settings[2];
         var force = new Vector2(0, 0);
 
+        // -- Calculations
         
         // Clustering different herds
         var groups = Clustering.Cluster(sheeps.Where(s => !s.IsInsideFinishZone()).ToList<Point>(), 100.0);
@@ -74,6 +76,7 @@ public class DroneOversight : Point
             .ToList();
         _pathIndex = closestPathPoint == null || closestPathPoint.Count < 1 ? _predefinedPathPoints.Count - 1 : closestPathPoint[0].PathIndex;
     
+        // -- Setting states
         _commandInRange = Calculator.UnderWithHysteresis(_commandInRange, Position, _command, 50.0, 10.0);
         var currentInRange = Calculator.InRange(Position, _current, 25.0, 0.0);
         var sheepCentroidInRange = Calculator.InRange(Position, centroids[0], 25.0, 0.0);
@@ -88,41 +91,44 @@ public class DroneOversight : Point
             ack.Ack();
         }
 
-        var lenghtToNextHerd =
-            centroids.Count < 2  ? int.MaxValue : Converter.ToVector2(Position, centroids[1]).Length();
+        var lenghtToNextHerd = centroids.Count < 2  ? int.MaxValue : Converter.ToVector2(Position, centroids[1]).Length();
         var lenghtToNextPathPoint = Converter.ToVector2(Position, closestPathPoint[0]).Length();
         
-        if (_machine.State == State.FollowPath && lenghtToNextHerd < lenghtToNextPathPoint)
+        var lenghtFromCurrentToHerd = centroids.Count < 2  ? int.MaxValue : Converter.ToVector2(_current, centroids[1]).Length();
+        var lenghtFromNextToHerd = centroids.Count < 2  ? int.MaxValue : Converter.ToVector2(_next, centroids[1]).Length();
+        
+        if (_machine.State == State.FollowPath && lenghtFromCurrentToHerd < lenghtFromNextToHerd)
         {
             _machine.Fire(Trigger.NewHerdInRange);
         }
         
-        if (_machine.State == State.FetchingNewHerd && centroids.Count < 2)
+        if (_machine.State == State.FetchingNewHerd && currentInRange)
         {
             _machine.Fire(Trigger.NewHerdCollected);
         }
+        
+        
 
-
+        // -- Acting according to state
         switch (_machine.State)
         {
             case State.FetchingFirstHerd:
                 _current = centroids[0];
                 _next = closestPathPoint[0];
-                var nextVector = Converter.ToVector2(_current, _next);
-                _nextPoint = new Point(0, 0, 0, _current.X, _current.Y);
-                _nextPoint.Force = nextVector;
-                var adjustedNextVector = Vector2.Multiply(Vector2.Normalize(Calculator.RotateVector(nextVector, Math.PI)), 150.0f);
-                _commandPoint = new Point(0, 0, 0, _current.X + adjustedNextVector.X, _current.Y + adjustedNextVector.Y);
-                _commandPoint.Force = Vector2.Negate(adjustedNextVector);
-                _command =  _commandInRange ? _current : _commandPoint.Position; // TODO denne slåes av og på. Implementer inner state - gå mot commando så mot current
+                _commandPoint = GetCommandPointV2(_pathVector, _current, _next, 100.0);
+                _command =  _commandPoint.Position;
                 break;
             case State.FetchingNewHerd:
-                _current = centroids[1];
-                _command = _current;
+                _current = centroids.Count > 1 ? centroids[1] : centroids[0];
+                _next = closestPathPoint[0];
+                _commandPoint = GetCommandPointV2(_pathVector, _current, _next, 100.0);
+                _command =  centroids.Count > 1 ? _commandPoint.Position : _current;
                 break;
             case State.FollowPath:
                 _current = closestPathPoint[0];
-                _command = _current;
+                _next = closestPathPoint.Count > 1 ? closestPathPoint[1] : closestPathPoint[0];
+                _commandPoint = GetCommandPointV2(_pathVector, _current, _next, 150.0);
+                _command = _commandPoint.Position;
                 break;
             case State.RecollectSheep:
                 break;
@@ -153,19 +159,19 @@ public class DroneOversight : Point
         **/
 
         
-        
-        
-        var pathVector = Converter.ToVector2(Position, new Coordinate(_command.X, _command.Y));
+        // Write out
+        _nextPoint = new Point(0, 0, 0, _current.X, _current.Y);
+        _pathVector = Converter.ToVector2(Position, new Coordinate(_command.X, _command.Y));
         var pathPoint = new Point(0, 0, 0, Position.X, Position.Y);
-        pathPoint.Force = pathVector;
+        pathPoint.Force = _pathVector;
         
         
-        force = Vector2.Add(force, Vector2.Multiply(Vector2.Normalize(pathVector), (float) _speed));
+        force = Vector2.Add(force, Vector2.Multiply(Vector2.Normalize(_pathVector), (float) _speed));
         Force = Vector2.Multiply(force, 10); // For visualization purposes only
         Position.Update(Position.X + (force.X * (dt / 100)), Position.Y + (force.Y * (dt / 100)));
 
         // After updating this position, update the herders
-        var h0 = Vector2.Multiply( Vector2.Negate(Vector2.Normalize(pathVector)), (float) _herdRadius);
+        var h0 = Vector2.Multiply( Vector2.Negate(Vector2.Normalize(_pathVector)), (float) _herdRadius);
         var h1 = Calculator.RotateVector(h0, _herdAngleInRadians);
         var h2 = Calculator.RotateVector(h0, -_herdAngleInRadians);
         
@@ -179,5 +185,60 @@ public class DroneOversight : Point
     public double GetHerdingCircleRadius()
     {
         return _herdRadius;
+    }
+
+    private Point GetCommandPointV1(Vector2 pathVector, Coordinate current, Coordinate next, double reductionStart)
+    {
+        var nextVector = Converter.ToVector2(current, next);
+        var currentVector = Converter.ToVector2(Position, current);
+        var pathVectorNorm = Vector2.Normalize(pathVector);
+        double reduction;
+        if (currentVector.Length() > reductionStart && pathVector.Length() > reductionStart)
+        {
+            reduction = reductionStart;
+        } 
+        else if (currentVector.Length() > pathVector.Length())
+        {
+            reduction = pathVector.Length();
+        }
+        else
+        {
+            reduction = currentVector.Length();
+        }
+        var rotatedNormNextVector = Vector2.Normalize(Calculator.RotateVector(nextVector, Math.PI/2));
+        var adjustedNextVector = Vector2.Multiply(Vector2.Normalize(rotatedNormNextVector), (float)reduction);
+        
+        var command = new Point(0, 0, 0, _current.X + adjustedNextVector.X, _current.Y + adjustedNextVector.Y);
+        command.Force = Vector2.Negate(adjustedNextVector);
+        return command;
+    }
+    
+    private Point GetCommandPointV2(Vector2 pathVector, Coordinate current, Coordinate next, double reductionStart)
+    {
+        var currentNextVector = Converter.ToVector2(current, next);
+        var positionCurrentVector = Converter.ToVector2(Position, current);
+        
+        var angles = Calculator.AngleInRadiansLimited(positionCurrentVector, currentNextVector);
+
+        var pathVectorNorm = Vector2.Normalize(pathVector);
+        double reduction;
+        if (positionCurrentVector.Length()*2 > reductionStart && pathVector.Length()*2 > reductionStart)
+        {
+            reduction = reductionStart;
+        } 
+        else if (positionCurrentVector.Length() > pathVector.Length())
+        {
+            reduction = pathVector.Length()*2;
+        }
+        else
+        {
+            reduction = positionCurrentVector.Length()*2;
+        }
+        var rotatedNormNextVector = Vector2.Normalize(Calculator.RotateVector(currentNextVector, angles));
+        var adjustedNextVector = Vector2.Multiply(Vector2.Normalize(rotatedNormNextVector), (float)reduction);
+        
+        var command = new Point(0, 0, 0, _current.X + adjustedNextVector.X, _current.Y + adjustedNextVector.Y);
+        command.Force = Vector2.Negate(adjustedNextVector);
+        return command;
     }
 }
