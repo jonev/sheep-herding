@@ -33,9 +33,9 @@ public static class Calculator
         return result;
     }
 
-    public static double AngleInRadians(double x1, double y1, double x2, double y2)
+    public static double AngleInRadians(Vector2 a, Vector2 b)
     {
-        return Math.Atan2(y2 - y1, x2 - x1);
+        return Math.Atan2(b.Y, b.X) - Math.Atan2(a.Y, a.X);
     }
 
     public static double Length(double x1, double y1, double x2, double y2)
@@ -123,5 +123,30 @@ public static class Calculator
         }
 
         return value;
+    }
+    
+    public static Vector2 GetCommandVector(Coordinate position, Coordinate current, Coordinate next)
+    {
+        var positionCurrentVector = Converter.ToVector2(position, current);
+        var currentNextVector = Converter.ToVector2(current, next);
+        
+        var angleInRadians = AngleInRadians(positionCurrentVector, currentNextVector);
+
+        if (angleInRadians < Math.PI/4) // If the andle is under 90 degrees we do now want any adjustments
+        {
+            return Vector2.Zero;
+        }
+        
+        var rotatedNormNextVector = Vector2.Normalize(RotateVector(currentNextVector,  
+            angleInRadians)); 
+        
+        return rotatedNormNextVector;
+    }
+
+    public static double IncreaseWhenUnder(double master, double threshold, double valueToIncrease)
+    {
+        if (master > threshold) return valueToIncrease;
+
+        return valueToIncrease + Math.PI/4;
     }
 }

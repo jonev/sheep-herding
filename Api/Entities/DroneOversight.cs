@@ -15,7 +15,7 @@ public class DroneOversight : Point
     private readonly List<DroneHerder> _herders;
     private double _speed = 10.0;
     private double _herdRadius = 75.0;
-    private double _herdAngleInRadians = Math.PI / 3;
+    private double _herdAngleInRadians = Math.PI / 2.5;
     private int _pathIndex = 0; // TODO fix this
     private bool _herdInPosesion;
     private Coordinate _current = new (Double.MaxValue, Double.MaxValue);
@@ -26,7 +26,7 @@ public class DroneOversight : Point
     private MaxRateOfChange _mrcAngle = new ();
     private bool _pathAngleCalculationActivated = false;
     private bool _commandInRange;
-    private Vector2 _pathVector;
+    private Vector2 _positionCommandVector;
 
     public DroneOversight(ILogger logger, double maxX, double maxY, int id, 
         List<AckableCoordinate> predefinedPathPoints, List<DroneHerder> herders) :
@@ -78,8 +78,9 @@ public class DroneOversight : Point
     
         // -- Setting states
         _commandInRange = Calculator.UnderWithHysteresis(_commandInRange, Position, _command, 50.0, 10.0);
-        var currentInRange = Calculator.InRange(Position, _current, 25.0, 0.0);
-        var sheepCentroidInRange = Calculator.InRange(Position, centroids[0], 25.0, 0.0);
+        var currentInRange = Calculator.InRange(Position, _current, 45.0, 0.0);
+        var sheepCentroidInRange = Calculator.InRange(Position, centroids[0], 45.0, 0.0);
+        var sheepCentroidOutOfRange = Calculator.InRange(Position, centroids[0], 100.0, 50.0);
         
         if (_machine.State == State.FetchingFirstHerd && currentInRange)
         {
@@ -89,6 +90,16 @@ public class DroneOversight : Point
         if (currentInRange && sheepCentroidInRange && _current is AckableCoordinate ack)
         {
             ack.Ack();
+        }
+
+        if (_machine.State == State.FollowPath && sheepCentroidOutOfRange)
+        {
+            _machine.Fire(Trigger.SheepEscaped);
+        }
+        
+        if (_machine.State == State.RecollectSheep && sheepCentroidInRange)
+        {
+            _machine.Fire(Trigger.SheepCaptured);
         }
 
         var lenghtToNextHerd = centroids.Count < 2  ? int.MaxValue : Converter.ToVector2(Position, centroids[1]).Length();
@@ -115,22 +126,25 @@ public class DroneOversight : Point
             case State.FetchingFirstHerd:
                 _current = centroids[0];
                 _next = closestPathPoint[0];
-                _commandPoint = GetCommandPointV2(_pathVector, _current, _next, 100.0);
-                _command =  _commandPoint.Position;
+                _commandPoint = GetCommandPointV3(_command, _current, _next, 100.0);
+                _command =  _current;
                 break;
             case State.FetchingNewHerd:
                 _current = centroids.Count > 1 ? centroids[1] : centroids[0];
                 _next = closestPathPoint[0];
-                _commandPoint = GetCommandPointV2(_pathVector, _current, _next, 100.0);
-                _command =  centroids.Count > 1 ? _commandPoint.Position : _current;
+                _commandPoint = GetCommandPointV3(_command, _current, _next, 100.0);
+                _command = _current; //centroids.Count > 1 ? _commandPoint.Position : _current;
                 break;
             case State.FollowPath:
                 _current = closestPathPoint[0];
                 _next = closestPathPoint.Count > 1 ? closestPathPoint[1] : closestPathPoint[0];
-                _commandPoint = GetCommandPointV2(_pathVector, _current, _next, 150.0);
-                _command = _commandPoint.Position;
+                _commandPoint = GetCommandPointV3(_command, _current, _next, 150.0);
+                _command = _current; //_commandPoint.Position;
                 break;
             case State.RecollectSheep:
+                _current = centroids[0];
+                _next = closestPathPoint[0];
+                _command = _current;
                 break;
             case State.Finished:
                 break;
@@ -161,17 +175,17 @@ public class DroneOversight : Point
         
         // Write out
         _nextPoint = new Point(0, 0, 0, _current.X, _current.Y);
-        _pathVector = Converter.ToVector2(Position, new Coordinate(_command.X, _command.Y));
+        _positionCommandVector = Converter.ToVector2(Position, new Coordinate(_command.X, _command.Y));
         var pathPoint = new Point(0, 0, 0, Position.X, Position.Y);
-        pathPoint.Force = _pathVector;
+        pathPoint.Force = _positionCommandVector;
+
         
-        
-        force = Vector2.Add(force, Vector2.Multiply(Vector2.Normalize(_pathVector), (float) _speed));
+        force = Vector2.Add(force, Vector2.Multiply(Vector2.Normalize(_positionCommandVector), 4.0f));
         Force = Vector2.Multiply(force, 10); // For visualization purposes only
         Position.Update(Position.X + (force.X * (dt / 100)), Position.Y + (force.Y * (dt / 100)));
 
         // After updating this position, update the herders
-        var h0 = Vector2.Multiply( Vector2.Negate(Vector2.Normalize(_pathVector)), (float) _herdRadius);
+        var h0 = Vector2.Multiply( Vector2.Negate(Vector2.Normalize(_positionCommandVector)), (float) _herdRadius);
         var h1 = Calculator.RotateVector(h0, _herdAngleInRadians);
         var h2 = Calculator.RotateVector(h0, -_herdAngleInRadians);
         
@@ -208,7 +222,7 @@ public class DroneOversight : Point
         var rotatedNormNextVector = Vector2.Normalize(Calculator.RotateVector(nextVector, Math.PI/2));
         var adjustedNextVector = Vector2.Multiply(Vector2.Normalize(rotatedNormNextVector), (float)reduction);
         
-        var command = new Point(0, 0, 0, _current.X + adjustedNextVector.X, _current.Y + adjustedNextVector.Y);
+        var command = new Point(0, 0, 0, current.X + adjustedNextVector.X, current.Y + adjustedNextVector.Y);
         command.Force = Vector2.Negate(adjustedNextVector);
         return command;
     }
@@ -237,8 +251,17 @@ public class DroneOversight : Point
         var rotatedNormNextVector = Vector2.Normalize(Calculator.RotateVector(currentNextVector, angles));
         var adjustedNextVector = Vector2.Multiply(Vector2.Normalize(rotatedNormNextVector), (float)reduction);
         
-        var command = new Point(0, 0, 0, _current.X + adjustedNextVector.X, _current.Y + adjustedNextVector.Y);
+        var command = new Point(0, 0, 0, current.X + adjustedNextVector.X, current.Y + adjustedNextVector.Y);
         command.Force = Vector2.Negate(adjustedNextVector);
+        return command;
+    }
+    
+    private Point GetCommandPointV3(Coordinate previousCommand, Coordinate current, Coordinate next, double reductionStart)
+    {
+        var commandVector = Vector2.Multiply(Calculator.GetCommandVector(Position, current, next), 100.0f);
+        
+        var command = new Point(0, 0, 0, current.X + commandVector.X, current.Y + commandVector.Y);
+        command.Force = Vector2.Negate(commandVector);
         return command;
     }
 }

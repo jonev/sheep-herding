@@ -44,17 +44,30 @@ public class HerdService : IDisposable
     private async Task DoWork()
     {
         var dt = 10;
-        var path = new List<AckableCoordinate>
+        // var path = new List<AckableCoordinate>
+        // {
+        //     new(0, 100, 100),
+        //     new(1, 200, 150),
+        //     new(2, 300, 250),
+        //     new(3, 400, 450),
+        //     new(4, 600, 500),
+        //     new(5, 700, 600),
+        //     new(6, 850, 700),
+        //     new(7, 950, 850),
+        // }; 
+
+        var path = new List<AckableCoordinate>();
+        path.Add(new(0, 200, 100));
+        path.AddRange(PathCreator.Create90DegreesTurn(new Coordinate(650, 100), new Coordinate(725, 150), 1, 4));
+        path.AddRange(PathCreator.Create90DegreesTurn(new Coordinate(725, 250), new Coordinate(650, 300), 5, 4));
+        path.AddRange(new List<AckableCoordinate>
         {
-            new(0, 100, 100),
-            new(1, 200, 150),
-            new(2, 300, 250),
-            new(3, 400, 450),
-            new(4, 600, 500),
-            new(5, 700, 600),
-            new(6, 850, 700),
-            new(7, 950, 850),
-        }; //, new(800, 300), new(200, 300), new(200, 600), new(800, 600), new(950, 850)};
+            new(9, 600, 300),
+            new(10, 200, 300),
+            new(11, 200, 600),
+            new(12, 800, 600),
+            new(13, 950, 850)
+        });
         var pathString = CoordinatePrinter.ToString(path.ToList<Coordinate>());
         while (Connected)
         {
@@ -85,7 +98,7 @@ public class HerdService : IDisposable
                 for (int i = 0; i < NrOfSheeps/2; i++)
                 {
                     var sheep = new Sheep(200, 200, i, listOfSheeps, listOfHerders, Finish);
-                    sheep.Set(new Coordinate(400 + ((i % 10) * 20), 200 + ((i % 3) * 20)));
+                    sheep.Set(new Coordinate(400 + ((i % 10) * 20), 100 + ((i % 3) * 20)));
                     listOfSheeps.Add(sheep);
                 }
 
