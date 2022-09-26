@@ -29,6 +29,11 @@ public class Coordinate
     {
     }
 
+    public Point ToPoint()
+    {
+        return new Point(0, 0, 0, X, Y);
+    }
+
     public override string ToString()
     {
         return $"{nameof(X)}: {X}, {nameof(Y)}: {Y}";

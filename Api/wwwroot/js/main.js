@@ -18,7 +18,7 @@ connection.on("ReceiveMessage", function (user, message) {
     var circle = objects[4].split(";");
     var pathCoordinates = objects[5].split(";");
     var pathCoordinatesAchieved = objects[6].split(";");
-    var currentCoordinate = objects[7].split(";");
+    var commandsCoordinates = objects[7].split(";");
     var state = objects[8];
     
     printElapsedTime(elapsedTime);
@@ -53,10 +53,15 @@ connection.on("ReceiveMessage", function (user, message) {
         drawPoint(coordinates[0], coordinates[1], 'black')
     }
 
-    let coordinates = currentCoordinate[0].split(",")
-    drawPoint(coordinates[0], coordinates[1], 'pink')
-    coordinates = currentCoordinate[1].split(",")
-    drawPoint(coordinates[0], coordinates[1], 'purple')
+    for (let i = 0; i < commandsCoordinates.length - 1; i++) {
+        let coordinates = commandsCoordinates[i].split(",")
+        drawPoint(coordinates[0], coordinates[1], 'purple')
+    }
+
+    // let coordinates = commandsCoordinates[0].split(",")
+    // drawPoint(coordinates[0], coordinates[1], 'pink')
+    // coordinates = commandsCoordinates[1].split(",")
+    // drawPoint(coordinates[0], coordinates[1], 'purple')
 });
 
 connection.on("Scoreboard", function (list) {

@@ -56,18 +56,16 @@ public class HerdService : IDisposable
         //     new(7, 950, 850),
         // }; 
 
-        var path = new List<AckableCoordinate>();
-        path.Add(new(0, 200, 100));
-        path.AddRange(PathCreator.Create90DegreesTurn(new Coordinate(650, 100), new Coordinate(725, 150), 1, 4));
-        path.AddRange(PathCreator.Create90DegreesTurn(new Coordinate(725, 250), new Coordinate(650, 300), 5, 4));
-        path.AddRange(new List<AckableCoordinate>
+        var path = new List<AckableCoordinate>()
         {
-            new(9, 600, 300),
-            new(10, 200, 300),
-            new(11, 200, 600),
-            new(12, 800, 600),
-            new(13, 950, 850)
-        });
+            new(0, 200, 100),
+            new(1, 700, 100),
+            new(2, 700, 300),
+            new(3, 200, 300),
+            new(4, 200, 600),
+            new(5, 800, 600),
+            new(6, 950, 850)
+        };
         var pathString = CoordinatePrinter.ToString(path.ToList<Coordinate>());
         while (Connected)
         {
@@ -149,11 +147,12 @@ public class HerdService : IDisposable
                     cast.AddRange(listOfSheeps);
                     cast.Add(droneOversight);
                     cast.AddRange(listOfHerders);
-                    cast.AddRange(oversightPoints);
+                    // cast.AddRange(oversightPoints);
+                    oversightPoints.Add(current);
                     var vectors = VectorPrinter.ToString(cast);
                     var circle = $"{droneOversight.Position.X};{droneOversight.Position.Y};{droneOversight.GetHerdingCircleRadius()}";
                     var message =
-                        $"{stopwatch.Elapsed.TotalSeconds}!{CoordinatePrinter.ToString(centroids)}!{coordinates}!{vectors}!{circle}!{pathString}!{CoordinatePrinter.ToString(path.ToList<Coordinate>().Take(pathIndex + 1).ToList())}!{CoordinatePrinter.ToString(new List<Coordinate> {current, next})}!{state}";
+                        $"{stopwatch.Elapsed.TotalSeconds}!{CoordinatePrinter.ToString(centroids)}!{coordinates}!{vectors}!{circle}!{pathString}!{CoordinatePrinter.ToString(path.ToList<Coordinate>().Take(pathIndex + 1).ToList())}!{CoordinatePrinter.ToString(oversightPoints)}!{state}";
                     // _logger.LogDebug($"Sending cooridnates; {message}");
                     await _hub.Clients.Client(ClientId).SendAsync("ReceiveMessage", "admin", message,
                         default(CancellationToken));

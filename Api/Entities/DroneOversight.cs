@@ -21,6 +21,7 @@ public class DroneOversight : Point
     private Coordinate _current = new (Double.MaxValue, Double.MaxValue);
     private Coordinate _next = new (Double.MaxValue, Double.MaxValue);
     private Coordinate _command = new (Double.MaxValue, Double.MaxValue);
+    private IList<Coordinate> _commands = new List<Coordinate>();
     private Point _nextPoint = new (0,0, 0, Double.MaxValue, Double.MaxValue);
     private Point _commandPoint = new (0,0,0, Double.MaxValue, Double.MaxValue);
     private MaxRateOfChange _mrcAngle = new ();
@@ -51,7 +52,7 @@ public class DroneOversight : Point
             .Permit(Trigger.SheepCaptured, State.FollowPath);
     }
 
-    public (int pathIndex, List<Coordinate> centroids, Coordinate current, Coordinate next, string state, IList<Point> points) UpdatePosition(bool disableHerders, double dt, double[] settings,
+    public (int pathIndex, List<Coordinate> centroids, Coordinate current, Coordinate next, string state, IList<Coordinate> points) UpdatePosition(bool disableHerders, double dt, double[] settings,
         List<Sheep> sheeps)
     {
         // _herdRadius = settings[0]; //largestDistance; // settings[0];
@@ -189,11 +190,13 @@ public class DroneOversight : Point
         var h1 = Calculator.RotateVector(h0, _herdAngleInRadians);
         var h2 = Calculator.RotateVector(h0, -_herdAngleInRadians);
         
-        if(disableHerders) return (_pathIndex, centroids.ToList(), _command, _next, _machine.State.ToString(), new List<Point>());
+        if(disableHerders) return (_pathIndex, centroids.ToList(), _command, _next, _machine.State.ToString(), new List<Coordinate>());
         _herders[0].UpdatePosition(dt, new Coordinate(Position.X + h0.X, Position.Y + h0.Y));
         _herders[1].UpdatePosition(dt, new Coordinate(Position.X + h1.X, Position.Y + h1.Y));
         _herders[2].UpdatePosition(dt, new Coordinate(Position.X + h2.X, Position.Y + h2.Y));
-        return (_pathIndex, centroids.ToList(), _command, _next, _machine.State.ToString(), new List<Point>{pathPoint, _nextPoint, _commandPoint});
+        var pointList = new List<Coordinate> {pathPoint.Position, _nextPoint.Position, _commandPoint.Position};
+        pointList.AddRange(_commands);
+        return (_pathIndex, centroids.ToList(), _command, _next, _machine.State.ToString(), pointList);
     }
 
     public double GetHerdingCircleRadius()
