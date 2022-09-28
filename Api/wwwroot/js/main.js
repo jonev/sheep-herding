@@ -55,7 +55,7 @@ connection.on("ReceiveMessage", function (user, message) {
 
     for (let i = 0; i < commandsCoordinates.length - 1; i++) {
         let coordinates = commandsCoordinates[i].split(",")
-        drawPoint(coordinates[0], coordinates[1], 'purple')
+        drawPoint(coordinates[0], coordinates[1], 'black', 5)
     }
 
     // let coordinates = commandsCoordinates[0].split(",")
@@ -129,7 +129,7 @@ function clearCanvas() {
     ctx.clearRect(0, 0, canvas.width, canvas.height);
 }
 
-function drawPoint(x, y, color) {
+function drawPoint(x, y, color, size = 10) {
     const canvas = document.querySelector('#canvas');
 
     if (!canvas.getContext) {
@@ -138,7 +138,7 @@ function drawPoint(x, y, color) {
     const ctx = canvas.getContext('2d');
     // ctx.clearRect(0, 0, canvas.width, canvas.height);
     ctx.fillStyle = color;
-    ctx.fillRect(x, y, 10, 10)
+    ctx.fillRect(x, y, size, size)
 }
 
 function drawVector(x1, y1, x2, y2, color, lineWidth) {

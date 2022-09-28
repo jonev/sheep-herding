@@ -58,13 +58,10 @@ public class HerdService : IDisposable
 
         var path = new List<AckableCoordinate>()
         {
-            new(0, 200, 100),
-            new(1, 700, 100),
-            new(2, 700, 300),
-            new(3, 200, 300),
-            new(4, 200, 600),
-            new(5, 800, 600),
-            new(6, 950, 850)
+            new(0, 200, 300),
+            new(1, 700, 300),
+            new(2, 800, 600),
+            new(3, 950, 850)
         };
         var pathString = CoordinatePrinter.ToString(path.ToList<Coordinate>());
         while (Connected)
@@ -96,7 +93,7 @@ public class HerdService : IDisposable
                 for (int i = 0; i < NrOfSheeps/2; i++)
                 {
                     var sheep = new Sheep(200, 200, i, listOfSheeps, listOfHerders, Finish);
-                    sheep.Set(new Coordinate(400 + ((i % 10) * 20), 100 + ((i % 3) * 20)));
+                    sheep.Set(new Coordinate(450 + ((i % 10) * 20), 350 + ((i % 3) * 20)));
                     listOfSheeps.Add(sheep);
                 }
 
@@ -148,7 +145,7 @@ public class HerdService : IDisposable
                     cast.Add(droneOversight);
                     cast.AddRange(listOfHerders);
                     // cast.AddRange(oversightPoints);
-                    oversightPoints.Add(current);
+                    if(current != null) oversightPoints.Add(current);
                     var vectors = VectorPrinter.ToString(cast);
                     var circle = $"{droneOversight.Position.X};{droneOversight.Position.Y};{droneOversight.GetHerdingCircleRadius()}";
                     var message =
