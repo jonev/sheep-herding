@@ -7,7 +7,7 @@ public enum Trigger
     NewHerdCollected,
     SheepEscaped,
     SheepCaptured,
-    PathPointInRange,
+    CommandsExecuted,
     PathPointOutOfRange,
     AllSheepsAtFinish,
 }

@@ -14,7 +14,7 @@ public class DroneHerder : Point
         var force = new Vector2(0, 0);
 
         var commandVector = Converter.ToVector2(Position, command);
-        var commandVectorSpeedLimited = Vector2.Multiply(Vector2.Normalize(commandVector), 5.0f);
+        var commandVectorSpeedLimited = Vector2.Multiply(Vector2.Normalize(commandVector), 6.0f);
         // var commandVectorReduced = Vector2.Divide(commandVector, 5);
 
         force = Vector2.Add(force, commandVectorSpeedLimited);

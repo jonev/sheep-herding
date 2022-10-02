@@ -58,10 +58,17 @@ public class HerdService : IDisposable
 
         var path = new List<AckableCoordinate>()
         {
-            new(0, 200, 300),
-            new(1, 700, 300),
-            new(2, 800, 600),
-            new(3, 950, 850)
+            new(0, 150, 200),
+            new(1, 300, 200),
+            new(2, 400, 200),
+            new(3, 500, 200),
+            new(4, 600, 200),
+            new(5, 800, 200),
+            new(6, 800, 400),
+            new(7, 400, 400),
+            new(8, 200, 400),
+            new(9, 200, 700),
+            new(10, 900, 900)
         };
         var pathString = CoordinatePrinter.ToString(path.ToList<Coordinate>());
         while (Connected)
@@ -87,13 +94,13 @@ public class HerdService : IDisposable
                 }
 
                 listOfHerders.Add(mouse);
-                var droneOversight = new DroneOversight(_logger, 1000, 800, dt, path, listOfHerders);
-                droneOversight.Set(new Coordinate(100, 100));
+                var droneOversight = new DroneOversight(_logger, 1000, 800, dt, path, listOfHerders, new PathCreator(_logger), listOfSheeps);
+                droneOversight.Set(new Coordinate(150, 100));
 
-                for (int i = 0; i < NrOfSheeps/2; i++)
+                for (int i = 0; i < 2; i++)
                 {
                     var sheep = new Sheep(200, 200, i, listOfSheeps, listOfHerders, Finish);
-                    sheep.Set(new Coordinate(450 + ((i % 10) * 20), 350 + ((i % 3) * 20)));
+                    sheep.Set(new Coordinate(350 + ((i % 10) * 20), 150 + ((i % 3) * 20)));
                     listOfSheeps.Add(sheep);
                 }
 
@@ -129,7 +136,7 @@ public class HerdService : IDisposable
                     }
 
                     var (pathIndex, centroids, current, next, state, oversightPoints) =
-                        droneOversight.UpdatePosition(!StartDrones, dt, herdSettings, listOfSheeps);
+                        droneOversight.UpdatePosition(!StartDrones, dt, herdSettings);
                     // var pathIndex = droneOversight.UpdatePosition(new Coordinate(x, y), largestDistance, dt,
                     //     herdSettings, path);
 

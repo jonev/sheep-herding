@@ -20,7 +20,7 @@ public class Machine
         _machine.Configure(State.FollowPath)
             .Permit(Trigger.NewHerdInRange, State.FetchingNewHerd)
             .Permit(Trigger.SheepEscaped, State.RecollectSheep)
-            .Permit(Trigger.PathPointInRange, State.Waiting)
+            .Permit(Trigger.CommandsExecuted, State.Waiting)
             .Permit(Trigger.AllSheepsAtFinish, State.Finished);
 
         _machine.Configure(State.RecollectSheep)

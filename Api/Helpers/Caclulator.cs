@@ -32,7 +32,6 @@ public static class Calculator
         while (result > Math.PI) result -= 2*Math.PI;
         return result;
     }
-
     public static double AngleInRadians(Vector2 a, Vector2 b)
     {
         return Math.Atan2(b.Y, b.X) - Math.Atan2(a.Y, a.X);
