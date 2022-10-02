@@ -57,7 +57,7 @@ public class DroneOversight : Point
             _next = _closestPathPointToSheepCentroid[0];
             // _commandPoint = GetCommandPointV3(_command, _current, _next, 100.0);
             // _command =  _current;
-            _commands = _pathCreator.CurvedLineV2(Position, _current, _next);
+            _commands = _pathCreator.CurvedLineToFetchHerd(Position, _current, _next);
         });
 
         _machine.ExecuteOnEntry(State.Waiting, () =>
@@ -91,7 +91,7 @@ public class DroneOversight : Point
             _next = _closestPathPoints.Count > 1 ? _closestPathPoints[1] : _closestPathPoints[0];
             // _commandPoint = GetCommandPointV3(_command, _current, _next, 150.0);
             // _command = _current; //_commandPoint.Position;
-            _commands = _pathCreator.CurvedLineV2(Position, _current, _next);
+            _commands = _pathCreator.CurvedLineToFollowPath(Position, _current, _next);
         });
         _machine.ExecuteOnEntry(State.RecollectSheep, () =>
         {

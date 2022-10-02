@@ -44,32 +44,8 @@ public class HerdService : IDisposable
     private async Task DoWork()
     {
         var dt = 10;
-        // var path = new List<AckableCoordinate>
-        // {
-        //     new(0, 100, 100),
-        //     new(1, 200, 150),
-        //     new(2, 300, 250),
-        //     new(3, 400, 450),
-        //     new(4, 600, 500),
-        //     new(5, 700, 600),
-        //     new(6, 850, 700),
-        //     new(7, 950, 850),
-        // }; 
-
-        var path = new List<AckableCoordinate>()
-        {
-            new(0, 150, 200),
-            new(1, 300, 200),
-            new(2, 400, 200),
-            new(3, 500, 200),
-            new(4, 600, 200),
-            new(5, 800, 200),
-            new(6, 800, 400),
-            new(7, 400, 400),
-            new(8, 200, 400),
-            new(9, 200, 700),
-            new(10, 900, 900)
-        };
+        var path = PredefinedPaths.SmallAnd90DegreesTurn();
+        
         var pathString = CoordinatePrinter.ToString(path.ToList<Coordinate>());
         while (Connected)
         {
@@ -79,7 +55,8 @@ public class HerdService : IDisposable
                 var finished = false;
                 var listOfSheeps = new List<Sheep>();
                 var listOfHerders = new List<DroneHerder>();
-                var mouse = new DroneHerder(0, 0, -1);
+                var mouse = new DroneHerder(0, 0, -1, 25.0);
+                mouse.Set(new Coordinate(0, 800));
 
                 var herdSettings = new double[3];
                 herdSettings[0] = HerdRadius;
@@ -88,19 +65,19 @@ public class HerdService : IDisposable
 
                 for (int i = 0; i < 3; i++)
                 {
-                    var h = new DroneHerder(200, 200, i);
+                    var h = new DroneHerder(200, 200, i, 6.0);
                     h.Set(new Coordinate(100, 100));
                     listOfHerders.Add(h);
                 }
 
                 listOfHerders.Add(mouse);
-                var droneOversight = new DroneOversight(_logger, 1000, 800, dt, path, listOfHerders, new PathCreator(_logger), listOfSheeps);
+                var droneOversight = new DroneOversight(_logger, 1000, 500, dt, path, listOfHerders, new PathCreator(_logger), listOfSheeps);
                 droneOversight.Set(new Coordinate(150, 100));
 
                 for (int i = 0; i < 2; i++)
                 {
                     var sheep = new Sheep(200, 200, i, listOfSheeps, listOfHerders, Finish);
-                    sheep.Set(new Coordinate(350 + ((i % 10) * 20), 150 + ((i % 3) * 20)));
+                    sheep.Set(new Coordinate(800 + ((i % 10) * 20), 200 + ((i % 3) * 20)));
                     listOfSheeps.Add(sheep);
                 }
 
