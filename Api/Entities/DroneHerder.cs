@@ -5,8 +5,11 @@ namespace SheepHerding.Api.Entities;
 
 public class DroneHerder : Point
 {
-    public DroneHerder(double maxX, double maxY, int id) : base(maxX, maxY, id)
+    private readonly double _speed;
+
+    public DroneHerder(double maxX, double maxY, int id, double speed) : base(maxX, maxY, id)
     {
+        _speed = speed;
     }
 
     public void UpdatePosition(double dt, Coordinate command)
@@ -14,7 +17,7 @@ public class DroneHerder : Point
         var force = new Vector2(0, 0);
 
         var commandVector = Converter.ToVector2(Position, command);
-        var commandVectorSpeedLimited = Vector2.Multiply(Vector2.Normalize(commandVector), 5.0f);
+        var commandVectorSpeedLimited = Vector2.Multiply(Vector2.Normalize(commandVector), (float) _speed);
         // var commandVectorReduced = Vector2.Divide(commandVector, 5);
 
         force = Vector2.Add(force, commandVectorSpeedLimited);

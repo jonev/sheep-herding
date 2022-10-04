@@ -58,8 +58,9 @@ public class AckableCoordinate : Coordinate
 
 public static class CoordinatePrinter
 {
-    public static string ToString(IList<Coordinate> coordinates)
+    public static string ToString(IList<Coordinate>? coordinates)
     {
+        if (coordinates is null || coordinates.Count < 1) return "";
         var sb = new StringBuilder();
         foreach (var coordinate in coordinates)
         {

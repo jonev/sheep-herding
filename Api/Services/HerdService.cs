@@ -44,28 +44,8 @@ public class HerdService : IDisposable
     private async Task DoWork()
     {
         var dt = 10;
-        // var path = new List<AckableCoordinate>
-        // {
-        //     new(0, 100, 100),
-        //     new(1, 200, 150),
-        //     new(2, 300, 250),
-        //     new(3, 400, 450),
-        //     new(4, 600, 500),
-        //     new(5, 700, 600),
-        //     new(6, 850, 700),
-        //     new(7, 950, 850),
-        // }; 
-
-        var path = new List<AckableCoordinate>()
-        {
-            new(0, 200, 100),
-            new(1, 700, 100),
-            new(2, 700, 300),
-            new(3, 200, 300),
-            new(4, 200, 600),
-            new(5, 800, 600),
-            new(6, 950, 850)
-        };
+        var path = PredefinedPaths.SmallAnd90DegreesTurn();
+        
         var pathString = CoordinatePrinter.ToString(path.ToList<Coordinate>());
         while (Connected)
         {
@@ -75,7 +55,8 @@ public class HerdService : IDisposable
                 var finished = false;
                 var listOfSheeps = new List<Sheep>();
                 var listOfHerders = new List<DroneHerder>();
-                var mouse = new DroneHerder(0, 0, -1);
+                var mouse = new DroneHerder(0, 0, -1, 25.0);
+                mouse.Set(new Coordinate(0, 800));
 
                 var herdSettings = new double[3];
                 herdSettings[0] = HerdRadius;
@@ -84,19 +65,19 @@ public class HerdService : IDisposable
 
                 for (int i = 0; i < 3; i++)
                 {
-                    var h = new DroneHerder(200, 200, i);
+                    var h = new DroneHerder(200, 200, i, 6.0);
                     h.Set(new Coordinate(100, 100));
                     listOfHerders.Add(h);
                 }
 
                 listOfHerders.Add(mouse);
-                var droneOversight = new DroneOversight(_logger, 1000, 800, dt, path, listOfHerders);
-                droneOversight.Set(new Coordinate(100, 100));
+                var droneOversight = new DroneOversight(_logger, 1000, 500, dt, path, listOfHerders, new PathCreator(_logger), listOfSheeps);
+                droneOversight.Set(new Coordinate(150, 100));
 
-                for (int i = 0; i < NrOfSheeps/2; i++)
+                for (int i = 0; i < 2; i++)
                 {
                     var sheep = new Sheep(200, 200, i, listOfSheeps, listOfHerders, Finish);
-                    sheep.Set(new Coordinate(400 + ((i % 10) * 20), 100 + ((i % 3) * 20)));
+                    sheep.Set(new Coordinate(800 + ((i % 10) * 20), 200 + ((i % 3) * 20)));
                     listOfSheeps.Add(sheep);
                 }
 
@@ -132,7 +113,7 @@ public class HerdService : IDisposable
                     }
 
                     var (pathIndex, centroids, current, next, state, oversightPoints) =
-                        droneOversight.UpdatePosition(!StartDrones, dt, herdSettings, listOfSheeps);
+                        droneOversight.UpdatePosition(!StartDrones, dt, herdSettings);
                     // var pathIndex = droneOversight.UpdatePosition(new Coordinate(x, y), largestDistance, dt,
                     //     herdSettings, path);
 
@@ -148,7 +129,7 @@ public class HerdService : IDisposable
                     cast.Add(droneOversight);
                     cast.AddRange(listOfHerders);
                     // cast.AddRange(oversightPoints);
-                    oversightPoints.Add(current);
+                    if(current != null) oversightPoints.Add(current);
                     var vectors = VectorPrinter.ToString(cast);
                     var circle = $"{droneOversight.Position.X};{droneOversight.Position.Y};{droneOversight.GetHerdingCircleRadius()}";
                     var message =
