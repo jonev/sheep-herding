@@ -75,19 +75,19 @@ public class Communication : Hub
         service.Reset = true;
         
         int h = Convert.ToInt32(s1);
-        if (h < 1) h = 1;
+        if (h < 0) h = 0;
         if (h > 500) h = 500;
-        service.HerdRadius = h;
-        
-        h = Convert.ToInt32(s2);
-        if (h < 1) h = 1;
-        if (h > 500) h = 500;
-        service.HerdAngleInDegrees = h;
+        service.PathNr = h;
+        //
+        // h = Convert.ToInt32(s2);
+        // if (h < 1) h = 1;
+        // if (h > 500) h = 500;
+        // service.HerdAngleInDegrees = h;
         
         h = Convert.ToInt32(s3);
         if (h < 1) h = 1;
-        if (h > 10) h = 10;
-        service.OversightSpeed = h;
+        if (h > 1000) h = 10;
+        service.VisualizationSpeed = h;
     }
     
     public async Task SetName(string name)

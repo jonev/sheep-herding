@@ -11,7 +11,6 @@ public class DroneOversight : Point
     private readonly ILogger _logger;
     private readonly List<AckableCoordinate> _predefinedPathPoints;
     private readonly List<DroneHerder> _herders;
-    private double _speed = 10.0;
     private double _herdRadius = 75.0;
     private double _herdAngleInRadians = Math.PI / 2.5;
     private int _pathIndex = 0; // TODO fix this
@@ -32,6 +31,7 @@ public class DroneOversight : Point
     private List<AckableCoordinate> _closestPathPointToSheepCentroid;
     private PathCreator _pathCreator;
     private readonly List<Sheep> _sheeps;
+    private double _speedFactor;
 
     public DroneOversight(ILogger logger, double maxX, double maxY, int id,
         List<AckableCoordinate> predefinedPathPoints, List<DroneHerder> herders, PathCreator pathCreator, List<Sheep> sheeps) :
@@ -147,12 +147,8 @@ public class DroneOversight : Point
     }
 
     public (int pathIndex, List<Coordinate> centroids, Coordinate current, Coordinate next, string state,
-        IList<Coordinate> points) UpdatePosition(bool disableHerders, double dt, double[] settings)
+        IList<Coordinate> points) UpdatePosition(bool disableHerders, double forceAdjustment)
     {
-        // _herdRadius = settings[0]; //largestDistance; // settings[0];
-        _herdAngleInRadians = settings[1] == 0 ? _herdAngleInRadians : settings[1];
-        _speed = settings[2];
-
         // -- Calculations
 
         // Clustering different herds
@@ -209,7 +205,7 @@ public class DroneOversight : Point
 
         var force = Vector2.Multiply(Vector2.Normalize(_positionCommandVector), 4.0f);
         Force = Vector2.Multiply(force, 10); // For visualization purposes only
-        Position.Update(Position.X + (force.X * (dt / 100)), Position.Y + (force.Y * (dt / 100)));
+        Position.Update(Position.X + (force.X * forceAdjustment), Position.Y + (force.Y * forceAdjustment));
 
         // After updating this position, update the herders
         var h0 = Vector2.Multiply(Vector2.Negate(Vector2.Normalize(_positionCommandVector)), (float) _herdRadius);
@@ -219,9 +215,9 @@ public class DroneOversight : Point
         if (disableHerders)
             return (_pathIndex, _centroids.ToList(), _command, _next, _machine.State.ToString(),
                 new List<Coordinate>());
-        _herders[0].UpdatePosition(dt, new Coordinate(Position.X + h0.X, Position.Y + h0.Y));
-        _herders[1].UpdatePosition(dt, new Coordinate(Position.X + h1.X, Position.Y + h1.Y));
-        _herders[2].UpdatePosition(dt, new Coordinate(Position.X + h2.X, Position.Y + h2.Y));
+        _herders[0].UpdatePosition(forceAdjustment, new Coordinate(Position.X + h0.X, Position.Y + h0.Y));
+        _herders[1].UpdatePosition(forceAdjustment, new Coordinate(Position.X + h1.X, Position.Y + h1.Y));
+        _herders[2].UpdatePosition(forceAdjustment, new Coordinate(Position.X + h2.X, Position.Y + h2.Y));
         var pointList = new List<Coordinate> {pathPoint.Position, _nextPoint.Position, _commandPoint.Position};
         pointList.AddRange(_commands);
         return (_pathIndex, _centroids.ToList(), _command, _next, _machine.State.ToString(), pointList);

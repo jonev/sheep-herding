@@ -23,7 +23,7 @@ public class Sheep : Point
         _finish = finish;
     }
 
-    public void UpdatePosition(double dt)
+    public void UpdatePosition(double forceAdjustment)
     {
         var force = new Vector2(0, 0);
 
@@ -73,7 +73,7 @@ public class Sheep : Point
         }
 
         Force = Vector2.Multiply(force, 10); // For visualization purposes only
-        Position.Update(Position.X + (force.X * (dt / 100)), Position.Y + (force.Y * (dt / 100)));
+        Position.Update(Position.X + (force.X * forceAdjustment), Position.Y + (force.Y * forceAdjustment));
     }
 
     public bool IsInsideFinishZone()
