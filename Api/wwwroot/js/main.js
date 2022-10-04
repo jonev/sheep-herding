@@ -7,6 +7,7 @@ var mouseY = 0;
 
 var lastMouseX = 0;
 var lastMouseY = 0;
+var clearCanvasOn = true;
 
 connection.on("ReceiveMessage", function (user, message) {
     console.log(message)
@@ -20,34 +21,38 @@ connection.on("ReceiveMessage", function (user, message) {
     var pathCoordinatesAchieved = objects[6].split(";");
     var commandsCoordinates = objects[7].split(";");
     var state = objects[8];
-    
+
     printElapsedTime(elapsedTime);
     printState(state);
-    clearCanvas();
-    
-    for (let i = 0; i < pathCoordinates.length - 2; i++) {
-        let from = pathCoordinates[i].split(",")
-        let to = pathCoordinates[i+1].split(",")
-        drawVector(from[0], from[1], to[0], to[1], 'yellow', 5)
+    if (clearCanvasOn) {
+        clearCanvas();
     }
 
-    for (let i = 0; i < pathCoordinatesAchieved.length - 2; i++) {
-        let from = pathCoordinatesAchieved[i].split(",")
-        let to = pathCoordinatesAchieved[i+1].split(",")
-        drawVector(from[0], from[1], to[0], to[1], 'green', 5)
+    if (clearCanvasOn) {
+        for (let i = 0; i < pathCoordinates.length - 2; i++) {
+            let from = pathCoordinates[i].split(",")
+            let to = pathCoordinates[i + 1].split(",")
+            drawVector(from[0], from[1], to[0], to[1], 'yellow', 5)
+        }
+
+        for (let i = 0; i < pathCoordinatesAchieved.length - 2; i++) {
+            let from = pathCoordinatesAchieved[i].split(",")
+            let to = pathCoordinatesAchieved[i + 1].split(",")
+            drawVector(from[0], from[1], to[0], to[1], 'green', 5)
+        }
+
+        drawCircle(circle[0], circle[1], circle[2], "pink")
+
+        for (let i = 0; i < vectorCollection.length - 1; i++) {
+            let vector = vectorCollection[i].split(",")
+            drawVector(vector[0], vector[1], vector[2], vector[3], 'red', 1)
+        }
     }
-    
-    drawCircle(circle[0], circle[1], circle[2], "pink")
     for (let i = 0; i < coordinatesCollection.length - 1; i++) {
         let coordinates = coordinatesCollection[i].split(",")
         drawPoint(coordinates[0], coordinates[1], colors[i])
     }
 
-    for (let i = 0; i < vectorCollection.length - 1; i++) {
-        let vector = vectorCollection[i].split(",")
-        drawVector(vector[0], vector[1], vector[2], vector[3], 'red', 1)
-    }
-    
     for (let i = 0; i < centroidCollection.length - 1; i++) {
         let coordinates = centroidCollection[i].split(",")
         drawPoint(coordinates[0], coordinates[1], 'black')
@@ -75,7 +80,7 @@ connection.on("Scoreboard", function (list) {
     }
 });
 
-function reset(){
+function reset() {
     var nr = document.getElementById("nrOfSheeps").value;
     var s1 = document.getElementById("setting1").value;
     var s2 = document.getElementById("setting2").value;
@@ -86,21 +91,21 @@ function reset(){
     });
 }
 
-function startStop(){
+function startStop() {
     console.log("StartStop")
     connection.invoke("StartStop").catch(function (err) {
         return console.error(err.toString());
     });
 }
 
-function startStopDrones(){
+function startStopDrones() {
     console.log("StartStopDrones")
     connection.invoke("StartStopDrones").catch(function (err) {
         return console.error(err.toString());
     });
 }
 
-function saveName(){
+function saveName() {
     var name = document.getElementById("player").value;
     console.log("Player: ", name)
     connection.invoke("SetName", name).catch(function (err) {
@@ -118,6 +123,14 @@ connection.start().then(function () {
 }).catch(function (err) {
     return console.error(err.toString());
 });
+
+function toggleClearCanvas() {
+    if (clearCanvasOn) {
+        clearCanvasOn = false;
+    } else {
+        clearCanvasOn = true;
+    }
+}
 
 function clearCanvas() {
     const canvas = document.querySelector('#canvas');
@@ -182,18 +195,18 @@ function printState(state) {
     text.innerHTML = state;
 }
 
-function sendMousePosition(x,y){
+function sendMousePosition(x, y) {
     lastMouseX = x;
     lastMouseY = y;
-    connection.invoke("MousePosition", x+","+y).catch(function (err) {
+    connection.invoke("MousePosition", x + "," + y).catch(function (err) {
         return console.error(err.toString());
     });
 }
 
-function mousemove(event){
+function mousemove(event) {
     mouseX = event.clientX;
     mouseY = event.clientY;
-    if(mouseX > (lastMouseX + 10) || mouseX < (lastMouseX - 10) || mouseY > (lastMouseY + 10) || mouseY > (lastMouseY + 10)){
+    if (mouseX > (lastMouseX + 10) || mouseX < (lastMouseX - 10) || mouseY > (lastMouseY + 10) || mouseY > (lastMouseY + 10)) {
         sendMousePosition(mouseX, mouseY)
     }
 }

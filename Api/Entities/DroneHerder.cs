@@ -12,7 +12,7 @@ public class DroneHerder : Point
         _speed = speed;
     }
 
-    public void UpdatePosition(double dt, Coordinate command)
+    public void UpdatePosition(double scanTimeInSeconds, Coordinate command)
     {
         var force = new Vector2(0, 0);
 
@@ -23,6 +23,6 @@ public class DroneHerder : Point
         force = Vector2.Add(force, commandVectorSpeedLimited);
         
         Force = Vector2.Multiply(force, 10); // For visualization purposes only
-        Position.Update(Position.X + (force.X * (dt/100)), Position.Y + (force.Y * (dt/100)));
+        Position.Update(Position.X + (force.X * scanTimeInSeconds), Position.Y + (force.Y * scanTimeInSeconds));
     }
 }
