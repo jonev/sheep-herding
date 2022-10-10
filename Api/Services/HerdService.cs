@@ -125,7 +125,7 @@ public class HerdService : IDisposable
                     _forceAdjustment = _scanTime * VisualizationSpeed;
                     if (_forceAdjustment > 10) _forceAdjustment = 10.0;
                     _previousTicks = ticks;
-                    _logger.LogInformation($"Scantime: {_scanTime}, {_forceAdjustment}");
+                    // _logger.LogInformation($"Scantime: {_scanTime}, {_forceAdjustment}");
 
                     // Mouse
                     mouse.UpdatePosition(_forceAdjustment, MousePosition);

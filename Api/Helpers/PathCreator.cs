@@ -153,6 +153,8 @@ public class PathCreator
         var startNextVector = Converter.ToVector2(start, next);
         var startNextAngle = Math.Atan2(startNextVector.Y, startNextVector.X);
 
+        var startEndNextAngle = Calculator.AngleInRadiansLimited(Converter.ToVector2(end, start), Converter.ToVector2(end, next));
+        if (startEndNextAngle < 0) startEndNextAngle += 2 * Math.PI;
         var positionNextAngle = Calculator.AngleInRadiansLimited(pathVector, nextVector);
         if (Math.Abs(positionNextAngle) < Math.PI / 6 || pathLenght < 110.0)
         {
@@ -161,24 +163,19 @@ public class PathCreator
 
         var angleSignPositive = positionNextAngle > 0 ? true : false;
         
-        var curveFactor = 2;
         var bendRadius = 100.0f; //pathLenght / curveFactor;
-        var nrOfPointsInBend = 5;
-        var bend = (Math.PI/2)/nrOfPointsInBend;
+        var nrOfPointsInBend = (int) ((startEndNextAngle / 2) / (Math.PI / 20));
+        var bend = (startEndNextAngle/2)/nrOfPointsInBend;
         
         var lineLenght = pathLenght - bendRadius;
         var curveCenterVector = Vector2.Multiply(Vector2.Normalize(pathVector), lineLenght);
 
         var list = new List<AckableCoordinate>();
-        var startCoordinate = new AckableCoordinate(0, start.X, start.Y);
-        startCoordinate.Ack();
-        list.Add(startCoordinate);
-        
-        
-        var nrOfPointsOnLine = 5;
+        var nrOfPointsOnLine = (int)(lineLenght / 10.0);
 
         var adjustmentRegardsToZeroAngle = angleSignPositive ? -Math.PI / 2 : 0;
         var curveCenter = new Coordinate(start.X + curveCenterVector.X, start.Y + curveCenterVector.Y);
+        
         for (var i = 1; i <= nrOfPointsInBend; i++)
         {
             var cos = Math.Cos((bend * (i-1)) + adjustmentRegardsToZeroAngle + pathAngle) * bendRadius;
@@ -188,10 +185,15 @@ public class PathCreator
                 curveCenter.X + cos,
                 curveCenter.Y + sin));
         }
+        // Adjust according to end
+        list = list.OrderBy(c => c.PathIndex).ToList();
+        var endOfCircle = list.Last();
+        list = list.Select(c => new AckableCoordinate(c.PathIndex, c.X + (end.X - endOfCircle.X), c.Y  + (end.Y - endOfCircle.Y))).ToList();
 
-        var endPoint = list[angleSignPositive ? 1 : nrOfPointsInBend];
-        var movementInXPerPoint = (endPoint.X - start.X) / nrOfPointsOnLine;
-        var movementInYPerPoint = (endPoint.Y - start.Y) / nrOfPointsOnLine;
+        var endPointOfLine = list.First();
+        // var endPoint = list[angleSignPositive ? 1 : nrOfPointsInBend];
+        var movementInXPerPoint = (endPointOfLine.X - start.X) / nrOfPointsOnLine;
+        var movementInYPerPoint = (endPointOfLine.Y - start.Y) / nrOfPointsOnLine;
         for (int i = 1; i <= nrOfPointsOnLine; i++)
         {
             
@@ -199,7 +201,7 @@ public class PathCreator
                 start.X + (movementInXPerPoint * i), 
                 start.Y  + (movementInYPerPoint * i)));
         }
-        _logger.LogInformation($"New path: {nameof(start)}:{start},{nameof(end)}:{end},{nameof(next)}:{next}, {nameof(pathAngle)}:{pathAngle}, {nameof(nextAngle)}:{nextAngle}, {nameof(positionNextAngle)}:{positionNextAngle},  {nameof(startNextAngle)}:{startNextAngle}");
+        _logger.LogInformation($"New path: {nameof(start)}:{start},{nameof(end)}:{end},{nameof(next)}:{next}, {nameof(positionNextAngle)}:{positionNextAngle},  {nameof(startEndNextAngle)}:{startEndNextAngle}");
         return list.OrderBy(c => c.PathIndex).ToList();
     }
 }

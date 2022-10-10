@@ -9,16 +9,11 @@ public static class PredefinedPaths
         return new List<AckableCoordinate>()
         {
             new(0, 150, 200),
-            new(1, 300, 200),
-            new(2, 400, 200),
-            new(3, 500, 200),
-            new(4, 600, 200),
-            new(5, 800, 200),
-            new(6, 800, 400),
-            new(7, 400, 400),
-            new(8, 200, 400),
-            new(9, 200, 700),
-            new(10, 900, 900)
+            new(1, 600, 200),
+            new(2, 600, 500),
+            new(3, 200, 500),
+            new(4, 200, 800),
+            new(5, 900, 800)
         };
     }
     
