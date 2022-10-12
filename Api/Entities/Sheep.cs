@@ -14,10 +14,12 @@ public class Sheep : Point
     private readonly double _centroidOfHerdToFarEndMoveThreshold = 200.0;
     private readonly double _enemyToCloseStartMoveThreshold = 100.0;
     private readonly double _maxSpeed = 100.0;
+    private readonly ILogger _logger;
 
-    public Sheep(double maxX, double maxY, int id, IList<Sheep> friendlies, IList<DroneHerder> enemies,
+    public Sheep(ILogger logger, double maxX, double maxY, int id, IList<Sheep> friendlies, IList<DroneHerder> enemies,
         Coordinate finish) : base(maxX, maxY, id)
     {
+        _logger = logger;
         _friendlies = friendlies;
         _enemies = enemies;
         _finish = finish;
@@ -25,39 +27,46 @@ public class Sheep : Point
 
     public void UpdatePosition(double forceAdjustment)
     {
+        var personalSpaceForce = 3.0f;
+        var holdTogetherForce = 1.0f;
+        var runAwayForce = 1.0f;
         var force = new Vector2(0, 0);
-
+        
         // Personal space - dont have sheeps walk on top of each other
         var close = _friendlies.Where(s
-                => s.Id != Id
-                   && Calculator.InRange(Position, s.Position, _neighborToCloseStartMoveThreshold, 0.0))
-            .ToList();
+            => s.Id != Id && Converter.ToVector2(Position, s.Position).Length() < _neighborToCloseStartMoveThreshold)
+            .MinBy(s => Converter.ToVector2(Position, s.Position).Length());
 
-        if (close.Any())
+        if (close != null)
         {
-            var list = close.Select(s => s.Position).ToList();
-            list.Add(Position);
-            var closeCentroid = Calculator.Centroid(list);
-            var sheepVclose = Converter.ToVector2Negated(Position, new Coordinate(closeCentroid.X, closeCentroid.Y));
-            force = Vector2.Multiply(Vector2.Add(force, sheepVclose), 4.0f);
+            var sheepVclose = Converter.ToVector2Negated(Position, new Coordinate(close.Position.X, close.Position.Y));
+            var normalized = Vector2.Normalize(Vector2.Add(force, sheepVclose));
+            force = Vector2.Multiply(normalized, personalSpaceForce);
+            // _logger.LogInformation($"Sheep '{Id}' needs personal space");
         }
 
         // Hold together as a herd
         var neighbours = _friendlies
             .Where(s => s.Id != Id
-                        && Calculator.InRange(Position, s.Position,
-                            100.0,
-                            50.0))
+                        && Converter.ToVector2(Position, s.Position).Length() > 100 
+                        && Converter.ToVector2(Position, s.Position).Length() < 200)
             .OrderBy(s => Converter.ToVector2(Position, s.Position).Length())
             .Take(5);
-        if (neighbours.Count() < 5)
+        if (neighbours.Any())
         {
             var list = neighbours.Select(s => s.Position).ToList();
             list.Add(Position);
             var farCentroid = Calculator.Centroid(list);
             var sheepVfar = Converter.ToVector2(Position, new Coordinate(farCentroid.X, farCentroid.Y));
-            force = Vector2.Divide(Vector2.Add(force, sheepVfar), 20.0f);
+            var normalized = Vector2.Normalize(Vector2.Add(force, sheepVfar));
+            force = Vector2.Divide(normalized, 1.0f);
+            // _logger.LogInformation($"Sheep '{Id}' hold together as a herd");
+
         }
+        
+        // Grazing
+        var randomDirection = Calculator.RotateVector(Vector2.One, new Random().NextDouble() * Math.PI * 2);
+        force = Vector2.Add(force, randomDirection);
 
         // Enemies
         var sheepVenemy = _enemies.Select(e => Converter.ToVector2Negated(Position, e.Position));
@@ -68,7 +77,9 @@ public class Sheep : Point
             {
                 var flipped = Calculator.FlipExLength(enemy, 100.0);
                 var flippedReduced = Vector2.Divide(flipped, 10);
-                force = Vector2.Add(force, flippedReduced);
+                var flippedRandomRotated =
+                    Calculator.RotateVector(flippedReduced, new Random().NextDouble() * (Math.PI/4));
+                force = Vector2.Add(force, flippedRandomRotated);
             }
         }
 

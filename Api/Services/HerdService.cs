@@ -91,9 +91,9 @@ public class HerdService : IDisposable
                     new PathCreator(_logger), listOfSheeps);
                 droneOversight.Set(new Coordinate(150, 100));
 
-                for (int i = 0; i < 2; i++)
+                for (int i = 0; i < 5; i++)
                 {
-                    var sheep = new Sheep(200, 200, i, listOfSheeps, listOfHerders, Finish);
+                    var sheep = new Sheep(_logger, 200, 200, i, listOfSheeps, listOfHerders, Finish);
                     sheep.Set(new Coordinate(800 + ((i % 10) * 20), 200 + ((i % 3) * 20)));
                     listOfSheeps.Add(sheep);
                 }
