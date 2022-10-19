@@ -91,7 +91,9 @@ public class PathCreator
         var nextAngle = Math.Atan2(nextVector.Y, nextVector.X);
         var startNextVector = Converter.ToVector2(start, next);
         var startNextAngle = Math.Atan2(startNextVector.Y, startNextVector.X);
-
+        var startEndNextAngle = Calculator.AngleInRadiansLimited(Converter.ToVector2(end, start), Converter.ToVector2(end, next));
+        if (startEndNextAngle < 0) startEndNextAngle += 2 * Math.PI;
+        
         var positionNextAngle = Calculator.AngleInRadiansLimited(pathVector, nextVector);
         if (Math.Abs(positionNextAngle) < Math.PI / 3 || pathLenght < 110.0)
         {
@@ -101,7 +103,7 @@ public class PathCreator
         var angleSignPositive = positionNextAngle > 0 ? true : false;
         
         var bendRadius = 100.0f;
-        var nrOfPointsInBend = 10;
+        var nrOfPointsInBend = (int) ((startEndNextAngle / 2) / (Math.PI / 20));
         var bend = (Math.PI/2)/nrOfPointsInBend;
         
         var normalizedNextVector = Vector2.Normalize(nextVector);

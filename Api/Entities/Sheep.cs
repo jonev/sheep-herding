@@ -8,6 +8,7 @@ public class Sheep : Point
     private readonly IList<Sheep> _friendlies;
     private readonly IList<DroneHerder> _enemies;
     private readonly Coordinate _finish;
+    private readonly List<Coordinate> _terrainPaths;
     private readonly double _neighborToCloseStartMoveThreshold = 25.0;
     private readonly double _neighborToFarStartToMoveThreshold = 150.0;
     private readonly double _centroidOfHerdToFarStartMoveThreshold = 100.0;
@@ -15,18 +16,22 @@ public class Sheep : Point
     private readonly double _enemyToCloseStartMoveThreshold = 100.0;
     private readonly double _maxSpeed = 100.0;
     private readonly ILogger _logger;
+    private int _scanIndex = 0;
+    private double _randomAngle = 0.0;
 
     public Sheep(ILogger logger, double maxX, double maxY, int id, IList<Sheep> friendlies, IList<DroneHerder> enemies,
-        Coordinate finish) : base(maxX, maxY, id)
+        Coordinate finish, List<Coordinate> terrainPaths) : base(maxX, maxY, id)
     {
         _logger = logger;
         _friendlies = friendlies;
         _enemies = enemies;
         _finish = finish;
+        _terrainPaths = terrainPaths;
     }
 
     public void UpdatePosition(double forceAdjustment)
     {
+        _scanIndex++;
         var personalSpaceForce = 3.0f;
         var holdTogetherForce = 1.0f;
         var runAwayForce = 1.0f;
@@ -65,20 +70,26 @@ public class Sheep : Point
         }
         
         // Grazing
-        var randomDirection = Calculator.RotateVector(Vector2.One, new Random().NextDouble() * Math.PI * 2);
-        force = Vector2.Add(force, randomDirection);
+        // var randomDirection = Calculator.RotateVector(Vector2.One, new Random().NextDouble() * Math.PI * 2);
+        // force = Vector2.Add(force, randomDirection);
 
-        // Enemies
+        // Enemies - Herding
         var sheepVenemy = _enemies.Select(e => Converter.ToVector2Negated(Position, e.Position));
         var minLenght = sheepVenemy.Select(v => v.Length()).Min();
+        if (_randomAngle == 0.0 || _scanIndex % 10 == 0)
+        {
+            // Dont update so often
+            _randomAngle = (new Random().NextDouble() - 0.5) * (Math.PI/2);
+        }
         if (minLenght <= _enemyToCloseStartMoveThreshold)
         {
             foreach (var enemy in sheepVenemy)
             {
                 var flipped = Calculator.FlipExLength(enemy, 100.0);
                 var flippedReduced = Vector2.Divide(flipped, 10);
+                // Add random angle to make the herding more challenging
                 var flippedRandomRotated =
-                    Calculator.RotateVector(flippedReduced, new Random().NextDouble() * (Math.PI/4));
+                    Calculator.RotateVector(flippedReduced, _randomAngle);
                 force = Vector2.Add(force, flippedRandomRotated);
             }
         }

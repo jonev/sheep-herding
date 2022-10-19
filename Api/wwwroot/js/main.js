@@ -21,6 +21,7 @@ connection.on("ReceiveMessage", function (user, message) {
     var pathCoordinatesAchieved = objects[6].split(";");
     var commandsCoordinates = objects[7].split(";");
     var state = objects[8];
+    var terrainPath = objects[9].split(";");
 
     printElapsedTime(elapsedTime);
     printState(state);
@@ -29,6 +30,12 @@ connection.on("ReceiveMessage", function (user, message) {
     }
 
     if (clearCanvasOn) {
+        for (let i = 0; i < terrainPath.length - 2; i++) {
+            let from = terrainPath[i].split(",")
+            let to = terrainPath[i + 1].split(",")
+            drawVector(from[0], from[1], to[0], to[1], 'red', 3)
+        }
+        
         for (let i = 0; i < pathCoordinates.length - 2; i++) {
             let from = pathCoordinates[i].split(",")
             let to = pathCoordinates[i + 1].split(",")
@@ -38,7 +45,7 @@ connection.on("ReceiveMessage", function (user, message) {
         for (let i = 0; i < pathCoordinatesAchieved.length - 2; i++) {
             let from = pathCoordinatesAchieved[i].split(",")
             let to = pathCoordinatesAchieved[i + 1].split(",")
-            drawVector(from[0], from[1], to[0], to[1], 'green', 5)
+            drawVector(from[0], from[1], to[0], to[1], 'green', 4)
         }
 
         drawCircle(circle[0], circle[1], circle[2], "pink")
