@@ -48,6 +48,8 @@ public class HerdService : IDisposable
     private async Task DoWork()
     {
         List<AckableCoordinate> path;
+        List<Coordinate> SheepStartCoordinates;
+        List<Coordinate> TerrainPathCoordinates;
         while (Connected)
         {
             try
@@ -55,23 +57,27 @@ public class HerdService : IDisposable
                 switch (PathNr)
                 {
                     case 0:
-                        path = PredefinedPaths.SmallAnd90DegreesTurn();
+                        (path, SheepStartCoordinates, TerrainPathCoordinates) = PredefinedPaths.PathCrossTesting();
                         break;
                     case 1:
-                        path = PredefinedPaths.SmallTurns();
+                        (path, SheepStartCoordinates, TerrainPathCoordinates) = PredefinedPaths.SmallTurns();
                         break;
                     case 2:
-                        path = PredefinedPaths.TwoUTurns();
+                        (path, SheepStartCoordinates, TerrainPathCoordinates) = PredefinedPaths.TwoUTurns();
                         break;
                     case 3:
-                        path = PredefinedPaths.s90DegreesLeftTestTurn();
+                        (path, SheepStartCoordinates, TerrainPathCoordinates) = PredefinedPaths.s90DegreesLeftTestTurn();
+                        break;
+                    case 4:
+                        (path, SheepStartCoordinates, TerrainPathCoordinates) = PredefinedPaths.SmallAnd90DegreesTurn();
                         break;
                     default:
-                        path = PredefinedPaths.SmallAnd90DegreesTurn();
+                        (path, SheepStartCoordinates, TerrainPathCoordinates) = PredefinedPaths.SmallAnd90DegreesTurn();
                         break;
                 }
 
                 var pathString = CoordinatePrinter.ToString(path.ToList<Coordinate>());
+                var terrainPathString = CoordinatePrinter.ToString(TerrainPathCoordinates.ToList<Coordinate>());
                 Stopwatch stopwatch = new Stopwatch();
                 var finished = false;
                 var listOfSheeps = new List<Sheep>();
@@ -91,10 +97,12 @@ public class HerdService : IDisposable
                     new PathCreator(_logger), listOfSheeps);
                 droneOversight.Set(new Coordinate(150, 100));
 
-                for (int i = 0; i < 5; i++)
+                _logger.LogInformation($"Number of sheeps: {SheepStartCoordinates.Count}");
+                for (int i = 0; i < SheepStartCoordinates.Count; i++)
                 {
-                    var sheep = new Sheep(_logger, 200, 200, i, listOfSheeps, listOfHerders, Finish);
-                    sheep.Set(new Coordinate(800 + ((i % 10) * 20), 200 + ((i % 3) * 20)));
+                    var sheep = new Sheep(_logger, 200, 200, i, listOfSheeps, listOfHerders, Finish, TerrainPathCoordinates);
+                    sheep.Set(SheepStartCoordinates[i]);
+                    // sheep.Set(new Coordinate(800 + ((i % 10) * 20), 200 + ((i % 3) * 20)));
                     listOfSheeps.Add(sheep);
                 }
 
@@ -158,7 +166,16 @@ public class HerdService : IDisposable
                     var circle =
                         $"{droneOversight.Position.X};{droneOversight.Position.Y};{droneOversight.GetHerdingCircleRadius()}";
                     var message =
-                        $"{stopwatch.Elapsed.TotalSeconds}!{CoordinatePrinter.ToString(centroids)}!{coordinates}!{vectors}!{circle}!{pathString}!{CoordinatePrinter.ToString(path.ToList<Coordinate>().Take(pathIndex + 1).ToList())}!{CoordinatePrinter.ToString(oversightPoints)}!{state}";
+                        $"{stopwatch.Elapsed.TotalSeconds}" +
+                        $"!{CoordinatePrinter.ToString(centroids)}" +
+                        $"!{coordinates}" +
+                        $"!{vectors}" +
+                        $"!{circle}" +
+                        $"!{pathString}" +
+                        $"!{CoordinatePrinter.ToString(path.ToList<Coordinate>().Take(pathIndex + 1).ToList())}" +
+                        $"!{CoordinatePrinter.ToString(oversightPoints)}" +
+                        $"!{state}" +
+                        $"!{terrainPathString}";
                     // _logger.LogDebug($"Sending cooridnates; {message}");
                     await _hub.Clients.Client(ClientId).SendAsync("ReceiveMessage", "admin", message,
                         default(CancellationToken));
