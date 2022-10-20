@@ -73,6 +73,7 @@ public class Communication : Hub
         if (nrOfSheeps > 200) nrOfSheeps = 200;
         service.NrOfSheeps = nrOfSheeps;
         service.Reset = true;
+        service.Start = true;
         
         int h = Convert.ToInt32(s1);
         if (h < 0) h = 0;

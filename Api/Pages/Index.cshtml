@@ -86,18 +86,18 @@
 <button onclick="startStop()" style="position: absolute;left: 0;top: 901;">Start/Stop</button>
 <button onclick="startStopDrones()" style="position: absolute;left: 0;top: 921;">Start/Stop drones</button>
 <button onclick="toggleClearCanvas()" style="position: absolute;left: 0;top: 941;">Clear canvas on/off</button>
+<button onclick="toggleSendMouse()" style="position: absolute;left: 0;top: 961;">Use mouse on/off</button>
 <button onclick="reset()" style="position: absolute;left: 100;top: 901;">Reset</button>
 
-<text style="position: absolute;left: 160;top:901;">Nr of sheeps </text>
-<input id="nrOfSheeps" min="0" max="200" value="10" type="number" style="position: absolute;left: 260;top: 901;"/>
+@* <text style="position: absolute;left: 160;top:901;">Nr of sheeps </text> *@
+@* <input id="nrOfSheeps" min="0" max="200" value="10" type="number" style="position: absolute;left: 260;top: 901;"/> *@
 
-<text style="position: absolute;left: 350;top:901;">Drone settings (reset to apply):</text>
-<text style="position: absolute;left: 600;top:901;">Path Number</text>
-<input id="setting1" min="0" max="500" value="0" type="number" style="position: absolute;left: 700;top: 901;"/>
+<text style="position: absolute;left: 160;top:901;">Path Number</text>
+<input id="setting1" min="0" max="500" value="0" type="number" style="position: absolute;left: 400;top: 901;"/>
 <text hidden="true" style="position: absolute;left: 800;top:901;">Spread</text>
 <input hidden="true" id="setting2" min="1" max="500" value="66" type="number" style="position: absolute;left: 900;top: 901;"/>
-<text style="position: absolute;left: 1000;top:901;">Visualization Speed</text>
-<input id="setting3" min="1" max="1000" value="100" type="number" style="position: absolute;left: 1100;top: 921;"/>
+<text style="position: absolute;left: 160;top:921;">Visualization Speed</text>
+<input id="setting3" min="1" max="1000" value="20" type="number" style="position: absolute;left: 400;top: 921;"/>
 
 <text style="position: absolute;left: 1001;top:10;">Player name:</text>
 <input id="player" type="text" value="Unknown" style="position: absolute;left: 1001;top: 30;"/>

@@ -20,7 +20,7 @@ public class HerdService : IDisposable
     public bool Reset { get; set; } = false;
     public int NrOfSheeps { get; set; } = 10;
     public string Name { get; set; } = "Unknown";
-    public int VisualizationSpeed { get; set; } = 100;
+    public int VisualizationSpeed { get; set; } = 20;
     public int PathNr { get; set; } = 0;
     public bool Connected { get; set; } = true;
 
@@ -83,7 +83,7 @@ public class HerdService : IDisposable
                 var listOfSheeps = new List<Sheep>();
                 var listOfHerders = new List<DroneHerder>();
                 var mouse = new DroneHerder(0, 0, -1, 25.0);
-                mouse.Set(new Coordinate(0, 800));
+                mouse.Set(new Coordinate(1, 1));
 
                 for (int i = 0; i < 3; i++)
                 {

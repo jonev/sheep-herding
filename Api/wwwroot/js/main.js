@@ -8,9 +8,10 @@ var mouseY = 0;
 var lastMouseX = 0;
 var lastMouseY = 0;
 var clearCanvasOn = true;
+var sendMouseOn = false;
 
 connection.on("ReceiveMessage", function (user, message) {
-    console.log(message)
+    // console.log(message)
     var objects = message.split("!")
     var elapsedTime = objects[0].split(",");
     var centroidCollection = objects[1].split(";");
@@ -77,7 +78,7 @@ connection.on("ReceiveMessage", function (user, message) {
 });
 
 connection.on("Scoreboard", function (list) {
-    console.log(list)
+    // console.log(list)
     let htmlList = document.getElementById("scoreboard");
     htmlList.innerHTML = ""
     for (let i = 0; i < list.length; i++) {
@@ -88,11 +89,10 @@ connection.on("Scoreboard", function (list) {
 });
 
 function reset() {
-    var nr = document.getElementById("nrOfSheeps").value;
+    var nr = "5"; // document.getElementById("nrOfSheeps").value;
     var s1 = document.getElementById("setting1").value;
     var s2 = document.getElementById("setting2").value;
     var s3 = document.getElementById("setting3").value;
-    console.log("Reset, number of sheeps: ", nr)
     connection.invoke("Reset", nr, s1, s2, s3).catch(function (err) {
         return console.error(err.toString());
     });
@@ -136,6 +136,14 @@ function toggleClearCanvas() {
         clearCanvasOn = false;
     } else {
         clearCanvasOn = true;
+    }
+}
+
+function toggleSendMouse() {
+    if (sendMouseOn) {
+        sendMouseOn = false;
+    } else {
+        sendMouseOn = true;
     }
 }
 
@@ -211,6 +219,7 @@ function sendMousePosition(x, y) {
 }
 
 function mousemove(event) {
+    if(!sendMouseOn) return; 
     mouseX = event.clientX;
     mouseY = event.clientY;
     if (mouseX > (lastMouseX + 10) || mouseX < (lastMouseX - 10) || mouseY > (lastMouseY + 10) || mouseY > (lastMouseY + 10)) {
