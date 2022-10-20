@@ -1,13 +1,10 @@
 using SheepHerding.Api.Hubs;
-using SheepHerding.Api.Services;
-
 
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
 builder.Services.AddRazorPages();
 builder.Services.AddSignalR();
-builder.Services.AddSingleton<DataSharingService>();
 
 var app = builder.Build();
 

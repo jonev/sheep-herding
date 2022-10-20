@@ -10,26 +10,23 @@ public class Communication : Hub
     // https://docs.microsoft.com/en-us/aspnet/core/tutorials/signalr?WT.mc_id=dotnet-35129-website&view=aspnetcore-6.0&tabs=visual-studio-code
     private readonly ILogger<Communication> _logger;
     private readonly IHubContext<Communication> _hubContext;
-    private readonly DataSharingService _data;
     public static readonly ConcurrentDictionary<string, HerdService> _services = new ();
 
-    public Communication(ILogger<Communication> logger, IHubContext<Communication> hubContext, DataSharingService data)
+    public Communication(ILogger<Communication> logger, IHubContext<Communication> hubContext)
     {
         _logger = logger;
         _hubContext = hubContext;
-        _data = data;
     }
 
     public override async Task OnConnectedAsync()
     {
         _logger.LogInformation($"Client connected: {Context.ConnectionId}");
-        var service = new HerdService(_logger, _hubContext, Context.ConnectionId, _data);
+        var service = new HerdService(_logger, _hubContext, Context.ConnectionId);
         service.ExecuteAsync();
         var result = _services.AddOrUpdate(Context.ConnectionId, service, (key, oldValue) => service);
         _logger.LogInformation($"Client service added: {result.ClientId}");
-        await Clients.All.SendAsync("Scoreboard", _data.ScoreBoard.OrderBy(s => s.Points));
     }
-
+    
     public override Task OnDisconnectedAsync(Exception? exception)
     {
         _logger.LogInformation($"Client disconnected: {Context.ConnectionId} - {exception}");

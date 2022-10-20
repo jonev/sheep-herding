@@ -1,7 +1,7 @@
 "use strict";
 
 var connection = new signalR.HubConnectionBuilder().withUrl("/communication").build();
-var colors = ['green', 'red', 'red', 'red', 'indigo', 'yellow'];
+var colors = ['dark grey', 'grey', 'grey', 'grey', 'light grey', 'white'];
 var mouseX = 0;
 var mouseY = 0;
 
@@ -15,14 +15,16 @@ connection.on("ReceiveMessage", function (user, message) {
     var objects = message.split("!")
     var elapsedTime = objects[0].split(",");
     var centroidCollection = objects[1].split(";");
-    var coordinatesCollection = objects[2].split(";");
-    var vectorCollection = objects[3].split(";");
-    var circle = objects[4].split(";");
-    var pathCoordinates = objects[5].split(";");
-    var pathCoordinatesAchieved = objects[6].split(";");
-    var commandsCoordinates = objects[7].split(";");
-    var state = objects[8];
-    var terrainPath = objects[9].split(";");
+    var droneOversight = objects[2].split(",");
+    var herders = objects[3].split(";");
+    var sheeps = objects[4].split(";");
+    var vectorCollection = objects[5].split(";");
+    var circle = objects[6].split(";");
+    var pathCoordinates = objects[7].split(";");
+    var pathCoordinatesAchieved = objects[8].split(";");
+    var commandsCoordinates = objects[9].split(";");
+    var state = objects[10];
+    var terrainPath = objects[11].split(";");
 
     printElapsedTime(elapsedTime);
     printState(state);
@@ -34,58 +36,54 @@ connection.on("ReceiveMessage", function (user, message) {
         for (let i = 0; i < terrainPath.length - 2; i++) {
             let from = terrainPath[i].split(",")
             let to = terrainPath[i + 1].split(",")
-            drawVector(from[0], from[1], to[0], to[1], 'red', 3)
+            drawVector(from[0], from[1], to[0], to[1], 'white', 3)
         }
         
         for (let i = 0; i < pathCoordinates.length - 2; i++) {
             let from = pathCoordinates[i].split(",")
             let to = pathCoordinates[i + 1].split(",")
-            drawVector(from[0], from[1], to[0], to[1], 'yellow', 5)
+            drawVector(from[0], from[1], to[0], to[1], 'white', 5)
         }
 
         for (let i = 0; i < pathCoordinatesAchieved.length - 2; i++) {
             let from = pathCoordinatesAchieved[i].split(",")
             let to = pathCoordinatesAchieved[i + 1].split(",")
-            drawVector(from[0], from[1], to[0], to[1], 'green', 4)
+            drawVector(from[0], from[1], to[0], to[1], 'grey', 4)
         }
 
-        drawCircle(circle[0], circle[1], circle[2], "pink")
+        drawCircle(circle[0], circle[1], circle[2], "white", 0.25)
 
         for (let i = 0; i < vectorCollection.length - 1; i++) {
             let vector = vectorCollection[i].split(",")
-            drawVector(vector[0], vector[1], vector[2], vector[3], 'red', 1)
+            drawVector(vector[0], vector[1], vector[2], vector[3], 'white', 0.25)
         }
     }
-    for (let i = 0; i < coordinatesCollection.length - 1; i++) {
-        let coordinates = coordinatesCollection[i].split(",")
-        drawPoint(coordinates[0], coordinates[1], colors[i])
+    drawCircle(droneOversight[0], droneOversight[1], 5.0, "white", 3)
+    
+    for (let i = 0; i < herders.length - 1; i++) {
+        let coordinates = herders[i].split(",")
+        drawPoint(coordinates[0], coordinates[1], 'white')
+    }
+
+    for (let i = 0; i < sheeps.length - 1; i++) {
+        let coordinates = sheeps[i].split(",")
+        drawCircle(coordinates[0], coordinates[1], 5, "white", 2)
     }
 
     for (let i = 0; i < centroidCollection.length - 1; i++) {
-        let coordinates = centroidCollection[i].split(",")
-        drawPoint(coordinates[0], coordinates[1], 'black')
+        let coordinates = centroidCollection[i].split(",").map(s => parseFloat(s))
+        triangle(coordinates[0], coordinates[1], 'white')
     }
 
     for (let i = 0; i < commandsCoordinates.length - 1; i++) {
         let coordinates = commandsCoordinates[i].split(",")
-        drawPoint(coordinates[0], coordinates[1], 'black', 5)
+        drawPoint(coordinates[0], coordinates[1], 'white', 5)
     }
 
     // let coordinates = commandsCoordinates[0].split(",")
     // drawPoint(coordinates[0], coordinates[1], 'pink')
     // coordinates = commandsCoordinates[1].split(",")
     // drawPoint(coordinates[0], coordinates[1], 'purple')
-});
-
-connection.on("Scoreboard", function (list) {
-    // console.log(list)
-    let htmlList = document.getElementById("scoreboard");
-    htmlList.innerHTML = ""
-    for (let i = 0; i < list.length; i++) {
-        var li = document.createElement("li");
-        li.appendChild(document.createTextNode(list[i].name + " sheeps: " + list[i].nrOfSheeps + " time: " + list[i].time + " adjusted time: " + list[i].points));
-        htmlList.appendChild(li);
-    }
 });
 
 function reset() {
@@ -111,19 +109,6 @@ function startStopDrones() {
         return console.error(err.toString());
     });
 }
-
-function saveName() {
-    var name = document.getElementById("player").value;
-    console.log("Player: ", name)
-    connection.invoke("SetName", name).catch(function (err) {
-        return console.error(err.toString());
-    });
-}
-
-connection.on("SendName", function (name) {
-    console.log("Player playing: ", name)
-    document.getElementById("player").value = name;
-});
 
 connection.start().then(function () {
     console.log("Connection started")
@@ -186,7 +171,7 @@ function drawVector(x1, y1, x2, y2, color, lineWidth) {
     ctx.stroke();
 }
 
-function drawCircle(x, y, radius, color) {
+function drawCircle(x, y, radius, color, lineWidth) {
     const canvas = document.querySelector('#canvas');
 
     if (!canvas.getContext) {
@@ -195,9 +180,26 @@ function drawCircle(x, y, radius, color) {
     const ctx = canvas.getContext('2d');
     // ctx.clearRect(0, 0, canvas.width, canvas.height);
     ctx.strokeStyle = color;
+    ctx.lineWidth = lineWidth;
     ctx.beginPath();
     ctx.arc(x, y, radius, 0, 2 * Math.PI);
     ctx.stroke();
+}
+
+function triangle(x, y, color, lineWidth) {
+    const canvas = document.querySelector('#canvas');
+
+    if (!canvas.getContext) {
+        return;
+    }
+    const ctx = canvas.getContext('2d');
+    ctx.strokeStyle = color;
+    ctx.lineWidth = lineWidth;
+    ctx.beginPath();
+    ctx.moveTo(x, y);
+    ctx.lineTo(x-10, y+10);
+    ctx.lineTo(x+10, y+10);
+    ctx.fill();
 }
 
 function printElapsedTime(time) {

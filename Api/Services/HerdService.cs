@@ -11,7 +11,6 @@ public class HerdService : IDisposable
 {
     private readonly ILogger _logger;
     private readonly IHubContext<Communication> _hub;
-    private readonly DataSharingService _data;
     public string ClientId { get; }
     private readonly Coordinate Finish = new(870, 770);
     public Coordinate MousePosition { get; set; } = new(0, 0);
@@ -30,11 +29,10 @@ public class HerdService : IDisposable
     private long _previousTicks = DateTime.Now.Ticks;
 
 
-    public HerdService(ILogger logger, IHubContext<Communication> hub, string clientId, DataSharingService data)
+    public HerdService(ILogger logger, IHubContext<Communication> hub, string clientId)
     {
         _logger = logger;
         _hub = hub;
-        _data = data;
         ClientId = clientId;
         _logger.LogInformation($"Herd service init for: {clientId} --------------------");
     }
@@ -149,13 +147,6 @@ public class HerdService : IDisposable
                     // var pathIndex = droneOversight.UpdatePosition(new Coordinate(x, y), largestDistance, dt,
                     //     herdSettings, path);
 
-                    // Send coordinates
-                    var print = new List<Coordinate>();
-                    print.Add(droneOversight.Position);
-                    print.AddRange(listOfHerders.Select(s => s.Position).ToList());
-                    print.AddRange(listOfSheeps.Select(s => s.Position).ToList());
-                    var coordinates = CoordinatePrinter.ToString(print);
-
                     var cast = new List<Point>();
                     cast.AddRange(listOfSheeps);
                     cast.Add(droneOversight);
@@ -168,7 +159,9 @@ public class HerdService : IDisposable
                     var message =
                         $"{stopwatch.Elapsed.TotalSeconds}" +
                         $"!{CoordinatePrinter.ToString(centroids)}" +
-                        $"!{coordinates}" +
+                        $"!{CoordinatePrinter.ToString(new List<Coordinate>{droneOversight.Position})}" +
+                        $"!{CoordinatePrinter.ToString(listOfHerders.Select(s => s.Position).ToList())}" +
+                        $"!{CoordinatePrinter.ToString(listOfSheeps.Select(s => s.Position).ToList())}" +
                         $"!{vectors}" +
                         $"!{circle}" +
                         $"!{pathString}" +
@@ -185,9 +178,6 @@ public class HerdService : IDisposable
                     if (finished)
                     {
                         stopwatch.Stop();
-                        AddScore(stopwatch.Elapsed.TotalSeconds);
-                        await _hub.Clients.All.SendAsync("Scoreboard", _data.ScoreBoard.OrderBy(s => s.Points),
-                            default);
                         Start = false;
                     }
 
@@ -213,17 +203,6 @@ public class HerdService : IDisposable
         }
 
         _logger.LogInformation($"Shutting down {ClientId}");
-    }
-
-    private void AddScore(double timeInSeconds)
-    {
-        if (_data.ScoreBoard.Count > 999)
-        {
-            var lowest = _data.ScoreBoard.OrderByDescending(s => s.Points).FirstOrDefault();
-            _data.ScoreBoard = new ConcurrentBag<Score>(_data.ScoreBoard.Where(s => s.Time != lowest.Points).ToList());
-        }
-
-        _data.ScoreBoard.Add(new Score(Name, NrOfSheeps, timeInSeconds));
     }
 
     public void Dispose()
