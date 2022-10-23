@@ -22,6 +22,7 @@ public class HerdService : IDisposable
     public int VisualizationSpeed { get; set; } = 20;
     public int PathNr { get; set; } = 0;
     public bool Connected { get; set; } = true;
+    public bool Finished { get; set; } = false;
 
     private int _scanTimeDelay = 10;
     private double _scanTime = 0.01;
@@ -77,7 +78,7 @@ public class HerdService : IDisposable
                 var pathString = CoordinatePrinter.ToString(path.ToList<Coordinate>());
                 var terrainPathString = CoordinatePrinter.ToString(TerrainPathCoordinates.ToList<Coordinate>());
                 Stopwatch stopwatch = new Stopwatch();
-                var finished = false;
+                if(Start) Finished = false;
                 var listOfSheeps = new List<Sheep>();
                 var listOfHerders = new List<DroneHerder>();
                 var mouse = new DroneHerder(0, 0, -1, 25.0);
@@ -116,7 +117,7 @@ public class HerdService : IDisposable
                     p.Accessed = false;
                 }
 
-                while (Connected && Reset == false && finished == false)
+                while (Connected && Reset == false && Finished == false)
                 {
                     if (Start) stopwatch.Start();
                     if (!Start)
@@ -170,12 +171,12 @@ public class HerdService : IDisposable
                         $"!{state}" +
                         $"!{terrainPathString}";
                     // _logger.LogDebug($"Sending cooridnates; {message}");
-                    await _hub.Clients.Client(ClientId).SendAsync("ReceiveMessage", "admin", message,
+                    if(_hub != null) await _hub.Clients.Client(ClientId).SendAsync("ReceiveMessage", "admin", message,
                         default(CancellationToken));
 
                     // Finished?
-                    finished = listOfSheeps.All(s => s.IsInsideFinishZone());
-                    if (finished)
+                    Finished = listOfSheeps.All(s => s.IsInsideFinishZone());
+                    if (Finished)
                     {
                         stopwatch.Stop();
                         Start = false;
