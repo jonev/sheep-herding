@@ -9,44 +9,39 @@ public class Sheep : Point
     private readonly IList<DroneHerder> _enemies;
     private readonly Coordinate _finish;
     private readonly List<Coordinate> _terrainPaths;
-    private readonly double _neighborToCloseStartMoveThreshold = 25.0;
-    private readonly double _neighborToFarStartToMoveThreshold = 150.0;
-    private readonly double _centroidOfHerdToFarStartMoveThreshold = 100.0;
-    private readonly double _centroidOfHerdToFarEndMoveThreshold = 200.0;
-    private readonly double _enemyToCloseStartMoveThreshold = 100.0;
-    private readonly double _maxSpeed = 100.0;
+    private readonly int _randomSeed;
     private readonly ILogger _logger;
+    private readonly SheepSettings _settings;
     private int _scanIndex = 0;
     private double _randomAngle = 0.0;
 
-    public Sheep(ILogger logger, double maxX, double maxY, int id, IList<Sheep> friendlies, IList<DroneHerder> enemies,
-        Coordinate finish, List<Coordinate> terrainPaths) : base(maxX, maxY, id)
+    public Sheep(ILogger logger, int id, SheepSettings settings, IList<Sheep> friendlies, IList<DroneHerder> enemies,
+        Coordinate finish, List<Coordinate> terrainPaths, int randomSeed) : base(id)
     {
         _logger = logger;
+        _settings = settings;
         _friendlies = friendlies;
         _enemies = enemies;
         _finish = finish;
         _terrainPaths = terrainPaths;
+        _randomSeed = randomSeed;
     }
 
     public void UpdatePosition(double forceAdjustment)
     {
         _scanIndex++;
-        var personalSpaceForce = 3.0f;
-        var holdTogetherForce = 1.0f;
-        var runAwayForce = 1.0f;
         var force = new Vector2(0, 0);
         
         // Personal space - dont have sheeps walk on top of each other
         var close = _friendlies.Where(s
-            => s.Id != Id && Converter.ToVector2(Position, s.Position).Length() < _neighborToCloseStartMoveThreshold)
+            => s.Id != Id && Converter.ToVector2(Position, s.Position).Length() < _settings.NeighborToCloseStartMoveThreshold)
             .MinBy(s => Converter.ToVector2(Position, s.Position).Length());
 
         if (close != null)
         {
             var sheepVclose = Converter.ToVector2Negated(Position, new Coordinate(close.Position.X, close.Position.Y));
             var normalized = Vector2.Normalize(Vector2.Add(force, sheepVclose));
-            force = Vector2.Multiply(normalized, personalSpaceForce);
+            force = Vector2.Multiply(normalized, _settings.PersonalSpaceForce);
             // _logger.LogInformation($"Sheep '{Id}' needs personal space");
         }
 
@@ -76,12 +71,12 @@ public class Sheep : Point
         // Enemies - Herding
         var sheepVenemy = _enemies.Select(e => Converter.ToVector2Negated(Position, e.Position));
         var minLenght = sheepVenemy.Select(v => v.Length()).Min();
-        if (_randomAngle == 0.0 || _scanIndex % 10 == 0)
+        if (_randomAngle == 0.0 || _scanIndex % _settings.RandomAngleUpdateDelayFactor == 0)
         {
             // Dont update so often
-            _randomAngle = (new Random().NextDouble() - 0.5) * (Math.PI/2);
+            _randomAngle = (new Random(_randomSeed).NextDouble() - 0.5) * _settings.RandomAngleRange;
         }
-        if (minLenght <= _enemyToCloseStartMoveThreshold)
+        if (minLenght <= _settings.EnemyToCloseStartMoveThreshold)
         {
             foreach (var enemy in sheepVenemy)
             {

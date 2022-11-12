@@ -7,7 +7,7 @@ public class DroneHerder : Point
 {
     private readonly double _speed;
 
-    public DroneHerder(double maxX, double maxY, int id, double speed) : base(maxX, maxY, id)
+    public DroneHerder(double maxX, double maxY, int id, double speed) : base(id)
     {
         _speed = speed;
     }

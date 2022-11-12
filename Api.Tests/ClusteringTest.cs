@@ -8,7 +8,7 @@ public class ClusteringTest
 {
     class TestPoint : Point
     {
-        public TestPoint(int id, double x, double y) : base(0, 0, id, x, y)
+        public TestPoint(int id, double x, double y) : base(id, x, y)
         {
         }
     }

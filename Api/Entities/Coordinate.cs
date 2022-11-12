@@ -31,7 +31,7 @@ public class Coordinate
 
     public Point ToPoint()
     {
-        return new Point(0, 0, 0, X, Y);
+        return new Point(0, X, Y);
     }
 
     public override string ToString()

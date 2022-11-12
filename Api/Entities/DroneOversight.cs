@@ -1,8 +1,6 @@
 using System.Numerics;
 using SheepHerding.Api.Helpers;
-using SheepHerding.Api.Services;
 using SheepHerding.Api.StateMachine;
-using Stateless;
 
 namespace SheepHerding.Api.Entities;
 
@@ -19,8 +17,8 @@ public class DroneOversight : Point
     private Coordinate _next = new(Double.MaxValue, Double.MaxValue);
     private Coordinate _command = new(0, 0);
     private IList<AckableCoordinate> _commands = new List<AckableCoordinate>();
-    private Point _nextPoint = new(0, 0, 0, Double.MaxValue, Double.MaxValue);
-    private Point _commandPoint = new(0, 0, 0, Double.MaxValue, Double.MaxValue);
+    private Point _nextPoint = new(0, Double.MaxValue, Double.MaxValue);
+    private Point _commandPoint = new(0, Double.MaxValue, Double.MaxValue);
     private MaxRateOfChange _mrcAngle = new();
     private bool _pathAngleCalculationActivated = false;
     private bool _commandInRange;
@@ -32,16 +30,19 @@ public class DroneOversight : Point
     private PathCreator _pathCreator;
     private readonly List<Sheep> _sheeps;
     private double _speedFactor;
+    private readonly Coordinate _finish;
+
 
     public DroneOversight(ILogger logger, double maxX, double maxY, int id,
-        List<AckableCoordinate> predefinedPathPoints, List<DroneHerder> herders, PathCreator pathCreator, List<Sheep> sheeps) :
-        base(maxX, maxY, id)
+        List<AckableCoordinate> predefinedPathPoints, List<DroneHerder> herders, PathCreator pathCreator, List<Sheep> sheeps, Coordinate finish) :
+        base(id)
     {
         _logger = logger;
         _predefinedPathPoints = predefinedPathPoints;
         _herders = herders;
         _pathCreator = pathCreator;
         _sheeps = sheeps;
+        _finish = finish;
         InitializeStateMachine();
         StartupCalculations();
     }
@@ -202,7 +203,7 @@ public class DroneOversight : Point
             ack.Ack();
         }
 
-        _nextPoint = new Point(0, 0, 0, _current.X, _current.Y);
+        _nextPoint = new Point(0, _current.X, _current.Y);
         var c = _commands.FirstOrDefault(c => !c.Accessed);
         if (c != null)
         {
@@ -210,7 +211,7 @@ public class DroneOversight : Point
             _positionCommandVector = Converter.ToVector2(Position, new Coordinate(_command.X, _command.Y));
         }
 
-        var pathPoint = new Point(0, 0, 0, Position.X, Position.Y);
+        var pathPoint = new Point(0, Position.X, Position.Y);
         pathPoint.Force = _positionCommandVector;
 
 
@@ -221,6 +222,9 @@ public class DroneOversight : Point
         // After updating this position, update the herders
         _herdRadius = Math.Pow(_centroids[0].Radius, 1.2);
         if (_herdRadius < 75) _herdRadius = 75;
+        if (_herdRadius > 110.0) _herdRadius = 110.0;
+        // _herdRadius = 90.0;
+        
         // _logger.LogInformation($"{nameof(_herdRadius)}:{_herdRadius}");
         var h0 = Vector2.Multiply(Vector2.Negate(Vector2.Normalize(_positionCommandVector)), (float) _herdRadius);
         var h1 = Calculator.RotateVector(h0, _herdAngleInRadians);
@@ -264,7 +268,7 @@ public class DroneOversight : Point
         var rotatedNormNextVector = Vector2.Normalize(Calculator.RotateVector(nextVector, Math.PI / 2));
         var adjustedNextVector = Vector2.Multiply(Vector2.Normalize(rotatedNormNextVector), (float) reduction);
 
-        var command = new Point(0, 0, 0, current.X + adjustedNextVector.X, current.Y + adjustedNextVector.Y);
+        var command = new Point(0, current.X + adjustedNextVector.X, current.Y + adjustedNextVector.Y);
         command.Force = Vector2.Negate(adjustedNextVector);
         return command;
     }
@@ -294,7 +298,7 @@ public class DroneOversight : Point
         var rotatedNormNextVector = Vector2.Normalize(Calculator.RotateVector(currentNextVector, angles));
         var adjustedNextVector = Vector2.Multiply(Vector2.Normalize(rotatedNormNextVector), (float) reduction);
 
-        var command = new Point(0, 0, 0, current.X + adjustedNextVector.X, current.Y + adjustedNextVector.Y);
+        var command = new Point(0, current.X + adjustedNextVector.X, current.Y + adjustedNextVector.Y);
         command.Force = Vector2.Negate(adjustedNextVector);
         return command;
     }
@@ -304,8 +308,13 @@ public class DroneOversight : Point
     {
         var commandVector = Vector2.Multiply(Calculator.GetCommandVector(Position, current, next), 100.0f);
 
-        var command = new Point(0, 0, 0, current.X + commandVector.X, current.Y + commandVector.Y);
+        var command = new Point(0, current.X + commandVector.X, current.Y + commandVector.Y);
         command.Force = Vector2.Negate(commandVector);
         return command;
+    }
+
+    public bool IsInsideFinishZone()
+    {
+        return Position.X >= _finish.X && Position.Y >= _finish.Y;
     }
 }

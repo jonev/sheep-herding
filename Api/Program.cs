@@ -24,6 +24,6 @@ app.UseRouting();
 app.UseAuthorization();
 
 app.MapRazorPages();
-app.MapHub<Communication>("/communication");
+app.MapHub<VisualizationCommunication>("/communication");
 
 app.Run();
