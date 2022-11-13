@@ -62,9 +62,10 @@ public static class CoordinatePrinter
     {
         if (coordinates is null || coordinates.Count < 1) return "";
         var sb = new StringBuilder();
-        foreach (var coordinate in coordinates)
+        sb.Append($"{coordinates[0].X},{coordinates[0].Y}");
+        foreach (var coordinate in coordinates.Skip(1))
         {
-            sb.Append($"{coordinate.X},{coordinate.Y};");
+            sb.Append($";{coordinate.X},{coordinate.Y}");
         }
 
         return sb.ToString();

@@ -1,12 +1,12 @@
 .canvas-style{
-    background-color: black;
+    background-color: white;
 }
 
 .coordinate-numbers{
-    color: #9d9fa0;
+    color: black;
 }
 
 .canvas-line{
-    stroke: #3f4040;
-    stroke-width: 1;
+    stroke: darkgrey;
+    stroke-width: 0.25;
 }

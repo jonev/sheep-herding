@@ -6,9 +6,10 @@
     <link rel="stylesheet" href="css/Index.css">
 </head>
 
-<text id="elapsedTime" style="position: absolute;left: 850;top: 10; color: red; background-color: black;z-index: 100"></text>
-<text id="state" style="position: absolute;left: 550;top: 10; color: red; background-color: black;z-index: 100"></text>
+<text id="elapsedTime" style="position: absolute;left: 850;top: 10; color: white; background-color: black;z-index: 100"></text>
+<text id="state" style="position: absolute;left: 550;top: 10; color: white; background-color: black;z-index: 100"></text>
 
+@* Canvas coordinate numbering *@
 <text class="coordinate-numbers" style="position: absolute;left: 100;top: 50;z-index: 100">100</text>
 <text class="coordinate-numbers" style="position: absolute;left: 200;top: 50;z-index: 100">200</text>
 <text class="coordinate-numbers" style="position: absolute;left: 300;top: 50;z-index: 100">300</text>
@@ -31,6 +32,8 @@
 
 <canvas id="canvas" height="900" width="1000" class="canvas-style" style="position: absolute;left: 0;top: 0;z-index: -1">
 </canvas>
+
+@* Canvas lines *@
 <svg height="1000" width="1000" style="position: absolute;left: 0;top: 0">
     <line x1="0" y1="0" x2="0" y2="900" class="canvas-line"/>
     <line x1="50" y1="0" x2="50" y2="900" class="canvas-line"/>
@@ -74,8 +77,8 @@
     <line y1="850" x1="0" y2="850" x2="1000" class="canvas-line"/>
     <line y1="900" x1="0" y2="900" x2="1000" class="canvas-line"/>
 
-    <line x1="850" y1="750" x2="1000" y2="750" style="stroke:rgb(255,0,0);stroke-width:2"/>
-    <line x1="850" y1="750" x2="850" y2="900" style="stroke:rgb(255,0,0);stroke-width:2"/>
+    <line x1="850" y1="750" x2="1000" y2="750" style="stroke:black;stroke-width:2"/>
+    <line x1="850" y1="750" x2="850" y2="900" style="stroke:black;stroke-width:2"/>
 
     
 </svg>

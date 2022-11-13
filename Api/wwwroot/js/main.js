@@ -33,57 +33,52 @@ connection.on("ReceiveMessage", function (user, message) {
     }
 
     if (clearCanvasOn) {
-        for (let i = 0; i < terrainPath.length - 2; i++) {
+        for (let i = 0; i < terrainPath.length - 1; i++) {
             let from = terrainPath[i].split(",")
             let to = terrainPath[i + 1].split(",")
-            drawVector(from[0], from[1], to[0], to[1], 'white', 3)
+            drawVector(from[0], from[1], to[0], to[1], 'black', 3)
         }
         
-        for (let i = 0; i < pathCoordinates.length - 2; i++) {
+        for (let i = 0; i < pathCoordinates.length - 1; i++) {
             let from = pathCoordinates[i].split(",")
             let to = pathCoordinates[i + 1].split(",")
-            drawVector(from[0], from[1], to[0], to[1], 'white', 5)
+            drawVector(from[0], from[1], to[0], to[1], 'grey', 5)
         }
 
-        for (let i = 0; i < pathCoordinatesAchieved.length - 2; i++) {
+        for (let i = 0; i < pathCoordinatesAchieved.length - 1; i++) {
             let from = pathCoordinatesAchieved[i].split(",")
             let to = pathCoordinatesAchieved[i + 1].split(",")
-            drawVector(from[0], from[1], to[0], to[1], 'grey', 4)
+            drawVector(from[0], from[1], to[0], to[1], 'lightgrey', 4)
         }
 
-        drawCircle(circle[0], circle[1], circle[2], "white", 0.25)
+        drawCircle(circle[0], circle[1], circle[2], "black", 0.25)
 
-        for (let i = 0; i < vectorCollection.length - 1; i++) {
+        for (let i = 0; i < vectorCollection.length; i++) {
             let vector = vectorCollection[i].split(",")
-            drawVector(vector[0], vector[1], vector[2], vector[3], 'white', 0.25)
+            drawVector(vector[0], vector[1], vector[2], vector[3], 'grey', 0.25)
         }
     }
-    drawCircle(droneOversight[0], droneOversight[1], 5.0, "white", 3)
+    drawPoint(droneOversight[0], droneOversight[1],"lightgrey", 15)
     
-    for (let i = 0; i < herders.length - 1; i++) {
+    for (let i = 0; i < herders.length; i++) {
         let coordinates = herders[i].split(",")
-        drawPoint(coordinates[0], coordinates[1], 'white')
+        drawPoint(coordinates[0], coordinates[1], 'black', 10)
     }
 
-    for (let i = 0; i < sheeps.length - 1; i++) {
+    for (let i = 0; i < sheeps.length; i++) {
         let coordinates = sheeps[i].split(",")
-        drawCircle(coordinates[0], coordinates[1], 5, "white", 2)
+        drawCircle(coordinates[0], coordinates[1], 5, "black", 2)
     }
 
-    for (let i = 0; i < centroidCollection.length - 1; i++) {
+    for (let i = 0; i < centroidCollection.length; i++) {
         let coordinates = centroidCollection[i].split(",").map(s => parseFloat(s))
-        triangle(coordinates[0], coordinates[1], 'white')
+        triangle(coordinates[0], coordinates[1], 'lightgrey')
     }
 
-    for (let i = 0; i < commandsCoordinates.length - 1; i++) {
+    for (let i = 0; i < commandsCoordinates.length; i++) {
         let coordinates = commandsCoordinates[i].split(",")
-        drawPoint(coordinates[0], coordinates[1], 'white', 5)
+        drawPoint(coordinates[0], coordinates[1], 'black', 5)
     }
-
-    // let coordinates = commandsCoordinates[0].split(",")
-    // drawPoint(coordinates[0], coordinates[1], 'pink')
-    // coordinates = commandsCoordinates[1].split(",")
-    // drawPoint(coordinates[0], coordinates[1], 'purple')
 });
 
 function reset() {
@@ -180,21 +175,21 @@ function drawCircle(x, y, radius, color, lineWidth) {
     const ctx = canvas.getContext('2d');
     // ctx.clearRect(0, 0, canvas.width, canvas.height);
     ctx.strokeStyle = color;
+    ctx.fillStyle = color;
     ctx.lineWidth = lineWidth;
     ctx.beginPath();
     ctx.arc(x, y, radius, 0, 2 * Math.PI);
     ctx.stroke();
 }
 
-function triangle(x, y, color, lineWidth) {
+function triangle(x, y, color) {
     const canvas = document.querySelector('#canvas');
 
     if (!canvas.getContext) {
         return;
     }
     const ctx = canvas.getContext('2d');
-    ctx.strokeStyle = color;
-    ctx.lineWidth = lineWidth;
+    ctx.fillStyle = color;
     ctx.beginPath();
     ctx.moveTo(x, y);
     ctx.lineTo(x-10, y+10);

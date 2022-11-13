@@ -54,17 +54,12 @@ public class HerdService : IDisposable
     private List<DroneHerder> InitializeHerders()
     {
         var listOfHerders = new List<DroneHerder>();
-        var mouse = new DroneHerder(0, 0, -1, 25.0);
-        mouse.Set(new Coordinate(1, 1));
-
         for (int i = 0; i < 3; i++)
         {
             var h = new DroneHerder(200, 200, i, 6.0);
             h.Set(new Coordinate(100, 100));
             listOfHerders.Add(h);
         }
-
-        listOfHerders.Add(mouse);
         return listOfHerders;
     }
 
