@@ -23,7 +23,7 @@ public class VisualizationCommunication : Hub
         _logger.LogInformation($"Client connected: {Context.ConnectionId}");
         var service = new HerdService(_logger, _hubContext, Context.ConnectionId, Globals.RandomSeed, new SheepSettings
         {
-            RandomAngleRange = Math.PI/20
+            RandomAngleRange = Math.PI/10
         });
         service.ExecuteAsync();
         var result = Services.AddOrUpdate(Context.ConnectionId, service, (_, _) => service);
@@ -66,11 +66,11 @@ public class VisualizationCommunication : Hub
         if (h < 0) h = 0;
         if (h > 500) h = 500;
         service.PathNr = h;
-        //
-        // h = Convert.ToInt32(s2);
-        // if (h < 1) h = 1;
-        // if (h > 500) h = 500;
-        // service.HerdAngleInDegrees = h;
+        
+        h = Convert.ToInt32(s2);
+        if (h < 1) h = 1;
+        if (h > 500) h = 500;
+        service.RandomAngle = h;
         
         h = Convert.ToInt32(s3);
         if (h < 0) h = 0;
