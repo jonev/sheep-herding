@@ -95,7 +95,8 @@ public class PathCreator
         if (startEndNextAngle < 0) startEndNextAngle += 2 * Math.PI;
         
         var positionNextAngle = Calculator.AngleInRadiansLimited(pathVector, nextVector);
-        if (Math.Abs(positionNextAngle) < Math.PI / 3 || pathLenght < 110.0)
+        var onLastPoint = nextVector.Equals(Vector2.Zero);
+        if (onLastPoint || Math.Abs(positionNextAngle) < Math.PI / 3 || pathLenght < 110.0)
         {
             return new List<AckableCoordinate> {new AckableCoordinate(0, end.X, end.Y)};
         }

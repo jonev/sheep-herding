@@ -131,7 +131,7 @@ public static class Calculator
         
         var angleInRadians = AngleInRadians(positionCurrentVector, currentNextVector);
 
-        if (angleInRadians < Math.PI/4) // If the andle is under 90 degrees we do now want any adjustments
+        if (angleInRadians < Math.PI/4) // If the angle is under 90 degrees we do now want any adjustments
         {
             return Vector2.Zero;
         }
@@ -147,5 +147,26 @@ public static class Calculator
         if (master > threshold) return valueToIncrease;
 
         return valueToIncrease + Math.PI/4;
+    }
+    
+    public static Coordinate Outcast(IList<Coordinate> coordinates, Coordinate center)
+    {
+        if (coordinates.Count < 1)
+        {
+            throw new ArgumentException($"{nameof(coordinates)} must have at least 1 element to find the outcast");
+        }
+        var outcast = coordinates.First();
+        var length = Converter.ToVector2(center, outcast).Length();
+        foreach (var coordinate in coordinates)
+        {
+            var currentCoordinateLenght = Converter.ToVector2(center, coordinate).Length();
+            if (currentCoordinateLenght > length)
+            {
+                outcast = coordinate;
+                length = currentCoordinateLenght;
+            }
+        }
+
+        return outcast;
     }
 }

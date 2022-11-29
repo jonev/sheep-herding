@@ -36,7 +36,7 @@ public class PredefinedHerdSetup
         var path = new List<AckableCoordinate>()
         {
             new(0, 350, 350),
-            new(1, 900, 800),
+            new(1, 950, 850),
         };
         return new HerdSetup(path, listOfSheepCoordinates, path.Select(p => new Coordinate(p.X, p.Y)).ToList());
     }
@@ -54,7 +54,7 @@ public class PredefinedHerdSetup
         {
             new(0, 500, 300),
             new(1, 800, 300),
-            new(2, 900, 900),
+            new(2, 950, 850),
         };
 
         // var terrainPath = new List<Coordinate>()
@@ -102,7 +102,7 @@ public class PredefinedHerdSetup
             new(2, 600, 500),
             new(3, 200, 500),
             new(4, 200, 800),
-            new(5, 900, 800)
+            new(5, 950, 850)
         };
         return new HerdSetup(path, listOfSheepCoordinates, path.Select(p => new Coordinate(p.X, p.Y)).ToList());
     }

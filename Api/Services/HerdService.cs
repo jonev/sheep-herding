@@ -21,7 +21,7 @@ public class HerdService : IDisposable
     public int NrOfSheeps { get; set; } = 10;
     public string Name { get; set; } = "Unknown";
     public int VisualizationSpeed { get; set; } = 20;
-    public double FailedTimout { get; set; } = 30.0;
+    public double FailedTimout { get; set; } = 60.0;
     public int PathNr { get; set; } = 0;
     public int RandomAngle { get; set; } = 20;
     public bool Connected { get; set; } = true;
@@ -57,7 +57,7 @@ public class HerdService : IDisposable
         var listOfHerders = new List<DroneHerder>();
         for (int i = 0; i < 3; i++)
         {
-            var h = new DroneHerder(200, 200, i, 6.0);
+            var h = new DroneHerder(200, 200, i, 8.0);
             h.Set(new Coordinate(100, 100));
             listOfHerders.Add(h);
         }
@@ -139,13 +139,14 @@ public class HerdService : IDisposable
             // Calculate new coordinates
             _listOfSheeps.ForEach(sheep => sheep.UpdatePosition(_forceAdjustment));
 
-            var (pathIndex, centroids, current, next, state, oversightPoints) =
+            var (pathIndex, centroids, current, next, state, oversightPoints, dummy) =
                 droneOversight.UpdatePosition(!StartDrones, _forceAdjustment);
 
             var cast = new List<Point>();
             cast.AddRange(_listOfSheeps);
             cast.Add(droneOversight);
             cast.AddRange(listOfHerders);
+            cast.Add(dummy);
             // cast.AddRange(oversightPoints);
             if (current != null) oversightPoints.Add(current);
             var vectors = VectorPrinter.ToString(cast);

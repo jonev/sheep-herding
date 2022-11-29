@@ -157,11 +157,11 @@ public class DroneOversight : Point
     }
 
     public (int pathIndex, List<Coordinate> centroids, Coordinate current, Coordinate next, string state,
-        IList<Coordinate> points) UpdatePosition(bool disableHerders, double forceAdjustment)
+        IList<Coordinate> points, Point dummy) UpdatePosition(bool disableHerders, double forceAdjustment)
     {
         // -- Calculations
         if (!_sheeps.Any()) return (_pathIndex, _centroids.Select(c => c.Position).ToList(), _command, _next, _machine.State.ToString(),
-            new List<Coordinate>());
+            new List<Coordinate>(), new Point(-100));
         // Clustering different herds
         var newCentroids = GetSheepHerdCentroids(_sheeps);
         _centroids =  newCentroids.Count > 0 ? newCentroids : _centroids;
@@ -175,12 +175,12 @@ public class DroneOversight : Point
         var currentInRange = Calculator.InRange(Position, _current, 45.0, 0.0);
         var sheepCentroidInRange = Calculator.InRange(Position, _centroids[0].Position, 45.0, 0.0);
         var sheepCentroidOutOfRange = Calculator.InRange(Position, _centroids[0].Position, 100.0, 50.0);
-        var closestPathPointOutOfRange = Calculator.InRange(Position, _closestPathPoints[0], 10000.0, 10.0);
+        var closestPathPointOutOfRange = _closestPathPoints.Count > 0 && Calculator.InRange(Position, _closestPathPoints[0], 10000.0, 10.0);
 
 
         var lenghtToNextHerd =
             _centroids.Count < 2 ? int.MaxValue : Converter.ToVector2(Position, _centroids[1].Position).Length();
-        var lenghtToNextPathPoint = Converter.ToVector2(Position, _closestPathPoints[0]).Length();
+        // var lenghtToNextPathPoint = Converter.ToVector2(Position, _closestPathPoints[0]).Length();
 
         var lenghtFromCurrentToHerd =
             _centroids.Count < 2 ? int.MaxValue : Converter.ToVector2(_current, _centroids[1].Position).Length();
@@ -221,24 +221,40 @@ public class DroneOversight : Point
 
         // After updating this position, update the herders
         _herdRadius = Math.Pow(_centroids[0].Radius, 1.2);
-        if (_herdRadius < 75) _herdRadius = 75;
+        if (_herdRadius < 90.0) _herdRadius = 90.0;
         if (_herdRadius > 110.0) _herdRadius = 110.0;
         // _herdRadius = 90.0;
         
+        // Adjustment for sheep herd out of center
+        var outcast = Calculator.Outcast(_sheeps.Select(s => s.Position).ToList(), _centroids[0].Position);
+        var oversightSheepOutcastVector = Converter.ToVector2(Position, outcast);
+        var angleToCenterDummy = new Point(-1, Position.X, Position.Y);
+        angleToCenterDummy.Force = oversightSheepOutcastVector;
+
+        var angleToCenter = 0.0;
+        if (_machine.State == State.FollowPath)
+        {
+            angleToCenter = Calculator.AngleInRadiansLimited(oversightSheepOutcastVector, _positionCommandVector);
+            if (oversightSheepOutcastVector.Length() < 25.0 || Math.Abs(angleToCenter) > Math.PI / 2)
+            {
+                angleToCenter = 0.0;
+            }
+        }
         // _logger.LogInformation($"{nameof(_herdRadius)}:{_herdRadius}");
         var h0 = Vector2.Multiply(Vector2.Negate(Vector2.Normalize(_positionCommandVector)), (float) _herdRadius);
+        h0 = Calculator.RotateVector(h0, angleToCenter * 1.0);
         var h1 = Calculator.RotateVector(h0, _herdAngleInRadians);
         var h2 = Calculator.RotateVector(h0, -_herdAngleInRadians);
 
         if (disableHerders)
             return (_pathIndex, _centroids.Select(c => c.Position).ToList(), _command, _next, _machine.State.ToString(),
-                new List<Coordinate>());
+                new List<Coordinate>(), new Point(-100));
         _herders[0].UpdatePosition(forceAdjustment, new Coordinate(Position.X + h0.X, Position.Y + h0.Y));
         _herders[1].UpdatePosition(forceAdjustment, new Coordinate(Position.X + h1.X, Position.Y + h1.Y));
         _herders[2].UpdatePosition(forceAdjustment, new Coordinate(Position.X + h2.X, Position.Y + h2.Y));
         var pointList = new List<Coordinate> {pathPoint.Position, _nextPoint.Position, _commandPoint.Position};
         pointList.AddRange(_commands);
-        return (_pathIndex, _centroids.Select(c => c.Position).ToList(), _command, _next, _machine.State.ToString(), pointList);
+        return (_pathIndex, _centroids.Select(c => c.Position).ToList(), _command, _next, _machine.State.ToString(), pointList, angleToCenterDummy);
     }
 
     public double GetHerdingCircleRadius()

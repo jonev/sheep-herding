@@ -219,4 +219,24 @@ public class CalculatorTest
         result.X.Should().BeApproximately(10.0f, 0.001f);
     }
     
+    [Fact]
+    public void OutCastTest()
+    {
+        //      1   2   3   4   5
+        // 1    
+        // 2        1       3
+        // 3
+        // 4        2       4
+        // 5                    5
+        var coordinates = new List<Coordinate>
+        {
+            new(2, 2), new(2, 4), new(4, 2), new(4, 4), new(5, 5)
+        };
+        var center = Calculator.Centroid(coordinates);
+        center.X.Should().BeApproximately(3.4, 0.0001);
+        center.Y.Should().BeApproximately(3.4, 0.0001);
+        var outcast = Calculator.Outcast(coordinates, center);
+        outcast.X.Should().Be(5);
+        outcast.Y.Should().Be(5);
+    }
 }
