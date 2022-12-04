@@ -8,22 +8,23 @@ public class Sheep : Point
     private readonly IList<Sheep> _friendlies;
     private readonly IList<DroneHerder> _enemies;
     private readonly Coordinate _finish;
-    private readonly List<Coordinate> _terrainPaths;
+    private readonly PathCoordinator _terrainPath;
     private readonly int _randomSeed;
     private readonly ILogger _logger;
     private readonly SheepSettings _settings;
     private int _scanIndex = 0;
     private double _randomAngle = 0.0;
+    private bool _pathCoordinateInRange;
 
     public Sheep(ILogger logger, int id, SheepSettings settings, IList<Sheep> friendlies, IList<DroneHerder> enemies,
-        Coordinate finish, List<Coordinate> terrainPaths, int randomSeed) : base(id)
+        Coordinate finish, PathCoordinator terrainPath, int randomSeed) : base(id)
     {
         _logger = logger;
         _settings = settings;
         _friendlies = friendlies;
         _enemies = enemies;
         _finish = finish;
-        _terrainPaths = terrainPaths;
+        _terrainPath = terrainPath;
         _randomSeed = randomSeed;
     }
 
@@ -42,6 +43,10 @@ public class Sheep : Point
             var sheepVclose = Converter.ToVector2Negated(Position, new Coordinate(close.Position.X, close.Position.Y));
             var normalized = Vector2.Normalize(Vector2.Add(force, sheepVclose));
             force = Vector2.Multiply(normalized, _settings.PersonalSpaceForce);
+            // force = Calculator.AddWithForceFactor(
+            //     force, 
+            //     sheepVclose, 
+            //     _settings.PersonalSpaceForce);
             // _logger.LogInformation($"Sheep '{Id}' needs personal space");
         }
 
@@ -60,6 +65,10 @@ public class Sheep : Point
             var sheepVfar = Converter.ToVector2(Position, new Coordinate(farCentroid.X, farCentroid.Y));
             var normalized = Vector2.Normalize(Vector2.Add(force, sheepVfar));
             force = Vector2.Divide(normalized, 1.0f);
+            // force = Calculator.AddWithForceFactor(
+            //     force, 
+            //     sheepVfar, 
+            //     _settings.HoldTogetherForce);
             // _logger.LogInformation($"Sheep '{Id}' hold together as a herd");
 
         }
@@ -71,12 +80,14 @@ public class Sheep : Point
         // Enemies - Herding
         var sheepVenemy = _enemies.Select(e => Converter.ToVector2Negated(Position, e.Position));
         var minLenght = sheepVenemy.Select(v => v.Length()).Min();
-        if (_randomAngle == 0.0 || _scanIndex % _settings.RandomAngleUpdateDelayFactor == 0)
-        {
-            // Dont update so often
-            _randomAngle = (new Random(_randomSeed).NextDouble() - 0.5) * _settings.RandomAngleRange;
-        }
-        if (minLenght <= _settings.EnemyToCloseStartMoveThreshold)
+        // if (_randomAngle == 0.0 || _scanIndex % _settings.RandomAngleUpdateDelayFactor == 0)
+        // {
+        //     // Dont update so often
+        //     _randomAngle = (new Random(_randomSeed).NextDouble() - 0.5) * _settings.RandomAngleRange;
+        // }
+        _randomAngle = 0.0;
+        var enemyClose = minLenght <= _settings.EnemyToCloseStartMoveThreshold;
+        if (enemyClose)
         {
             foreach (var enemy in sheepVenemy)
             {
@@ -86,11 +97,38 @@ public class Sheep : Point
                 var flippedRandomRotated =
                     Calculator.RotateVector(flippedReduced, _randomAngle);
                 force = Vector2.Add(force, flippedRandomRotated);
+                // force = Calculator.AddWithForceFactor(
+                //     force, 
+                //     flippedRandomRotated, 
+                //     _settings.RunAwayForce);
             }
+        }
+        
+        // Drawn towards the path
+        _pathCoordinateInRange = Calculator.UnderWithHysteresis(
+            _pathCoordinateInRange, 
+            Position, 
+            _terrainPath.GetCurrent(PATH_EXECUTER.SHEEP), 
+            10.0, 
+            1.0);
+        if (_pathCoordinateInRange)
+        {
+            // _logger.LogInformation($"Sheep ack path coordinate");
+            _terrainPath.Ack(PATH_EXECUTER.SHEEP);
+        }
+
+        var sheepVpath = Converter.ToVector2(Position, _terrainPath.GetCurrent(PATH_EXECUTER.SHEEP));
+        if (enemyClose) // && sheepVpath.Length() < 200.0)
+        {
+            var sheepVpathNorm = Vector2.Normalize(sheepVpath);
+            force = Vector2.Add(force, Vector2.Multiply(sheepVpathNorm, 8.0f));
         }
 
         Force = Vector2.Multiply(force, 10); // For visualization purposes only
         Position.Update(Position.X + (force.X * forceAdjustment), Position.Y + (force.Y * forceAdjustment));
+        // _logger.LogInformation($"Sheep force, {force.Length()}, {force.X}, {force.Y}");
+        // force = Vector2.Multiply(force, _settings.SpeedAdjustment);
+        // Position.Update(Position.X + force.X, Position.Y + force.Y);
     }
 
     public bool IsInsideFinishZone()

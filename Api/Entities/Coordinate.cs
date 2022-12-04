@@ -25,6 +25,12 @@ public class Coordinate
         Y = y;
     }
     
+    public Coordinate(Coordinate coordinate)
+    {
+        X = coordinate.X;
+        Y = coordinate.Y;
+    }
+    
     public Coordinate()
     {
     }

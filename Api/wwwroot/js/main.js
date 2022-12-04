@@ -33,16 +33,16 @@ connection.on("ReceiveMessage", function (user, message) {
     }
 
     if (clearCanvasOn) {
+
+        for (let i = 0; i < pathCoordinates.length; i++) {
+            let line = pathCoordinates[i].split(",");
+            drawVector(line[0], line[1], line[2], line[3], 'grey', 5)
+        }
+        
         for (let i = 0; i < terrainPath.length - 1; i++) {
             let from = terrainPath[i].split(",")
             let to = terrainPath[i + 1].split(",")
             drawVector(from[0], from[1], to[0], to[1], 'black', 3)
-        }
-        
-        for (let i = 0; i < pathCoordinates.length - 1; i++) {
-            let from = pathCoordinates[i].split(",")
-            let to = pathCoordinates[i + 1].split(",")
-            drawVector(from[0], from[1], to[0], to[1], 'grey', 5)
         }
 
         for (let i = 0; i < pathCoordinatesAchieved.length - 1; i++) {

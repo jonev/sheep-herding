@@ -2,13 +2,13 @@ namespace SheepHerding.Api.Entities;
 
 public class HerdSetup
 {
-    public List<AckableCoordinate> Path { get; }
+    public PathCoordinator PredefinedPathCoordinator { get; }
     public List<Coordinate> SheepStartCoordinates { get; }
-    public List<Coordinate> TerrainPath { get; }
+    public PathCoordinator TerrainPath { get; }
 
-    public HerdSetup(List<AckableCoordinate> path, List<Coordinate> sheepStartCoordinates, List<Coordinate> terrainPath)
+    public HerdSetup(PathCoordinator predefinedPathCoordinator, List<Coordinate> sheepStartCoordinates, PathCoordinator terrainPath)
     {
-        Path = path;
+        PredefinedPathCoordinator = predefinedPathCoordinator;
         SheepStartCoordinates = sheepStartCoordinates;
         TerrainPath = terrainPath;
     }

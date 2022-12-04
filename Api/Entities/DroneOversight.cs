@@ -7,10 +7,10 @@ namespace SheepHerding.Api.Entities;
 public class DroneOversight : Point
 {
     private readonly ILogger _logger;
-    private readonly List<AckableCoordinate> _predefinedPathPoints;
+    private readonly PathCoordinator _predefinedPathPoints;
     private readonly List<DroneHerder> _herders;
     private double _herdRadius = 75.0;
-    private double _herdAngleInRadians = Math.PI / 2.5;
+    private double _herdAngleInRadians = Math.PI / 2.5; //3.1 - For when sheep movement are adjusted
     private int _pathIndex = 0; // TODO fix this
     private bool _herdInPosesion;
     private Coordinate _current = new(Double.MaxValue, Double.MaxValue);
@@ -23,10 +23,10 @@ public class DroneOversight : Point
     private bool _pathAngleCalculationActivated = false;
     private bool _commandInRange;
     private Vector2 _positionCommandVector = Vector2.One;
-    private Machine _machine = new();
+    private Machine _machine;
     private List<(Coordinate Position, double Radius)> _centroids;
-    private List<AckableCoordinate> _closestPathPoints;
-    private List<AckableCoordinate> _closestPathPointToSheepCentroid;
+    // private List<AckableCoordinate> _closestPathPoints;
+    // private List<AckableCoordinate> _closestPathPointToSheepCentroid;
     private PathCreator _pathCreator;
     private readonly List<Sheep> _sheeps;
     private double _speedFactor;
@@ -34,7 +34,7 @@ public class DroneOversight : Point
 
 
     public DroneOversight(ILogger logger, double maxX, double maxY, int id,
-        List<AckableCoordinate> predefinedPathPoints, List<DroneHerder> herders, PathCreator pathCreator, List<Sheep> sheeps, Coordinate finish) :
+        PathCoordinator predefinedPathPoints, List<DroneHerder> herders, PathCreator pathCreator, List<Sheep> sheeps, Coordinate finish) :
         base(id)
     {
         _logger = logger;
@@ -43,6 +43,7 @@ public class DroneOversight : Point
         _pathCreator = pathCreator;
         _sheeps = sheeps;
         _finish = finish;
+        _machine = new(_logger);
         InitializeStateMachine();
         StartupCalculations();
     }
@@ -54,8 +55,9 @@ public class DroneOversight : Point
             // _logger.LogInformation("On entry FetchingFirstHerd");
             _centroids = GetSheepHerdCentroids(_sheeps);
             _current = _centroids[0].Position;
-            _closestPathPointToSheepCentroid = GetClosesPathPointToClosestSheepCentroid();
-            _next = _closestPathPointToSheepCentroid[0];
+            // _closestPathPointToSheepCentroid = GetClosesPathPointToClosestSheepCentroid();
+            _predefinedPathPoints.UpdateToClosest(_centroids[0].Position);
+            _next = _predefinedPathPoints.GetCurrent(PATH_EXECUTER.HERDER); // _closestPathPointToSheepCentroid[0];
             // _commandPoint = GetCommandPointV3(_command, _current, _next, 100.0);
             // _command =  _current;
             _commands = _pathCreator.CurvedLineToFetchHerd(Position, _current, _next);
@@ -64,79 +66,82 @@ public class DroneOversight : Point
         _machine.ExecuteOnEntry(State.Waiting, () =>
         {
             // _logger.LogInformation("On entry Waiting");
-            if (_current is AckableCoordinate ack)
-            {
-                // _logger.LogInformation("On entry Waiting ack");
-                ack.Ack();
-            }
+            // if (_current is AckableCoordinate ack)
+            // {
+            //     // _logger.LogInformation("On entry Waiting ack");
+            //     ack.Ack();
+            // }
+            _predefinedPathPoints.Ack(PATH_EXECUTER.HERDER);
 
-            _closestPathPoints = GetClosesPathPoint();
+            // _closestPathPoints = GetClosesPathPoint();
            // _current = _closestPathPoint[0];
         });
 
-        _machine.ExecuteOnEntry(State.FetchingNewHerd, () =>
-        {
-            // _logger.LogInformation("On entry FetchingNewHerd");
-            _centroids = GetSheepHerdCentroids(_sheeps);
-            _current = _centroids.Count > 1 ? _centroids[1].Position : _centroids[0].Position;
-            _closestPathPointToSheepCentroid = GetClosesPathPointToClosestSheepCentroid();
-            _next = _closestPathPointToSheepCentroid[0];
-            // _commandPoint = GetCommandPointV3(_command, _current, _next, 100.0);
-            // _command = _current; //centroids.Count > 1 ? _commandPoint.Position : _current;
-        });
+        // _machine.ExecuteOnEntry(State.FetchingNewHerd, () =>
+        // {
+        //     // _logger.LogInformation("On entry FetchingNewHerd");
+        //     _centroids = GetSheepHerdCentroids(_sheeps);
+        //     _current = _centroids.Count > 1 ? _centroids[1].Position : _centroids[0].Position;
+        //     // _closestPathPointToSheepCentroid = GetClosesPathPointToClosestSheepCentroid();
+        //     _predefinedPathPoints.UpdateToClosest(_centroids[0].Position);
+        //     _next = _predefinedPathPoints.GetCurrent(PATH_EXECUTER.HERDER); // _closestPathPointToSheepCentroid[0];
+        //     // _commandPoint = GetCommandPointV3(_command, _current, _next, 100.0);
+        //     // _command = _current; //centroids.Count > 1 ? _commandPoint.Position : _current;
+        // });
         _machine.ExecuteOnEntry(State.FollowPath, () =>
         {
             // _logger.LogInformation("On entry FollowPath");
-            _closestPathPoints = GetClosesPathPoint();
-            _current = _closestPathPoints[0];
-            _next = _closestPathPoints.Count > 1 ? _closestPathPoints[1] : _closestPathPoints[0];
+            // _closestPathPoints = GetClosesPathPoint();
+            _current = _predefinedPathPoints.GetCurrent(PATH_EXECUTER.HERDER); // _closestPathPoints[0];
+            _next = _predefinedPathPoints.GetNext(PATH_EXECUTER.HERDER); // _closestPathPoints.Count > 1 ? _closestPathPoints[1] : _closestPathPoints[0];
             // _commandPoint = GetCommandPointV3(_command, _current, _next, 150.0);
             // _command = _current; //_commandPoint.Position;
             _commands = _pathCreator.CurvedLineToFollowPath(Position, _current, _next);
         });
-        _machine.ExecuteOnEntry(State.RecollectSheep, () =>
-        {
-            // _logger.LogInformation("On entry RecollectSheep");
-            _centroids = GetSheepHerdCentroids(_sheeps);
-            _current = _centroids[0].Position;
-            _closestPathPointToSheepCentroid = GetClosesPathPointToClosestSheepCentroid();
-            _next = _closestPathPointToSheepCentroid[0];
-            // _command = _current;
-        });
+        // _machine.ExecuteOnEntry(State.RecollectSheep, () =>
+        // {
+        //     // _logger.LogInformation("On entry RecollectSheep");
+        //     _centroids = GetSheepHerdCentroids(_sheeps);
+        //     _current = _centroids[0].Position;
+        //     // _closestPathPointToSheepCentroid = GetClosesPathPointToClosestSheepCentroid();
+        //     _predefinedPathPoints.UpdateToClosest(_centroids[0].Position);
+        //     _next = _predefinedPathPoints.GetCurrent(PATH_EXECUTER.HERDER); //  _closestPathPointToSheepCentroid[0];
+        //     // _command = _current;
+        // });
         _machine.ExecuteOnEntry(State.Finished, () => { _logger.LogInformation("On entry Finished"); });
     }
 
     private void StartupCalculations()
     {
         _centroids = GetSheepHerdCentroids(_sheeps);
-        _closestPathPoints = GetClosesPathPoint();
-        _closestPathPointToSheepCentroid = GetClosesPathPointToClosestSheepCentroid();
+        // _closestPathPoints = GetClosesPathPoint();
+        // _closestPathPointToSheepCentroid = GetClosesPathPointToClosestSheepCentroid();
     }
 
-    private List<AckableCoordinate> GetClosesPathPoint()
-    {
-        var points = _predefinedPathPoints
-            .Where(p => (!p.Accessed && p.PathIndex >= _pathIndex) || (p.Accessed && p.PathIndex > _pathIndex))
-            .OrderBy(p => p.PathIndex)
-            .ToList();
-        _pathIndex = points == null || points.Count < 1
-            ? _predefinedPathPoints.Count - 1
-            : points[0].PathIndex;
-        return points;
-    }
-
-    private List<AckableCoordinate> GetClosesPathPointToClosestSheepCentroid()
-    {
-        if (!_centroids.Any()) return new List<AckableCoordinate>();
-        var points = _predefinedPathPoints
-            .Where(p => (!p.Accessed && p.PathIndex >= _pathIndex) || (p.Accessed && p.PathIndex > _pathIndex))
-            .OrderBy(p => Converter.ToVector2(p, _centroids[0].Position).Length())
-            .ToList();
-        _pathIndex = points == null || points.Count < 1
-            ? _predefinedPathPoints.Count - 1
-            : points[0].PathIndex;
-        return points;
-    }
+    // private List<AckableCoordinate> GetClosesPathPoint()
+    // {
+    //     var points = _predefinedPathPoints
+    //         .Where(p => (!p.Accessed && p.PathIndex >= _pathIndex) || (p.Accessed && p.PathIndex > _pathIndex))
+    //         .OrderBy(p => p.PathIndex)
+    //         .ToList();
+    //     _pathIndex = points == null || points.Count < 1
+    //         ? _predefinedPathPoints.Count - 1
+    //         : points[0].PathIndex;
+    //     return points;
+    // }
+    //
+    // private List<AckableCoordinate> GetClosesPathPointToClosestSheepCentroid()
+    // {
+    //     if (!_centroids.Any()) return new List<AckableCoordinate>();
+    //     var points = _predefinedPathPoints
+    //         .Where(p => (!p.Accessed && p.PathIndex >= _pathIndex) || (p.Accessed && p.PathIndex > _pathIndex))
+    //         .OrderBy(p => Converter.ToVector2(p, _centroids[0].Position).Length())
+    //         .ToList();
+    //     _pathIndex = points == null || points.Count < 1
+    //         ? _predefinedPathPoints.Count - 1
+    //         : points[0].PathIndex;
+    //     return points;
+    // }
 
     private List<(Coordinate Position, double Radius)> GetSheepHerdCentroids(List<Sheep> sheeps)
     {
@@ -168,14 +173,14 @@ public class DroneOversight : Point
 
         // Move the drone
 
-        _closestPathPointToSheepCentroid = GetClosesPathPointToClosestSheepCentroid();
+        // _closestPathPointToSheepCentroid = GetClosesPathPointToClosestSheepCentroid();
 
         // -- Setting states
         _commandInRange = Calculator.UnderWithHysteresis(_commandInRange, Position, _command, 5.0, 1.0);
         var currentInRange = Calculator.InRange(Position, _current, 45.0, 0.0);
         var sheepCentroidInRange = Calculator.InRange(Position, _centroids[0].Position, 45.0, 0.0);
         var sheepCentroidOutOfRange = Calculator.InRange(Position, _centroids[0].Position, 100.0, 50.0);
-        var closestPathPointOutOfRange = _closestPathPoints.Count > 0 && Calculator.InRange(Position, _closestPathPoints[0], 10000.0, 10.0);
+        var closestPathPointOutOfRange = Calculator.InRange(Position, _predefinedPathPoints.GetCurrent(PATH_EXECUTER.HERDER), 10000.0, 10.0); //  _closestPathPoints.Count > 0 && Calculator.InRange(Position, _closestPathPoints[0], 10000.0, 10.0);
 
 
         var lenghtToNextHerd =
@@ -188,13 +193,14 @@ public class DroneOversight : Point
             _centroids.Count < 2 ? int.MaxValue : Converter.ToVector2(_next, _centroids[1].Position).Length();
 
         _machine.Fire(State.FetchingFirstHerd, Trigger.NewHerdCollected, () => currentInRange);
-        _machine.Fire(State.FetchingNewHerd, Trigger.NewHerdCollected, () => currentInRange);
-        _machine.Fire(State.FollowPath, Trigger.SheepEscaped, () => sheepCentroidOutOfRange);
-        _machine.Fire(State.FollowPath, Trigger.NewHerdInRange, () => lenghtFromCurrentToHerd < lenghtFromNextToHerd);
+        // _machine.Fire(State.FetchingNewHerd, Trigger.NewHerdCollected, () => currentInRange);
+        // _machine.Fire(State.FollowPath, Trigger.SheepEscaped, () => sheepCentroidOutOfRange);
+        // _machine.Fire(State.FollowPath, Trigger.NewHerdInRange, () => lenghtFromCurrentToHerd < lenghtFromNextToHerd);
         _machine.Fire(State.FollowPath, Trigger.CommandsExecuted, () => _commands.All(c => c.Accessed));
         _machine.Fire(State.Waiting, Trigger.PathPointOutOfRange, () => closestPathPointOutOfRange);
-        _machine.Fire(State.RecollectSheep, Trigger.SheepCaptured, () => sheepCentroidInRange);
+        // _machine.Fire(State.RecollectSheep, Trigger.SheepCaptured, () => sheepCentroidInRange);
         _machine.Fire(State.Start, Trigger.Start, () => true);
+        _machine.Fire(State.FollowPath, Trigger.AllSheepsAtFinish, () => _sheeps.All(s => s.IsInsideFinishZone()));
 
 
         // Write out

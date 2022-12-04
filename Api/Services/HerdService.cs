@@ -22,7 +22,7 @@ public class HerdService : IDisposable
     public string Name { get; set; } = "Unknown";
     public int VisualizationSpeed { get; set; } = 20;
     public double FailedTimout { get; set; } = 60.0;
-    public int PathNr { get; set; } = 0;
+    public int PathNr { get; set; } = 6;
     public int RandomAngle { get; set; } = 20;
     public bool Connected { get; set; } = true;
     public bool Finished { get; set; } = false;
@@ -107,6 +107,8 @@ public class HerdService : IDisposable
     {
         // Initializeation --
         var herdSetup = new PredefinedHerdSetup().GetSetup(PathNr);
+        herdSetup.PredefinedPathCoordinator.Start();
+        var startPath = herdSetup.PredefinedPathCoordinator.GetStartListAsString();
         Finished = false;
 
         _listOfSheeps = new List<Sheep>();
@@ -115,7 +117,7 @@ public class HerdService : IDisposable
         var mouse = InitializeMouse();
         listOfHerders.Add(mouse);
 
-        var droneOversight = new DroneOversight(_logger, 1000, 500, -1, herdSetup.Path, listOfHerders,
+        var droneOversight = new DroneOversight(_logger, 1000, 500, -1, herdSetup.PredefinedPathCoordinator, listOfHerders,
             new PathCreator(_logger), _listOfSheeps, Finish);
         droneOversight.Set(new Coordinate(150, 100));
         
@@ -152,7 +154,7 @@ public class HerdService : IDisposable
             var vectors = VectorPrinter.ToString(cast);
 
             var message = CreateMessage(stopwatch, centroids, droneOversight, listOfHerders, vectors,
-                herdSetup, pathIndex, oversightPoints, state);
+                herdSetup, startPath, oversightPoints, state);
             // _logger.LogDebug($"Sending cooridnates; {message}");
             if (_hub != null)
                 await _hub.Clients.Client(ClientId)
@@ -183,7 +185,7 @@ public class HerdService : IDisposable
 
     private string CreateMessage(Stopwatch stopwatch, List<Coordinate> centroids, DroneOversight droneOversight,
         List<DroneHerder> listOfHerders,
-        string vectors, HerdSetup herdSetup, int pathIndex, IList<Coordinate> oversightPoints,
+        string vectors, HerdSetup herdSetup, string startPath, IList<Coordinate> oversightPoints,
         string state)
     {
         var circle =
@@ -196,11 +198,11 @@ public class HerdService : IDisposable
             $"!{CoordinatePrinter.ToString(_listOfSheeps.Select(s => s.Position).ToList())}" +
             $"!{vectors}" +
             $"!{circle}" +
-            $"!{CoordinatePrinter.ToString(herdSetup.Path.ToList<Coordinate>())}" +
-            $"!{CoordinatePrinter.ToString(herdSetup.Path.ToList<Coordinate>().Take(pathIndex + 1).ToList())}" +
+            $"!{startPath}" +
+            $"!{CoordinatePrinter.ToString(herdSetup.PredefinedPathCoordinator.GetList(PATH_EXECUTER.HERDER))}" +
             $"!{CoordinatePrinter.ToString(oversightPoints)}" +
             $"!{state}" +
-            $"!{CoordinatePrinter.ToString(herdSetup.TerrainPath.ToList<Coordinate>())}";
+            $"!{CoordinatePrinter.ToString(herdSetup.TerrainPath.GetList(PATH_EXECUTER.SHEEP))}";
         return message;
     }
 

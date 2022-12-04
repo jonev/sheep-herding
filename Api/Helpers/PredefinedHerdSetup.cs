@@ -20,6 +20,8 @@ public class PredefinedHerdSetup
                 return s90DegreesLeftTestTurn();
             case 5:
                 return SmallAnd90DegreesTurn();
+            case 6:
+                return FromAToBWithX();
             default:
                 return FromAToB();
         }
@@ -33,12 +35,35 @@ public class PredefinedHerdSetup
             listOfSheepCoordinates.Add(new Coordinate(200 + ((i % 10) * 20), 250 + ((i % 3) * 20)));
         }
 
-        var path = new List<AckableCoordinate>()
+        var p = new PathCoordinator
+        (
+            new PathCoordinate(new Coordinate(350, 350),
+                new PathCoordinate(new Coordinate(950, 850), null)));
+        return new HerdSetup(p, listOfSheepCoordinates, p);
+    }
+
+    private HerdSetup FromAToBWithX()
+    {
+        var listOfSheepCoordinates = new List<Coordinate>();
+        for (int i = 0; i < 5; i++)
         {
-            new(0, 350, 350),
-            new(1, 950, 850),
-        };
-        return new HerdSetup(path, listOfSheepCoordinates, path.Select(p => new Coordinate(p.X, p.Y)).ToList());
+            listOfSheepCoordinates.Add(new Coordinate(200 + ((i % 10) * 20), 250 + ((i % 3) * 20)));
+        }
+
+        var p = new PathCoordinator
+        (
+            new PathCoordinate(new Coordinate(350, 350),
+                new PathCoordinate(new Coordinate(450, 450),
+                    new PathCross(
+                        new PathCoordinate(new Coordinate(550, 450),
+                            new PathCoordinate(new Coordinate(650, 450),
+                                new PathCoordinate(new Coordinate(1000, 450), null))),
+                        new PathCoordinate(new Coordinate(550, 550),
+                            new PathCoordinate(new Coordinate(750, 750),
+                                new PathCoordinate(new Coordinate(950, 850), null)))
+                    ))));
+
+        return new HerdSetup(p, listOfSheepCoordinates, p);
     }
 
     private HerdSetup PathCrossTesting()
@@ -46,25 +71,24 @@ public class PredefinedHerdSetup
         var listOfSheepCoordinates = new List<Coordinate>();
         for (int i = 0; i < 5; i++)
         {
-            // listOfSheepCoordinates.Add(new Coordinate(100, 300));
             listOfSheepCoordinates.Add(new Coordinate(200 + ((i % 10) * 20), 250 + ((i % 3) * 20)));
         }
-
+    
         var path = new List<AckableCoordinate>()
         {
             new(0, 500, 300),
             new(1, 800, 300),
             new(2, 950, 850),
         };
-
-        // var terrainPath = new List<Coordinate>()
-        // {
-        //     new(50, 300),
-        //     new(950, 300),
-        // };
-        return new HerdSetup(path, listOfSheepCoordinates, path.Select(p => new Coordinate(p.X, p.Y)).ToList());
+        var p = new PathCoordinator
+        (
+            new PathCoordinate(new Coordinate(500, 300),
+                new PathCoordinate(new Coordinate(800, 300),
+                    new PathCoordinate(new Coordinate(950, 850), null))));
+    
+        return new HerdSetup(p, listOfSheepCoordinates, p);
     }
-
+    
     private HerdSetup SmallTurns()
     {
         var listOfSheepCoordinates = new List<Coordinate>();
@@ -73,20 +97,20 @@ public class PredefinedHerdSetup
             listOfSheepCoordinates.Add(new Coordinate(800 + ((i % 10) * 20), 200 + ((i % 3) * 20)));
         }
 
-        var path = new List<AckableCoordinate>()
-        {
-            new(0, 100, 100),
-            new(1, 200, 150),
-            new(2, 300, 250),
-            new(3, 400, 450),
-            new(4, 600, 500),
-            new(5, 700, 600),
-            new(6, 850, 700),
-            new(7, 950, 850),
-        };
-        return new HerdSetup(path, listOfSheepCoordinates, path.Select(p => new Coordinate(p.X, p.Y)).ToList());
+        var p = new PathCoordinator
+        (
+            new PathCoordinate(new Coordinate(100, 100),
+                new PathCoordinate(new Coordinate(200, 150),
+                    new PathCoordinate(new Coordinate(300, 250),
+                        new PathCoordinate(new Coordinate(400, 450),
+                            new PathCoordinate(new Coordinate(600, 500),
+                                new PathCoordinate(new Coordinate(700, 600),
+                                    new PathCoordinate(new Coordinate(850, 700),
+                                        new PathCoordinate(new Coordinate(950, 850), null)))))))));
+    
+        return new HerdSetup(p, listOfSheepCoordinates, p);
     }
-
+    
     private HerdSetup TwoUTurns()
     {
         var listOfSheepCoordinates = new List<Coordinate>();
@@ -95,18 +119,17 @@ public class PredefinedHerdSetup
             listOfSheepCoordinates.Add(new Coordinate(800 + ((i % 10) * 20), 200 + ((i % 3) * 20)));
         }
 
-        var path = new List<AckableCoordinate>()
-        {
-            new(0, 150, 200),
-            new(1, 600, 200),
-            new(2, 600, 500),
-            new(3, 200, 500),
-            new(4, 200, 800),
-            new(5, 950, 850)
-        };
-        return new HerdSetup(path, listOfSheepCoordinates, path.Select(p => new Coordinate(p.X, p.Y)).ToList());
+        var p = new PathCoordinator
+        (
+            new PathCoordinate(new Coordinate(150, 200),
+                new PathCoordinate(new Coordinate(600, 200),
+                    new PathCoordinate(new Coordinate(600, 500),
+                        new PathCoordinate(new Coordinate(200, 500),
+                            new PathCoordinate(new Coordinate(200, 800),
+                                new PathCoordinate(new Coordinate(950, 850), null)))))));
+        return new HerdSetup(p, listOfSheepCoordinates, p);
     }
-
+    
     private HerdSetup s90DegreesLeftTestTurn()
     {
         var listOfSheepCoordinates = new List<Coordinate>();
@@ -115,18 +138,18 @@ public class PredefinedHerdSetup
             listOfSheepCoordinates.Add(new Coordinate(800 + ((i % 10) * 20), 200 + ((i % 3) * 20)));
         }
 
-        var path = new List<AckableCoordinate>()
-        {
-            new(0, 100, 100),
-            new(1, 200, 150),
-            new(2, 200, 400),
-            new(2, 200, 600),
-            new(3, 600, 600),
-            new(4, 950, 850),
-        };
-        return new HerdSetup(path, listOfSheepCoordinates, path.Select(p => new Coordinate(p.X, p.Y)).ToList());
+        var p = new PathCoordinator
+        (
+            new PathCoordinate(new Coordinate(100, 100),
+                new PathCoordinate(new Coordinate(200, 150),
+                    new PathCoordinate(new Coordinate(200, 400),
+                        new PathCoordinate(new Coordinate(200, 600),
+                            new PathCoordinate(new Coordinate(600, 600),
+                                new PathCoordinate(new Coordinate(950, 850), null)))))));
+        
+        return new HerdSetup(p, listOfSheepCoordinates, p);
     }
-
+    
     private HerdSetup SmallAnd90DegreesTurn()
     {
         var listOfSheepCoordinates = new List<Coordinate>();
@@ -135,17 +158,17 @@ public class PredefinedHerdSetup
             listOfSheepCoordinates.Add(new Coordinate(800 + ((i % 10) * 20), 200 + ((i % 3) * 20)));
         }
 
-        var path = new List<AckableCoordinate>()
-        {
-            new(0, 100, 100),
-            new(1, 200, 150),
-            new(2, 300, 250),
-            new(3, 400, 450),
-            new(4, 600, 500),
-            new(5, 600, 700),
-            new(6, 850, 700),
-            new(7, 950, 850),
-        };
-        return new HerdSetup(path, listOfSheepCoordinates, path.Select(p => new Coordinate(p.X, p.Y)).ToList());
+        var p = new PathCoordinator
+        (
+            new PathCoordinate(new Coordinate(100, 100),
+                new PathCoordinate(new Coordinate(200, 150),
+                    new PathCoordinate(new Coordinate(300, 250),
+                        new PathCoordinate(new Coordinate(400, 450),
+                            new PathCoordinate(new Coordinate(600, 500),
+                                new PathCoordinate(new Coordinate(600, 700),
+                                    new PathCoordinate(new Coordinate(850, 700),
+                                        new PathCoordinate(new Coordinate(950, 850), null)))))))));
+        
+        return new HerdSetup(p, listOfSheepCoordinates, p);
     }
 }

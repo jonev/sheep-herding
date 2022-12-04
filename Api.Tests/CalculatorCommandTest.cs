@@ -27,7 +27,7 @@ public class CalculatorCommandTest
         var next = new Coordinate(10, 5);
 
         var result = Calculator.GetCommandVector(position, current, next);
-        result.X.Should().Be(0);
+        result.X.Should().BeApproximately(0f, 0.001f);
         result.Y.Should().Be(0);
     }
     
@@ -39,7 +39,7 @@ public class CalculatorCommandTest
         var next = new Coordinate(5.01, 5);
 
         var result = Calculator.GetCommandVector(position, current, next);
-        result.X.Should().Be(0);
+        result.X.Should().BeApproximately(0, 0.001f);
         result.Y.Should().Be(0);
     }
     

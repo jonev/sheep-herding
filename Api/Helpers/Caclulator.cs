@@ -169,4 +169,19 @@ public static class Calculator
 
         return outcast;
     }
+
+    // TODO start using this when path cross is fixed
+    public static Vector2 AddWithForceFactor(Vector2 previous, Vector2 vectorToAdd, float forceFactor)
+    {
+        if (forceFactor > 1.0f) throw new ArgumentException($"{nameof(forceFactor)} can not be over 1.0f");
+        if (vectorToAdd.Length() < 0.00001f) return previous;
+        var normalized = Vector2.Normalize(Vector2.Add(previous, vectorToAdd));
+        var result = Vector2.Multiply(normalized, forceFactor);
+        if (float.IsNaN(result.X) || float.IsNaN(result.Y))
+        {
+            throw new CalculatorException($"Result is NaN");
+        }
+
+        return result;
+    }
 }
