@@ -116,7 +116,7 @@ public class Sheep : Point
             _terrainPath.Ack(PATH_EXECUTER.SHEEP);
 
         var sheepVpath = Converter.ToVector2(Position, _terrainPath.GetCurrent(PATH_EXECUTER.SHEEP));
-        if (enemyClose) // && sheepVpath.Length() < 200.0)
+        if (enemyClose && sheepVpath.Length() < 200.0)
         {
             var sheepVpathNorm = Vector2.Normalize(sheepVpath);
             force = Vector2.Add(force, Vector2.Multiply(sheepVpathNorm, 8.0f));

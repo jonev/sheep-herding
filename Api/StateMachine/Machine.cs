@@ -32,7 +32,12 @@ public class Machine
 
         _machine.Configure(State.FollowPathStraight)
             .SubstateOf(State.FollowPath)
-            .Permit(Trigger.CornerApproaching, State.FollowPathCorner);
+            .Permit(Trigger.CornerApproaching, State.FollowPathCorner)
+            .Permit(Trigger.IntersectionApproaching, State.FollowPathIntersectionLeft);
+
+        _machine.Configure(State.FollowPathIntersectionLeft)
+            .SubstateOf(State.FollowPath)
+            .Permit(Trigger.IntersectionAvoided, State.FollowPath);
 
         // _machine.Configure(State.RecollectSheep)
         //     .Permit(Trigger.SheepCaptured, State.FollowPath);

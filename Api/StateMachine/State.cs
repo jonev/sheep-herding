@@ -8,6 +8,7 @@ public enum State
     FollowPath,
     FollowPathCorner,
     FollowPathStraight,
+    FollowPathIntersectionLeft,
     RecollectSheep,
     Waiting,
     Finished

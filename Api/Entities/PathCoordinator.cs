@@ -113,6 +113,11 @@ public class PathCoordinator
         throw new NotImplementedException("Executer type unknown");
     }
 
+    public bool IntersectionApproaching()
+    {
+        return _herd.Next is PathCross;
+    }
+
     public void Ack(PATH_EXECUTER executer)
     {
         if (_herd.GetNext(PATH_EXECUTER.SHEEP) is null || _sheep.GetNext(PATH_EXECUTER.HERDER) is null) return;

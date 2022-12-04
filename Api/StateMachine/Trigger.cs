@@ -10,6 +10,8 @@ public enum Trigger
     CommandsExecuted,
     CornerApproaching,
     LeftCorner,
+    IntersectionApproaching,
+    IntersectionAvoided,
     PathPointOutOfRange,
     AllSheepsAtFinish
 }

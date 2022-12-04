@@ -96,8 +96,8 @@ public class DroneOversight : Point
             // _logger.LogInformation("On entry FollowPath");
             // _closestPathPoints = GetClosesPathPoint();
             _current = _predefinedPathPoints.GetCurrent(PATH_EXECUTER.HERDER); // _closestPathPoints[0];
-            _next = _predefinedPathPoints.GetNext(PATH_EXECUTER
-                .HERDER); // _closestPathPoints.Count > 1 ? _closestPathPoints[1] : _closestPathPoints[0];
+            _next = _predefinedPathPoints.GetNext(PATH_EXECUTER.HERDER); 
+            // _closestPathPoints.Count > 1 ? _closestPathPoints[1] : _closestPathPoints[0];
             // _commandPoint = GetCommandPointV3(_command, _current, _next, 150.0);
             // _command = _current; //_commandPoint.Position;
             _commands = _pathCreator.CurvedLineToFollowPath(Position, _current, _next);
@@ -212,6 +212,9 @@ public class DroneOversight : Point
         _machine.Fire(State.Start, Trigger.Start, () => true);
         _machine.Fire(Trigger.AllSheepsAtFinish, () => _sheeps.All(s => s.IsInsideFinishZone()));
         _machine.Fire(State.FollowPathStraight, Trigger.CornerApproaching, () => _command.IsPartOfCurve);
+        // TODO
+        _machine.Fire(State.FollowPathStraight, Trigger.IntersectionApproaching, () => _predefinedPathPoints.IntersectionApproaching());
+        _machine.Fire(State.FollowPathCorner, Trigger.IntersectionApproaching, () => _predefinedPathPoints.IntersectionApproaching());
 
         // Write out
         if (_commandInRange) _command.Ack();
