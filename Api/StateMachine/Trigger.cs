@@ -11,5 +11,5 @@ public enum Trigger
     CornerApproaching,
     LeftCorner,
     PathPointOutOfRange,
-    AllSheepsAtFinish,
+    AllSheepsAtFinish
 }

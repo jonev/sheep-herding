@@ -5,16 +5,16 @@ namespace SheepHerding.Api.Entities;
 
 public class Sheep : Point
 {
-    private readonly IList<Sheep> _friendlies;
     private readonly IList<DroneHerder> _enemies;
     private readonly Coordinate _finish;
-    private readonly PathCoordinator _terrainPath;
-    private readonly int _randomSeed;
+    private readonly IList<Sheep> _friendlies;
     private readonly ILogger _logger;
+    private readonly int _randomSeed;
     private readonly SheepSettings _settings;
-    private int _scanIndex = 0;
-    private double _randomAngle = 0.0;
+    private readonly PathCoordinator _terrainPath;
     private bool _pathCoordinateInRange;
+    private double _randomAngle;
+    private int _scanIndex;
 
     public Sheep(ILogger logger, int id, SheepSettings settings, IList<Sheep> friendlies, IList<DroneHerder> enemies,
         Coordinate finish, PathCoordinator terrainPath, int randomSeed) : base(id)
@@ -32,10 +32,11 @@ public class Sheep : Point
     {
         _scanIndex++;
         var force = new Vector2(0, 0);
-        
+
         // Personal space - dont have sheeps walk on top of each other
         var close = _friendlies.Where(s
-            => s.Id != Id && Converter.ToVector2(Position, s.Position).Length() < _settings.NeighborToCloseStartMoveThreshold)
+                => s.Id != Id && Converter.ToVector2(Position, s.Position).Length() <
+                _settings.NeighborToCloseStartMoveThreshold)
             .MinBy(s => Converter.ToVector2(Position, s.Position).Length());
 
         if (close != null)
@@ -53,7 +54,7 @@ public class Sheep : Point
         // Hold together as a herd
         var neighbours = _friendlies
             .Where(s => s.Id != Id
-                        && Converter.ToVector2(Position, s.Position).Length() > 100 
+                        && Converter.ToVector2(Position, s.Position).Length() > 100
                         && Converter.ToVector2(Position, s.Position).Length() < 200)
             .OrderBy(s => Converter.ToVector2(Position, s.Position).Length())
             .Take(5);
@@ -70,9 +71,8 @@ public class Sheep : Point
             //     sheepVfar, 
             //     _settings.HoldTogetherForce);
             // _logger.LogInformation($"Sheep '{Id}' hold together as a herd");
-
         }
-        
+
         // Grazing
         // var randomDirection = Calculator.RotateVector(Vector2.One, new Random().NextDouble() * Math.PI * 2);
         // force = Vector2.Add(force, randomDirection);
@@ -90,7 +90,6 @@ public class Sheep : Point
         _randomAngle = 0.0;
         var enemyClose = minLenght <= _settings.EnemyToCloseStartMoveThreshold;
         if (enemyClose)
-        {
             foreach (var enemy in sheepVenemy)
             {
                 var flipped = Calculator.FlipExLength(enemy, 100.0);
@@ -104,20 +103,17 @@ public class Sheep : Point
                 //     flippedRandomRotated, 
                 //     _settings.RunAwayForce);
             }
-        }
-        
+
         // Drawn towards the path
         _pathCoordinateInRange = Calculator.UnderWithHysteresis(
-            _pathCoordinateInRange, 
-            Position, 
-            _terrainPath.GetCurrent(PATH_EXECUTER.SHEEP), 
-            10.0, 
+            _pathCoordinateInRange,
+            Position,
+            _terrainPath.GetCurrent(PATH_EXECUTER.SHEEP),
+            10.0,
             1.0);
         if (_pathCoordinateInRange)
-        {
             // _logger.LogInformation($"Sheep ack path coordinate");
             _terrainPath.Ack(PATH_EXECUTER.SHEEP);
-        }
 
         var sheepVpath = Converter.ToVector2(Position, _terrainPath.GetCurrent(PATH_EXECUTER.SHEEP));
         if (enemyClose) // && sheepVpath.Length() < 200.0)
@@ -127,7 +123,7 @@ public class Sheep : Point
         }
 
         Force = Vector2.Multiply(force, 10); // For visualization purposes only
-        Position.Update(Position.X + (force.X * forceAdjustment), Position.Y + (force.Y * forceAdjustment));
+        Position.Update(Position.X + force.X * forceAdjustment, Position.Y + force.Y * forceAdjustment);
         // _logger.LogInformation($"Sheep force, {force.Length()}, {force.X}, {force.Y}");
         // force = Vector2.Multiply(force, _settings.SpeedAdjustment);
         // Position.Update(Position.X + force.X, Position.Y + force.Y);

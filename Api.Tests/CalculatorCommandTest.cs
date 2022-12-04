@@ -6,7 +6,6 @@ namespace SheepHerding.Api.Tests;
 
 public class CalculatorCommandTest
 {
-    
     [Fact]
     public void GetCommandVectorZero1Test()
     {
@@ -18,7 +17,7 @@ public class CalculatorCommandTest
         result.X.Should().Be(0);
         result.Y.Should().Be(0);
     }
-    
+
     [Fact]
     public void GetCommandVectorZero2Test()
     {
@@ -30,7 +29,7 @@ public class CalculatorCommandTest
         result.X.Should().BeApproximately(0f, 0.001f);
         result.Y.Should().Be(0);
     }
-    
+
     [Fact]
     public void GetCommandVectorZero3Test()
     {
@@ -42,7 +41,7 @@ public class CalculatorCommandTest
         result.X.Should().BeApproximately(0, 0.001f);
         result.Y.Should().Be(0);
     }
-    
+
     [Fact]
     public void GetCommandVectorZero4Test()
     {
@@ -54,7 +53,7 @@ public class CalculatorCommandTest
         result.X.Should().Be(0);
         result.Y.Should().Be(0);
     }
-    
+
     [Fact]
     public void GetCommandVectorZero5Test()
     {
@@ -66,7 +65,7 @@ public class CalculatorCommandTest
         result.X.Should().Be(0);
         result.Y.Should().Be(0);
     }
-    
+
     [Fact]
     public void GetCommandVectorZero6Test()
     {
@@ -90,7 +89,7 @@ public class CalculatorCommandTest
         result.X.Should().BeApproximately(0, 0.001f);
         result.Y.Should().BeApproximately(-1, 0.001f);
     }
-    
+
     [Fact]
     public void GetCommandVector135DegreesTest()
     {

@@ -14,23 +14,23 @@ public class MachineTest
     {
         _output = output;
     }
-    
+
     [Fact]
     public void Test()
     {
         var loggerMock = new Mock<ILogger>();
         var m = new Machine(loggerMock.Object);
         m.State.Should().Be(State.Start);
-        
+
         m.Fire(State.Start, Trigger.Start, () => true);
         m.State.Should().Be(State.FetchingFirstHerd);
-        
+
         m.Fire(State.FetchingFirstHerd, Trigger.NewHerdCollected, () => true);
         m.State.Should().Be(State.FollowPathStraight);
-        
+
         m.Fire(State.FollowPathStraight, Trigger.CornerApproaching, () => true);
         m.State.Should().Be(State.FollowPathCorner);
-        
+
         m.Fire(State.FollowPathCorner, Trigger.LeftCorner, () => true);
         m.State.Should().Be(State.FollowPathStraight);
     }

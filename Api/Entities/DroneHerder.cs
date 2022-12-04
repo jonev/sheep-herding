@@ -21,8 +21,8 @@ public class DroneHerder : Point
         // var commandVectorReduced = Vector2.Divide(commandVector, 5);
 
         force = Vector2.Add(force, commandVectorSpeedLimited);
-        
+
         Force = Vector2.Multiply(force, 10); // For visualization purposes only
-        Position.Update(Position.X + (force.X * forceAdjustment), Position.Y + (force.Y * forceAdjustment));
+        Position.Update(Position.X + force.X * forceAdjustment, Position.Y + force.Y * forceAdjustment);
     }
 }

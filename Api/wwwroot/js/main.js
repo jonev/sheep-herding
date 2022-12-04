@@ -38,7 +38,7 @@ connection.on("ReceiveMessage", function (user, message) {
             let line = pathCoordinates[i].split(",");
             drawVector(line[0], line[1], line[2], line[3], 'grey', 5)
         }
-        
+
         for (let i = 0; i < terrainPath.length - 1; i++) {
             let from = terrainPath[i].split(",")
             let to = terrainPath[i + 1].split(",")
@@ -58,8 +58,8 @@ connection.on("ReceiveMessage", function (user, message) {
             drawVector(vector[0], vector[1], vector[2], vector[3], 'grey', 0.25)
         }
     }
-    drawPoint(droneOversight[0], droneOversight[1],"lightgrey", 15)
-    
+    drawPoint(droneOversight[0], droneOversight[1], "lightgrey", 15)
+
     for (let i = 0; i < herders.length; i++) {
         let coordinates = herders[i].split(",")
         drawPoint(coordinates[0], coordinates[1], 'black', 10)
@@ -192,8 +192,8 @@ function triangle(x, y, color) {
     ctx.fillStyle = color;
     ctx.beginPath();
     ctx.moveTo(x, y);
-    ctx.lineTo(x-10, y+10);
-    ctx.lineTo(x+10, y+10);
+    ctx.lineTo(x - 10, y + 10);
+    ctx.lineTo(x + 10, y + 10);
     ctx.fill();
 }
 
@@ -216,7 +216,7 @@ function sendMousePosition(x, y) {
 }
 
 function mousemove(event) {
-    if(!sendMouseOn) return; 
+    if (!sendMouseOn) return;
     mouseX = event.clientX;
     mouseY = event.clientY;
     if (mouseX > (lastMouseX + 10) || mouseX < (lastMouseX - 10) || mouseY > (lastMouseY + 10) || mouseY > (lastMouseY + 10)) {

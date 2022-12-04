@@ -30,10 +30,7 @@ public class PredefinedHerdSetup
     private HerdSetup FromAToB()
     {
         var listOfSheepCoordinates = new List<Coordinate>();
-        for (int i = 0; i < 5; i++)
-        {
-            listOfSheepCoordinates.Add(new Coordinate(200 + ((i % 10) * 20), 250 + ((i % 3) * 20)));
-        }
+        for (var i = 0; i < 5; i++) listOfSheepCoordinates.Add(new Coordinate(200 + i % 10 * 20, 250 + i % 3 * 20));
 
         var p = new PathCoordinator
         (
@@ -45,10 +42,7 @@ public class PredefinedHerdSetup
     private HerdSetup FromAToBWithX()
     {
         var listOfSheepCoordinates = new List<Coordinate>();
-        for (int i = 0; i < 5; i++)
-        {
-            listOfSheepCoordinates.Add(new Coordinate(200 + ((i % 10) * 20), 250 + ((i % 3) * 20)));
-        }
+        for (var i = 0; i < 5; i++) listOfSheepCoordinates.Add(new Coordinate(200 + i % 10 * 20, 250 + i % 3 * 20));
 
         var p = new PathCoordinator
         (
@@ -69,10 +63,7 @@ public class PredefinedHerdSetup
     private HerdSetup PathCrossTesting()
     {
         var listOfSheepCoordinates = new List<Coordinate>();
-        for (int i = 0; i < 5; i++)
-        {
-            listOfSheepCoordinates.Add(new Coordinate(200 + ((i % 10) * 20), 250 + ((i % 3) * 20)));
-        }
+        for (var i = 0; i < 5; i++) listOfSheepCoordinates.Add(new Coordinate(200 + i % 10 * 20, 250 + i % 3 * 20));
 
         var p = new PathCoordinator
         (
@@ -86,10 +77,7 @@ public class PredefinedHerdSetup
     private HerdSetup SmallTurns()
     {
         var listOfSheepCoordinates = new List<Coordinate>();
-        for (int i = 0; i < 5; i++)
-        {
-            listOfSheepCoordinates.Add(new Coordinate(800 + ((i % 10) * 20), 200 + ((i % 3) * 20)));
-        }
+        for (var i = 0; i < 5; i++) listOfSheepCoordinates.Add(new Coordinate(800 + i % 10 * 20, 200 + i % 3 * 20));
 
         var p = new PathCoordinator
         (
@@ -108,10 +96,7 @@ public class PredefinedHerdSetup
     private HerdSetup TwoUTurns()
     {
         var listOfSheepCoordinates = new List<Coordinate>();
-        for (int i = 0; i < 5; i++)
-        {
-            listOfSheepCoordinates.Add(new Coordinate(800 + ((i % 10) * 20), 200 + ((i % 3) * 20)));
-        }
+        for (var i = 0; i < 5; i++) listOfSheepCoordinates.Add(new Coordinate(800 + i % 10 * 20, 200 + i % 3 * 20));
 
         var p = new PathCoordinator
         (
@@ -127,10 +112,7 @@ public class PredefinedHerdSetup
     private HerdSetup s90DegreesLeftTestTurn()
     {
         var listOfSheepCoordinates = new List<Coordinate>();
-        for (int i = 0; i < 5; i++)
-        {
-            listOfSheepCoordinates.Add(new Coordinate(800 + ((i % 10) * 20), 200 + ((i % 3) * 20)));
-        }
+        for (var i = 0; i < 5; i++) listOfSheepCoordinates.Add(new Coordinate(800 + i % 10 * 20, 200 + i % 3 * 20));
 
         var p = new PathCoordinator
         (
@@ -147,10 +129,7 @@ public class PredefinedHerdSetup
     private HerdSetup SmallAnd90DegreesTurn()
     {
         var listOfSheepCoordinates = new List<Coordinate>();
-        for (int i = 0; i < 5; i++)
-        {
-            listOfSheepCoordinates.Add(new Coordinate(800 + ((i % 10) * 20), 200 + ((i % 3) * 20)));
-        }
+        for (var i = 0; i < 5; i++) listOfSheepCoordinates.Add(new Coordinate(800 + i % 10 * 20, 200 + i % 3 * 20));
 
         var p = new PathCoordinator
         (

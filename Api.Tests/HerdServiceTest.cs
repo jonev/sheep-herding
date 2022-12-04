@@ -15,7 +15,7 @@ public class HerdServiceTest
     {
         _output = output;
     }
-    
+
     [Theory]
     [InlineData(0, 20)]
     [InlineData(1, 20)]
@@ -50,7 +50,7 @@ public class HerdServiceTest
     public async Task Test_Path_SimpleSheeps(int pathNr, int randomAngle)
     {
         var loggerMock = new Mock<ILogger>();
-        var service = new HerdService(loggerMock.Object,  null, "testClient", Globals.RandomSeed, new SheepSettings());
+        var service = new HerdService(loggerMock.Object, null, "testClient", Globals.RandomSeed, new SheepSettings());
         try
         {
             service.PathNr = pathNr;

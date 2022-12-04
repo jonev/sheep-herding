@@ -6,12 +6,6 @@ namespace SheepHerding.Api.Tests;
 
 public class ClusteringTest
 {
-    class TestPoint : Point
-    {
-        public TestPoint(int id, double x, double y) : base(id, x, y)
-        {
-        }
-    }
     [Fact]
     public void Cluster1Test()
     {
@@ -29,7 +23,7 @@ public class ClusteringTest
         result[0].Count.Should().Be(3);
         result[1].Count.Should().Be(2);
     }
-    
+
     [Fact]
     public void Cluster2Test()
     {
@@ -40,7 +34,7 @@ public class ClusteringTest
             new TestPoint(5, 11, 11),
             new TestPoint(5, 100, 100),
             new TestPoint(5, 13, 13),
-            new TestPoint(5, 102, 102),
+            new TestPoint(5, 102, 102)
         };
 
         var result = Clustering.Cluster(list, 2.0);
@@ -48,5 +42,12 @@ public class ClusteringTest
         result[0].Count.Should().Be(1);
         result[1].Count.Should().Be(3);
         result[2].Count.Should().Be(2);
+    }
+
+    private class TestPoint : Point
+    {
+        public TestPoint(int id, double x, double y) : base(id, x, y)
+        {
+        }
     }
 }

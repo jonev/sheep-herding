@@ -8,35 +8,20 @@ namespace SheepHerding.Api.Services;
 
 public class HerdService : IDisposable
 {
-    private readonly ILogger _logger;
     private readonly IHubContext<VisualizationCommunication> _hub;
+    private readonly ILogger _logger;
     private readonly int _randomSeed;
     private readonly SheepSettings _sheepSettings;
-    public string ClientId { get; }
     private readonly Coordinate Finish = new(870, 770);
-    public Coordinate MousePosition { get; set; } = new(0, 0);
-    public bool Start { get; set; } = false;
-    public bool StartDrones { get; set; } = true;
-    public bool Reset { get; set; } = false;
-    public int NrOfSheeps { get; set; } = 10;
-    public string Name { get; set; } = "Unknown";
-    public int VisualizationSpeed { get; set; } = 4;
-    public double FailedTimout { get; set; } = 60.0;
-    public int PathNr { get; set; } = 6;
-    public int RandomAngle { get; set; } = 20;
-    public bool Connected { get; set; } = true;
-    public bool Finished { get; set; } = false;
-    public bool Failed { get; set; } = false;
-    public List<Sheep> Sheeps => _listOfSheeps;
+    private readonly double _forceAdjustment = 0.25;
+    private long _previousTicks = DateTime.Now.Ticks;
+    private double _scanTime = 0.01;
 
     private int _scanTimeDelay = 10;
-    private double _scanTime = 0.01;
-    private double _forceAdjustment = 0.25;
-    private long _previousTicks = DateTime.Now.Ticks;
-    private List<Sheep> _listOfSheeps;
 
 
-    public HerdService(ILogger logger, IHubContext<VisualizationCommunication> hub, string clientId, int randomSeed, SheepSettings sheepSettings)
+    public HerdService(ILogger logger, IHubContext<VisualizationCommunication> hub, string clientId, int randomSeed,
+        SheepSettings sheepSettings)
     {
         _logger = logger;
         _hub = hub;
@@ -44,6 +29,30 @@ public class HerdService : IDisposable
         _sheepSettings = sheepSettings;
         ClientId = clientId;
         _logger.LogInformation($"Herd service init for: {clientId} --------------------");
+    }
+
+    public string ClientId { get; }
+    public Coordinate MousePosition { get; set; } = new(0, 0);
+    public bool Start { get; set; }
+    public bool StartDrones { get; set; } = true;
+    public bool Reset { get; set; }
+    public int NrOfSheeps { get; set; } = 10;
+    public string Name { get; set; } = "Unknown";
+    public int VisualizationSpeed { get; set; } = 4;
+    public double FailedTimout { get; set; } = 60.0;
+    public int PathNr { get; set; } = 6;
+    public int RandomAngle { get; set; } = 20;
+    public bool Connected { get; set; } = true;
+    public bool Finished { get; set; }
+    public bool Failed { get; set; }
+    public List<Sheep> Sheeps { get; private set; }
+
+
+    public void Dispose()
+    {
+        Start = false;
+        Connected = false;
+        _logger.LogInformation($"Disposing for client: {ClientId}");
     }
 
     public async Task ExecuteAsync()
@@ -55,12 +64,13 @@ public class HerdService : IDisposable
     private List<DroneHerder> InitializeHerders()
     {
         var listOfHerders = new List<DroneHerder>();
-        for (int i = 0; i < 3; i++)
+        for (var i = 0; i < 3; i++)
         {
             var h = new DroneHerder(200, 200, i, 8.0);
             h.Set(new Coordinate(100, 100));
             listOfHerders.Add(h);
         }
+
         return listOfHerders;
     }
 
@@ -73,11 +83,12 @@ public class HerdService : IDisposable
 
     private void InitializeSheeps(HerdSetup herdSetup, List<DroneHerder> listOfHerders, SheepSettings settings)
     {
-        for (int i = 0; i < herdSetup.SheepStartCoordinates.Count; i++)
+        for (var i = 0; i < herdSetup.SheepStartCoordinates.Count; i++)
         {
-            var sheep = new Sheep(_logger, i, settings, _listOfSheeps, listOfHerders, Finish, herdSetup.TerrainPath, _randomSeed);
+            var sheep = new Sheep(_logger, i, settings, Sheeps, listOfHerders, Finish, herdSetup.TerrainPath,
+                _randomSeed);
             sheep.Set(herdSetup.SheepStartCoordinates[i]);
-            _listOfSheeps.Add(sheep);
+            Sheeps.Add(sheep);
         }
     }
 
@@ -87,7 +98,7 @@ public class HerdService : IDisposable
         {
             try
             {
-                if(Start) await InitializeAndRun();
+                if (Start) await InitializeAndRun();
                 await Task.Delay(10);
             }
             catch (Exception e)
@@ -111,19 +122,20 @@ public class HerdService : IDisposable
         var startPath = herdSetup.PredefinedPathCoordinator.GetStartListAsString();
         Finished = false;
 
-        _listOfSheeps = new List<Sheep>();
+        Sheeps = new List<Sheep>();
 
         var listOfHerders = InitializeHerders();
         var mouse = InitializeMouse();
         listOfHerders.Add(mouse);
 
-        var droneOversight = new DroneOversight(_logger, 1000, 500, -1, herdSetup.PredefinedPathCoordinator, listOfHerders,
-            new PathCreator(_logger), _listOfSheeps, Finish);
+        var droneOversight = new DroneOversight(_logger, 1000, 500, -1, herdSetup.PredefinedPathCoordinator,
+            listOfHerders,
+            new PathCreator(_logger), Sheeps, Finish);
         droneOversight.Set(new Coordinate(150, 100));
-        
+
         InitializeSheeps(herdSetup, listOfHerders, _sheepSettings);
 
-        Stopwatch stopwatch = new Stopwatch();
+        var stopwatch = new Stopwatch();
         while (Connected && Reset == false && Finished == false && Failed == false)
         {
             if (Start) stopwatch.Start();
@@ -135,17 +147,17 @@ public class HerdService : IDisposable
             }
 
             _scanTimeDelay = VisualizationSpeed;
-            _sheepSettings.RandomAngleRange = Math.PI/RandomAngle;
+            _sheepSettings.RandomAngleRange = Math.PI / RandomAngle;
             // Mouse
             mouse.UpdatePosition(_forceAdjustment, MousePosition);
             // Calculate new coordinates
-            _listOfSheeps.ForEach(sheep => sheep.UpdatePosition(_forceAdjustment));
+            Sheeps.ForEach(sheep => sheep.UpdatePosition(_forceAdjustment));
 
             var (pathIndex, centroids, current, next, state, oversightPoints, dummy) =
                 droneOversight.UpdatePosition(!StartDrones, _forceAdjustment);
 
             var cast = new List<Point>();
-            cast.AddRange(_listOfSheeps);
+            cast.AddRange(Sheeps);
             cast.Add(droneOversight);
             cast.AddRange(listOfHerders);
             cast.Add(dummy);
@@ -161,7 +173,7 @@ public class HerdService : IDisposable
                     .SendAsync("ReceiveMessage", "admin", message);
 
             // Finished?
-            Finished = _listOfSheeps.All(s => s.IsInsideFinishZone());
+            Finished = Sheeps.All(s => s.IsInsideFinishZone());
             if (Finished)
             {
                 stopwatch.Stop();
@@ -179,7 +191,9 @@ public class HerdService : IDisposable
             // Wait
             await Task.Delay(_scanTimeDelay);
         }
-        _logger.LogInformation($"Exiting: Failed: {Failed}, Finished: {Finished}, Sheeps finished: {_listOfSheeps.Count(s => s.IsInsideFinishZone())}");
+
+        _logger.LogInformation(
+            $"Exiting: Failed: {Failed}, Finished: {Finished}, Sheeps finished: {Sheeps.Count(s => s.IsInsideFinishZone())}");
         Reset = false;
     }
 
@@ -195,7 +209,7 @@ public class HerdService : IDisposable
             $"!{CoordinatePrinter.ToString(centroids)}" +
             $"!{CoordinatePrinter.ToString(new List<Coordinate> {droneOversight.Position})}" +
             $"!{CoordinatePrinter.ToString(listOfHerders.Select(s => s.Position).ToList())}" +
-            $"!{CoordinatePrinter.ToString(_listOfSheeps.Select(s => s.Position).ToList())}" +
+            $"!{CoordinatePrinter.ToString(Sheeps.Select(s => s.Position).ToList())}" +
             $"!{vectors}" +
             $"!{circle}" +
             $"!{startPath}" +
@@ -204,13 +218,5 @@ public class HerdService : IDisposable
             $"!{state}" +
             $"!{CoordinatePrinter.ToString(herdSetup.TerrainPath.GetList(PATH_EXECUTER.SHEEP))}";
         return message;
-    }
-
-
-    public void Dispose()
-    {
-        Start = false;
-        Connected = false;
-        _logger.LogInformation($"Disposing for client: {ClientId}");
     }
 }

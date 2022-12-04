@@ -17,27 +17,21 @@ public interface IPathMember
 
 public class PathCross : IPathMember
 {
-    public PathCoordinate Sheeps { get; set; }
-    public PathCoordinate Herders { get; set; }
-    public IPathMember? Next { get; set; }
-
     public PathCross(PathCoordinate sheeps, PathCoordinate herders)
     {
         Sheeps = sheeps;
         Herders = herders;
     }
 
+    public PathCoordinate Sheeps { get; set; }
+    public PathCoordinate Herders { get; set; }
+    public IPathMember? Next { get; set; }
+
     public PathCoordinate Get(PATH_EXECUTER executer)
     {
-        if (executer == PATH_EXECUTER.SHEEP)
-        {
-            return Sheeps;
-        }
+        if (executer == PATH_EXECUTER.SHEEP) return Sheeps;
 
-        if (executer == PATH_EXECUTER.HERDER)
-        {
-            return Herders;
-        }
+        if (executer == PATH_EXECUTER.HERDER) return Herders;
 
         throw new NotImplementedException("Executer type unknown");
     }
@@ -50,14 +44,14 @@ public class PathCross : IPathMember
 
 public class PathCoordinate : IPathMember
 {
-    public Coordinate ThisCoordinate { get; set; }
-    public IPathMember? Next { get; set; }
-
     public PathCoordinate(Coordinate current, IPathMember? next)
     {
         ThisCoordinate = current;
         Next = next;
     }
+
+    public Coordinate ThisCoordinate { get; set; }
+    public IPathMember? Next { get; set; }
 
     public PathCoordinate Get(PATH_EXECUTER executer)
     {
@@ -66,18 +60,16 @@ public class PathCoordinate : IPathMember
 
     public PathCoordinate GetNext(PATH_EXECUTER executer)
     {
-        if (Next is null)
-        {
-            return this;
-        }
+        if (Next is null) return this;
+
         return Next?.Get(executer);
     }
 }
 
 public class PathCoordinator
 {
-    private IPathMember _root;
     private PathCoordinate _herd;
+    private readonly IPathMember _root;
     private PathCoordinate _sheep;
     private IList<Coordinate> _startPath;
 
@@ -88,10 +80,7 @@ public class PathCoordinator
 
     public void Start()
     {
-        if (_root is null)
-        {
-            throw new Exception("No root is defined");
-        }
+        if (_root is null) throw new Exception("No root is defined");
 
         // _startPath = _queue.ToList().Select(c => new Coordinate(c.Left)).ToList();
         _herd = _root.Get(PATH_EXECUTER.HERDER);
@@ -100,15 +89,9 @@ public class PathCoordinator
 
     public Coordinate GetCurrent(PATH_EXECUTER executer)
     {
-        if (executer == PATH_EXECUTER.SHEEP)
-        {
-            return new Coordinate(_sheep.ThisCoordinate);
-        }
+        if (executer == PATH_EXECUTER.SHEEP) return new Coordinate(_sheep.ThisCoordinate);
 
-        if (executer == PATH_EXECUTER.HERDER)
-        {
-            return new Coordinate(_herd.ThisCoordinate);
-        }
+        if (executer == PATH_EXECUTER.HERDER) return new Coordinate(_herd.ThisCoordinate);
 
         throw new NotImplementedException("Executer type unknown");
     }
@@ -132,21 +115,11 @@ public class PathCoordinator
 
     public void Ack(PATH_EXECUTER executer)
     {
-        if (_herd.GetNext(PATH_EXECUTER.SHEEP) is null || _sheep.GetNext(PATH_EXECUTER.HERDER) is null)
-        {
-            return;
-        }
+        if (_herd.GetNext(PATH_EXECUTER.SHEEP) is null || _sheep.GetNext(PATH_EXECUTER.HERDER) is null) return;
 
-        if (executer == PATH_EXECUTER.SHEEP)
-        {
-            _sheep = _sheep.GetNext(PATH_EXECUTER.SHEEP);
-        }
+        if (executer == PATH_EXECUTER.SHEEP) _sheep = _sheep.GetNext(PATH_EXECUTER.SHEEP);
 
-        if (executer == PATH_EXECUTER.HERDER)
-        {
-            _herd = _herd.GetNext(PATH_EXECUTER.HERDER);
-        }
-
+        if (executer == PATH_EXECUTER.HERDER) _herd = _herd.GetNext(PATH_EXECUTER.HERDER);
     }
 
     public void SheepRetreat()
@@ -158,32 +131,21 @@ public class PathCoordinator
     public void UpdateToClosest(Coordinate closestTo)
     {
         // TODO Denne tar ikke hensyn til retning av banen. Det gjør at det kan bli usving.
-        if (closestTo is null)
-        {
-            return;
-        }
+        if (closestTo is null) return;
 
-        if (_herd.ThisCoordinate != null 
+        if (_herd.ThisCoordinate != null
             || _herd?.GetNext(PATH_EXECUTER.HERDER) != null
             || _herd?.GetNext(PATH_EXECUTER.HERDER)?.ThisCoordinate != null)
-        {
             while (Converter.ToVector2(_herd.ThisCoordinate, closestTo).Length()
                    > Converter.ToVector2(_herd?.GetNext(PATH_EXECUTER.HERDER).ThisCoordinate, closestTo).Length())
-            {
                 Ack(PATH_EXECUTER.HERDER);
-            }
-        }
 
-        if (_sheep.ThisCoordinate != null 
+        if (_sheep.ThisCoordinate != null
             || _sheep.GetNext(PATH_EXECUTER.SHEEP) != null
             || _sheep.GetNext(PATH_EXECUTER.SHEEP)?.ThisCoordinate != null)
-        {
             while (Converter.ToVector2(_sheep.ThisCoordinate, closestTo).Length()
                    > Converter.ToVector2(_sheep.GetNext(PATH_EXECUTER.SHEEP).ThisCoordinate, closestTo).Length())
-            {
                 Ack(PATH_EXECUTER.SHEEP);
-            }
-        }
     }
 
     public string GetStartListAsString()
@@ -199,7 +161,7 @@ public class PathCoordinator
             currentStart = currentEnd;
             current = current.GetNext(PATH_EXECUTER.HERDER);
         }
-        
+
         current = _sheep;
         currentStart = _sheep.ThisCoordinate;
         while (current.Next != null)
@@ -226,13 +188,8 @@ public class PathCoordinator
             while (current.Next is not null)
             {
                 if (current.Next is PathCoordinate coordinate)
-                {
                     current = coordinate;
-                }
-                else if (current.Next is PathCross cross)
-                {
-                    current = cross.Herders;
-                }
+                else if (current.Next is PathCross cross) current = cross.Herders;
 
                 list.Add(new Coordinate(current.ThisCoordinate));
             }
@@ -246,13 +203,8 @@ public class PathCoordinator
             while (current.Next is not null)
             {
                 if (current.Next is PathCoordinate coordinate)
-                {
                     current = coordinate;
-                }
-                else if (current.Next is PathCross cross)
-                {
-                    current = cross.Sheeps;
-                }
+                else if (current.Next is PathCross cross) current = cross.Sheeps;
 
                 list.Add(new Coordinate(current.ThisCoordinate));
             }
