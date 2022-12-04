@@ -8,6 +8,8 @@ public enum Trigger
     SheepEscaped,
     SheepCaptured,
     CommandsExecuted,
+    CornerApproaching,
+    LeftCorner,
     PathPointOutOfRange,
     AllSheepsAtFinish,
 }

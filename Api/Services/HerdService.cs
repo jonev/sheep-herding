@@ -20,7 +20,7 @@ public class HerdService : IDisposable
     public bool Reset { get; set; } = false;
     public int NrOfSheeps { get; set; } = 10;
     public string Name { get; set; } = "Unknown";
-    public int VisualizationSpeed { get; set; } = 20;
+    public int VisualizationSpeed { get; set; } = 4;
     public double FailedTimout { get; set; } = 60.0;
     public int PathNr { get; set; } = 6;
     public int RandomAngle { get; set; } = 20;

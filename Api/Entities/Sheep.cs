@@ -80,10 +80,12 @@ public class Sheep : Point
         // Enemies - Herding
         var sheepVenemy = _enemies.Select(e => Converter.ToVector2Negated(Position, e.Position));
         var minLenght = sheepVenemy.Select(v => v.Length()).Min();
+        // TODO this is not working well after introducing the new path as a tree
         // if (_randomAngle == 0.0 || _scanIndex % _settings.RandomAngleUpdateDelayFactor == 0)
         // {
         //     // Dont update so often
         //     _randomAngle = (new Random(_randomSeed).NextDouble() - 0.5) * _settings.RandomAngleRange;
+        //     _logger.LogInformation($"Random angle = {_randomAngle}");
         // }
         _randomAngle = 0.0;
         var enemyClose = minLenght <= _settings.EnemyToCloseStartMoveThreshold;

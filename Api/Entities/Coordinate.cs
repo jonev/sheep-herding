@@ -50,10 +50,12 @@ public class AckableCoordinate : Coordinate
 {
     public int PathIndex { get; set; }
     public bool Accessed { get; set; }
+    public bool IsPartOfCurve { get; set; }
 
-    public AckableCoordinate(int pathIndex, double x, double y) : base(x, y)
+    public AckableCoordinate(int pathIndex, double x, double y, bool isPartOfCurve = false) : base(x, y)
     {
         PathIndex = pathIndex;
+        IsPartOfCurve = isPartOfCurve;
     }
 
     public void Ack()

@@ -19,5 +19,5 @@ public class SheepSettings
     // --- End Force input ------<<<<
 
     public double RandomAngleRange { get; set; } = Math.PI / 3;
-    public int RandomAngleUpdateDelayFactor { get; set; } = 10;
+    public int RandomAngleUpdateDelayFactor { get; set; } = 100;
 }

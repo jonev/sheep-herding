@@ -12,7 +12,7 @@ public class PathCreator
         _logger = logger;
     }
     public IList<AckableCoordinate> Create90DegreesTurn(Coordinate start, Coordinate end, int startId,
-        int nrOfCoordinates)
+        int nrOfCoordinates) // TODO add value to IsPartOfCurve
     {
         var list = new List<AckableCoordinate>();
         double movementInX = (end.X - start.X) / nrOfCoordinates;
@@ -139,7 +139,7 @@ public class PathCreator
             list.Add(new AckableCoordinate(
                 angleSignPositive ? nrOfPointsOnLine + i : nrOfPointsOnLine + nrOfPointsInBend - i + 1,
                 curveCenter.X + cos,
-                curveCenter.Y + sin));
+                curveCenter.Y + sin, true));
         }
     
         _logger.LogInformation($"New path: {nameof(start)}:{start},{nameof(end)}:{end},{nameof(next)}:{next}, {nameof(pathAngle)}:{pathAngle}, {nameof(nextAngle)}:{nextAngle}, {nameof(positionNextAngle)}:{positionNextAngle},  {nameof(startNextAngle)}:{startNextAngle}");

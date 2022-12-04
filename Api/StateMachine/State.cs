@@ -6,6 +6,8 @@ public enum State
     FetchingFirstHerd,
     FetchingNewHerd,
     FollowPath,
+    FollowPathCorner,
+    FollowPathStraight,
     RecollectSheep,
     Waiting,
     Finished,
