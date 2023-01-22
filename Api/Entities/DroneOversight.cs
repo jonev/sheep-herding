@@ -6,42 +6,42 @@ namespace SheepHerding.Api.Entities;
 
 public class DroneOversight : Point
 {
+    private readonly Point _commandPoint = new(0, double.MaxValue, double.MaxValue);
     private readonly Coordinate _finish;
+    private readonly double _herdAngleInRadians = Math.PI / 2.5; //3.1 - For when sheep movement are adjusted
     private readonly List<DroneHerder> _herders;
     private readonly ILogger _logger;
-    private readonly PathCoordinator _predefinedPathPoints;
-    private readonly List<Sheep> _sheeps;
-
-    private List<(Coordinate Position, double Radius)> _centroids;
-    private AckableCoordinate _command = new(-1, 0, 0);
-    private bool _commandInRange;
-    private readonly Point _commandPoint = new(0, double.MaxValue, double.MaxValue);
-    private IList<AckableCoordinate> _commands = new List<AckableCoordinate>();
-    private Coordinate _current = new(double.MaxValue, double.MaxValue);
-    private readonly double _herdAngleInRadians = Math.PI / 2.5; //3.1 - For when sheep movement are adjusted
-    private bool _herdInPosesion;
-    private double _herdRadius = 75.0;
     private readonly Machine _machine;
-    private MaxRateOfChange _mrcAngle = new();
-    private Coordinate _next = new(double.MaxValue, double.MaxValue);
-    private Point _nextPoint = new(0, double.MaxValue, double.MaxValue);
-    private bool _pathAngleCalculationActivated = false;
 
     // private List<AckableCoordinate> _closestPathPoints;
     // private List<AckableCoordinate> _closestPathPointToSheepCentroid;
     private readonly PathCreator _pathCreator;
     private readonly int _pathIndex = 0; // TODO fix this
+    private readonly PathCoordinator _pathCoordinator;
+    private readonly List<Sheep> _sheeps;
+
+    private List<(Coordinate Position, double Radius)> _centroids;
+    private AckableCoordinate _command = new(-1, 0, 0);
+    private bool _commandInRange;
+    private IList<AckableCoordinate> _commands = new List<AckableCoordinate>();
+    private Coordinate _current = new(double.MaxValue, double.MaxValue);
+    private bool _herdInPosesion;
+    private double _herdRadius = 75.0;
+    private MaxRateOfChange _mrcAngle = new();
+    private Coordinate _next = new(double.MaxValue, double.MaxValue);
+    private Point _nextPoint = new(0, double.MaxValue, double.MaxValue);
+    private bool _pathAngleCalculationActivated = false;
     private Vector2 _positionCommandVector = Vector2.One;
     private double _speedFactor;
 
 
     public DroneOversight(ILogger logger, double maxX, double maxY, int id,
-        PathCoordinator predefinedPathPoints, List<DroneHerder> herders, PathCreator pathCreator, List<Sheep> sheeps,
+        PathCoordinator pathCoordinator, List<DroneHerder> herders, PathCreator pathCreator, List<Sheep> sheeps,
         Coordinate finish) :
         base(id)
     {
         _logger = logger;
-        _predefinedPathPoints = predefinedPathPoints;
+        _pathCoordinator = pathCoordinator;
         _herders = herders;
         _pathCreator = pathCreator;
         _sheeps = sheeps;
@@ -55,12 +55,12 @@ public class DroneOversight : Point
     {
         _machine.ExecuteOnEntry(State.FetchingFirstHerd, () =>
         {
-            // _logger.LogInformation("On entry FetchingFirstHerd");
+            _logger.LogInformation("On entry FetchingFirstHerd");
             _centroids = GetSheepHerdCentroids(_sheeps);
             _current = _centroids[0].Position;
             // _closestPathPointToSheepCentroid = GetClosesPathPointToClosestSheepCentroid();
-            _predefinedPathPoints.UpdateToClosest(_centroids[0].Position);
-            _next = _predefinedPathPoints.GetCurrent(PATH_EXECUTER.HERDER); // _closestPathPointToSheepCentroid[0];
+            _pathCoordinator.UpdateToClosest(_centroids[0].Position);
+            _next = _pathCoordinator.GetCurrent(PATH_EXECUTER.HERDER); // _closestPathPointToSheepCentroid[0];
             // _commandPoint = GetCommandPointV3(_command, _current, _next, 100.0);
             // _command =  _current;
             _commands = _pathCreator.CurvedLineToFetchHerd(Position, _current, _next);
@@ -68,13 +68,13 @@ public class DroneOversight : Point
 
         _machine.ExecuteOnEntry(State.Waiting, () =>
         {
-            // _logger.LogInformation("On entry Waiting");
+            _logger.LogInformation("On entry Waiting");
             // if (_current is AckableCoordinate ack)
             // {
             //     // _logger.LogInformation("On entry Waiting ack");
             //     ack.Ack();
             // }
-            _predefinedPathPoints.Ack(PATH_EXECUTER.HERDER);
+            _pathCoordinator.Ack(PATH_EXECUTER.HERDER);
 
             // _closestPathPoints = GetClosesPathPoint();
             // _current = _closestPathPoint[0];
@@ -93,10 +93,10 @@ public class DroneOversight : Point
         // });
         _machine.ExecuteOnEntry(State.FollowPath, () =>
         {
-            // _logger.LogInformation("On entry FollowPath");
+            _logger.LogInformation("On entry FollowPath");
             // _closestPathPoints = GetClosesPathPoint();
-            _current = _predefinedPathPoints.GetCurrent(PATH_EXECUTER.HERDER); // _closestPathPoints[0];
-            _next = _predefinedPathPoints.GetNext(PATH_EXECUTER.HERDER); 
+            _current = _pathCoordinator.GetCurrent(PATH_EXECUTER.HERDER); // _closestPathPoints[0];
+            _next = _pathCoordinator.GetNext(PATH_EXECUTER.HERDER);
             // _closestPathPoints.Count > 1 ? _closestPathPoints[1] : _closestPathPoints[0];
             // _commandPoint = GetCommandPointV3(_command, _current, _next, 150.0);
             // _command = _current; //_commandPoint.Position;
@@ -189,7 +189,7 @@ public class DroneOversight : Point
         var sheepCentroidInRange = Calculator.InRange(Position, _centroids[0].Position, 45.0, 0.0);
         var sheepCentroidOutOfRange = Calculator.InRange(Position, _centroids[0].Position, 100.0, 50.0);
         var closestPathPointOutOfRange = Calculator.InRange(Position,
-            _predefinedPathPoints.GetCurrent(PATH_EXECUTER.HERDER), 10000.0,
+            _pathCoordinator.GetCurrent(PATH_EXECUTER.HERDER), 10000.0,
             10.0); //  _closestPathPoints.Count > 0 && Calculator.InRange(Position, _closestPathPoints[0], 10000.0, 10.0);
 
 
@@ -213,8 +213,10 @@ public class DroneOversight : Point
         _machine.Fire(Trigger.AllSheepsAtFinish, () => _sheeps.All(s => s.IsInsideFinishZone()));
         _machine.Fire(State.FollowPathStraight, Trigger.CornerApproaching, () => _command.IsPartOfCurve);
         // TODO
-        _machine.Fire(State.FollowPathStraight, Trigger.IntersectionApproaching, () => _predefinedPathPoints.IntersectionApproaching());
-        _machine.Fire(State.FollowPathCorner, Trigger.IntersectionApproaching, () => _predefinedPathPoints.IntersectionApproaching());
+        _machine.Fire(State.FollowPathStraight, Trigger.IntersectionApproaching,
+            () => _pathCoordinator.IntersectionApproaching(Position));
+        _machine.Fire(State.FollowPathCorner, Trigger.IntersectionApproaching,
+            () => _pathCoordinator.IntersectionApproaching(Position));
 
         // Write out
         if (_commandInRange) _command.Ack();

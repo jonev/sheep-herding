@@ -13,9 +13,6 @@ public class HerdService : IDisposable
     private readonly int _randomSeed;
     private readonly SheepSettings _sheepSettings;
     private readonly Coordinate Finish = new(870, 770);
-    private readonly double _forceAdjustment = 0.25;
-    private long _previousTicks = DateTime.Now.Ticks;
-    private double _scanTime = 0.01;
 
     private int _scanTimeDelay = 10;
 
