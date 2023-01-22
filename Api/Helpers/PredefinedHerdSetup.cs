@@ -4,6 +4,8 @@ namespace SheepHerding.Api.Helpers;
 
 public class PredefinedHerdSetup
 {
+    private static readonly double _intersectionApproachingThreshold = 200.0;
+
     public HerdSetup GetSetup(int nr)
     {
         switch (nr)
@@ -33,7 +35,7 @@ public class PredefinedHerdSetup
         for (var i = 0; i < 5; i++) listOfSheepCoordinates.Add(new Coordinate(200 + i % 10 * 20, 250 + i % 3 * 20));
 
         var p = new PathCoordinator
-        (
+        (_intersectionApproachingThreshold,
             new PathCoordinate(new Coordinate(350, 350),
                 new PathCoordinate(new Coordinate(950, 850), null)));
         return new HerdSetup(p, listOfSheepCoordinates, p);
@@ -45,7 +47,7 @@ public class PredefinedHerdSetup
         for (var i = 0; i < 5; i++) listOfSheepCoordinates.Add(new Coordinate(200 + i % 10 * 20, 250 + i % 3 * 20));
 
         var p = new PathCoordinator
-        (
+        (_intersectionApproachingThreshold,
             new PathCoordinate(new Coordinate(350, 350),
                 new PathCoordinate(new Coordinate(450, 450),
                     new PathCross(
@@ -66,7 +68,7 @@ public class PredefinedHerdSetup
         for (var i = 0; i < 5; i++) listOfSheepCoordinates.Add(new Coordinate(200 + i % 10 * 20, 250 + i % 3 * 20));
 
         var p = new PathCoordinator
-        (
+        (_intersectionApproachingThreshold,
             new PathCoordinate(new Coordinate(500, 300),
                 new PathCoordinate(new Coordinate(800, 300),
                     new PathCoordinate(new Coordinate(950, 850), null))));
@@ -80,7 +82,7 @@ public class PredefinedHerdSetup
         for (var i = 0; i < 5; i++) listOfSheepCoordinates.Add(new Coordinate(800 + i % 10 * 20, 200 + i % 3 * 20));
 
         var p = new PathCoordinator
-        (
+        (_intersectionApproachingThreshold,
             new PathCoordinate(new Coordinate(100, 100),
                 new PathCoordinate(new Coordinate(200, 150),
                     new PathCoordinate(new Coordinate(300, 250),
@@ -99,7 +101,7 @@ public class PredefinedHerdSetup
         for (var i = 0; i < 5; i++) listOfSheepCoordinates.Add(new Coordinate(800 + i % 10 * 20, 200 + i % 3 * 20));
 
         var p = new PathCoordinator
-        (
+        (_intersectionApproachingThreshold,
             new PathCoordinate(new Coordinate(150, 200),
                 new PathCoordinate(new Coordinate(600, 200),
                     new PathCoordinate(new Coordinate(600, 500),
@@ -115,7 +117,7 @@ public class PredefinedHerdSetup
         for (var i = 0; i < 5; i++) listOfSheepCoordinates.Add(new Coordinate(800 + i % 10 * 20, 200 + i % 3 * 20));
 
         var p = new PathCoordinator
-        (
+        (_intersectionApproachingThreshold,
             new PathCoordinate(new Coordinate(100, 100),
                 new PathCoordinate(new Coordinate(200, 150),
                     new PathCoordinate(new Coordinate(200, 400),
@@ -132,7 +134,7 @@ public class PredefinedHerdSetup
         for (var i = 0; i < 5; i++) listOfSheepCoordinates.Add(new Coordinate(800 + i % 10 * 20, 200 + i % 3 * 20));
 
         var p = new PathCoordinator
-        (
+        (_intersectionApproachingThreshold,
             new PathCoordinate(new Coordinate(100, 100),
                 new PathCoordinate(new Coordinate(200, 150),
                     new PathCoordinate(new Coordinate(300, 250),

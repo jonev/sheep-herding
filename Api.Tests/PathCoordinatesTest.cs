@@ -9,7 +9,7 @@ public class PathCoordinatesTest
     public void Test_Add_Coordinates_Simple_One_Line()
     {
         var p = new PathCoordinator
-        (
+        (100.0,
             new PathCoordinate(new Coordinate(0, 0),
                 new PathCoordinate(new Coordinate(1, 0),
                     new PathCoordinate(new Coordinate(2, 0),
@@ -40,7 +40,7 @@ public class PathCoordinatesTest
     public void Test_Add_Coordinates_Simple_One_Cross()
     {
         var p = new PathCoordinator
-        (
+        (100.0,
             new PathCoordinate(new Coordinate(0, 0),
                 new PathCoordinate(new Coordinate(1, 0),
                     new PathCoordinate(new Coordinate(2, 0),
@@ -88,7 +88,7 @@ public class PathCoordinatesTest
     public void Test_Add_Coordinates_Simple_One_Cross_SheepRetreat()
     {
         var p = new PathCoordinator
-        (
+        (100.0,
             new PathCoordinate(new Coordinate(0, 0),
                 new PathCoordinate(new Coordinate(1, 0),
                     new PathCoordinate(new Coordinate(2, 0),
@@ -136,7 +136,7 @@ public class PathCoordinatesTest
     public void Test_ToList()
     {
         var p = new PathCoordinator
-        (
+        (100.0,
             new PathCoordinate(new Coordinate(0, 0),
                 new PathCoordinate(new Coordinate(1, 0),
                     new PathCoordinate(new Coordinate(2, 0),
@@ -169,7 +169,7 @@ public class PathCoordinatesTest
     public void Test_PathCoordinatorPrinter()
     {
         var p = new PathCoordinator
-        (
+        (100.0,
             new PathCoordinate(new Coordinate(0, 0),
                 new PathCoordinate(new Coordinate(1, 0),
                     new PathCoordinate(new Coordinate(2, 0),
@@ -188,5 +188,46 @@ public class PathCoordinatesTest
         result.Should()
             .Be(
                 "0,0,1,0;1,0,2,0;2,0,33,0;33,0,44,0;44,0,55,0;55,0,66,0;0,0,1,0;1,0,2,0;2,0,3,0;3,0,4,0;4,0,5,0;5,0,6,0");
+    }
+
+    [Fact]
+    public void Test_Intersection_Approaching_Ok()
+    {
+        var p = new PathCoordinator
+        (1.0,
+            new PathCoordinate(new Coordinate(0, 0),
+                new PathCoordinate(new Coordinate(1, 0),
+                    new PathCoordinate(new Coordinate(2, 0),
+                        new PathCross(
+                            new PathCoordinate(new Coordinate(3, 0),
+                                new PathCoordinate(new Coordinate(6, 0), null)),
+                            new PathCoordinate(new Coordinate(33, 0),
+                                new PathCoordinate(new Coordinate(66, 0), null))))
+                )));
+        p.Start();
+        p.IntersectionApproaching(new Coordinate(0, 0)).Should().BeFalse();
+        p.Ack(PATH_EXECUTER.HERDER);
+        p.Ack(PATH_EXECUTER.SHEEP);
+        p.IntersectionApproaching(new Coordinate(1, 0)).Should().BeFalse();
+        p.Ack(PATH_EXECUTER.HERDER);
+        p.Ack(PATH_EXECUTER.SHEEP);
+        p.IntersectionApproaching(new Coordinate(2, 0)).Should().BeTrue();
+        // Cross
+        p.Ack(PATH_EXECUTER.HERDER);
+        p.Ack(PATH_EXECUTER.SHEEP);
+    }
+
+    [Fact]
+    public void Test_Intersection_Not_Present()
+    {
+        var p = new PathCoordinator
+        (1.0,
+            new PathCoordinate(new Coordinate(0, 0),
+                new PathCoordinate(new Coordinate(1, 0),
+                    new PathCoordinate(new Coordinate(2, 0),
+                        new PathCoordinate(new Coordinate(3, 0),
+                            new PathCoordinate(new Coordinate(6, 0), null))))));
+        p.Start();
+        p.IntersectionApproaching(new Coordinate(0, 0)).Should().BeFalse();
     }
 }
