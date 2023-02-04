@@ -12,12 +12,12 @@ public class DroneOversight : Point
     private readonly List<DroneHerder> _herders;
     private readonly ILogger _logger;
     private readonly Machine _machine;
+    private readonly PathCoordinator _pathCoordinator;
 
     // private List<AckableCoordinate> _closestPathPoints;
     // private List<AckableCoordinate> _closestPathPointToSheepCentroid;
     private readonly PathCreator _pathCreator;
     private readonly int _pathIndex = 0; // TODO fix this
-    private readonly PathCoordinator _pathCoordinator;
     private readonly List<Sheep> _sheeps;
 
     private List<(Coordinate Position, double Radius)> _centroids;
@@ -169,7 +169,8 @@ public class DroneOversight : Point
     }
 
     public (int pathIndex, List<Coordinate> centroids, Coordinate current, Coordinate next, string state,
-        IList<Coordinate> points, Point dummy) UpdatePosition(bool disableHerders, double forceAdjustment)
+        IList<Coordinate> points, Point dummy) UpdatePosition(bool disableHerders, double forceAdjustment,
+            bool interceptCross)
     {
         // -- Calculations
         if (!_sheeps.Any())
@@ -191,7 +192,8 @@ public class DroneOversight : Point
         var closestPathPointOutOfRange = Calculator.InRange(Position,
             _pathCoordinator.GetCurrent(PATH_EXECUTER.HERDER), 10000.0,
             10.0); //  _closestPathPoints.Count > 0 && Calculator.InRange(Position, _closestPathPoints[0], 10000.0, 10.0);
-
+        _logger.LogInformation(
+            $"closestPathPointOutOfRange: {closestPathPointOutOfRange}, curretn: {_pathCoordinator.GetCurrent(PATH_EXECUTER.HERDER)}");
 
         var lenghtToNextHerd =
             _centroids.Count < 2 ? int.MaxValue : Converter.ToVector2(Position, _centroids[1].Position).Length();
@@ -214,9 +216,9 @@ public class DroneOversight : Point
         _machine.Fire(State.FollowPathStraight, Trigger.CornerApproaching, () => _command.IsPartOfCurve);
         // TODO
         _machine.Fire(State.FollowPathStraight, Trigger.IntersectionApproaching,
-            () => _pathCoordinator.IntersectionApproaching(Position));
+            () => _pathCoordinator.IntersectionApproaching(Position) && interceptCross);
         _machine.Fire(State.FollowPathCorner, Trigger.IntersectionApproaching,
-            () => _pathCoordinator.IntersectionApproaching(Position));
+            () => _pathCoordinator.IntersectionApproaching(Position) && interceptCross);
 
         // Write out
         if (_commandInRange) _command.Ack();
@@ -261,7 +263,32 @@ public class DroneOversight : Point
         // Calculate Vectors to next position for herders
         var h0 = Vector2.Multiply(Vector2.Negate(Vector2.Normalize(_positionCommandVector)), (float) _herdRadius);
         h0 = Calculator.RotateVector(h0, angleAdjustmentForOutcastSheep * 1.0);
+
         var h1 = Calculator.RotateVector(h0, _herdAngleInRadians);
+        _logger.LogInformation($"h1.1:{h1.Length()}");
+        if (_machine.State == State.FollowPathIntersectionLeft)
+        {
+            // Send ut drone for å blokkere
+            var nextCross = _pathCoordinator.GetNextCross();
+            if (nextCross != null)
+            {
+                var nextSheepCoordinateAfterCross = nextCross.GetNext(PATH_EXECUTER.SHEEP).ThisCoordinate;
+                var cross = nextCross.ThisCoordinate;
+                // var next = _pathCoordinator.GetNext(PATH_EXECUTER.SHEEP); // Dette er nå selve krysset
+                // Her trenger jeg punktet som kommer etter krysset hos sauene
+                var vector = Vector2.Multiply(
+                    Vector2.Normalize(
+                        Converter.ToVector2(
+                            cross,
+                            nextSheepCoordinateAfterCross)
+                    ),
+                    180.0f);
+                h1 = vector;
+                _logger.LogInformation(
+                    $"Cross: ${cross}, SheepCoor: {nextSheepCoordinateAfterCross}, Position: {_herders[1].Position}, h1.2:{h1.Length()}");
+            }
+        }
+
         var h2 = Calculator.RotateVector(h0, -_herdAngleInRadians);
 
         if (disableHerders)

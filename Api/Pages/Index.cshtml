@@ -84,17 +84,26 @@
 </svg>
 <br/>
 <button onclick="startStop()" style="position: absolute;left: 0;top: 901;">Start/Stop</button>
-<button onclick="startStopDrones()" style="position: absolute;left: 0;top: 921;">Start/Stop drones</button>
-<button onclick="toggleClearCanvas()" style="position: absolute;left: 0;top: 941;">Clear canvas on/off</button>
-<button onclick="toggleSendMouse()" style="position: absolute;left: 0;top: 961;">Use mouse on/off</button>
 <button onclick="reset()" style="position: absolute;left: 100;top: 901;">Reset</button>
 
+<input type="checkbox" onchange="startStopDrones()" id="checkbox-start-drones" style="position: absolute;left: 150;top: 921;"/>
+<label for="checkbox-start-drones" style="position: absolute;left: 0;top: 921;">Stop herders</label>
 
-<text style="position: absolute;left: 160;top:901;">Path Number</text>
+<input type="checkbox" onchange="toggleClearCanvas()" id="checkbox-canvas" style="position: absolute;left: 150;top: 941;"/>
+<label for="checkbox-canvas" style="position: absolute;left: 0;top: 941;">Draw movements</label>
+
+<input type="checkbox" onchange="toggleSendMouse()" id="checkbox-mouse" style="position: absolute;left: 150;top: 961;"/>
+<label for="checkbox-mouse" style="position: absolute;left: 0;top: 961;">Use mouse herder</label>
+
+<input type="checkbox" checked="true" onchange="toggleInterceptCross()" id="checkbox-intercept-cross" style="position: absolute;left: 150;top: 981;"/>
+<label for="checkbox-intercept-cross" style="position: absolute;left: 0;top: 981;">Intercept cross</label>
+
+
+<text style="position: absolute;left: 220;top:901;">Path Number</text>
 <input id="setting1" min="0" max="500" value="6" type="number" style="position: absolute;left: 400;top: 901;"/>
 <text style="position: absolute;left: 800;top:901;">Random Angle</text>
 <input id="setting2" min="1" max="500" value="20" type="number" style="position: absolute;left: 900;top: 901;"/>
-<text style="position: absolute;left: 160;top:921;">Visualization Speed</text>
+<text style="position: absolute;left: 220;top:921;">Visualization Speed</text>
 <input id="setting3" min="1" max="1000" value="4" type="number" style="position: absolute;left: 400;top: 921;"/>
 
 <script src="~/js/signalr/dist/browser/signalr.js"></script>

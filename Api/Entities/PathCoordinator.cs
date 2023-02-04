@@ -64,17 +64,29 @@ public class PathCoordinate : IPathMember
 
         return Next?.Get(executer);
     }
+
+    public bool IsEnd()
+    {
+        return Next is null;
+    }
+
+    public bool IsNextCross()
+    {
+        return Next is PathCross;
+    }
 }
 
 public class PathCoordinator
 {
-    private PathCoordinate _herd;
+    private readonly double _intersectionApproachingThreshold;
     private readonly IPathMember _root;
+    private PathCoordinate _herd;
     private PathCoordinate _sheep;
     private IList<Coordinate> _startPath;
 
-    public PathCoordinator(IPathMember root)
+    public PathCoordinator(double intersectionApproachingThreshold, IPathMember root)
     {
+        _intersectionApproachingThreshold = intersectionApproachingThreshold;
         _root = root;
     }
 
@@ -113,9 +125,24 @@ public class PathCoordinator
         throw new NotImplementedException("Executer type unknown");
     }
 
-    public bool IntersectionApproaching()
+    public PathCoordinate? GetNextCross()
     {
-        return _herd.Next is PathCross;
+        var next = _herd;
+        while (!next.IsNextCross())
+        {
+            next = next.GetNext(PATH_EXECUTER.HERDER);
+            if (next.IsEnd()) return null;
+        }
+
+        return next.Get(PATH_EXECUTER.HERDER);
+    }
+
+    public bool IntersectionApproaching(Coordinate position)
+    {
+        var cross = GetNextCross();
+        if (cross is null) return false;
+        var v = Converter.ToVector2(position, cross.ThisCoordinate);
+        return v.Length() < _intersectionApproachingThreshold;
     }
 
     public void Ack(PATH_EXECUTER executer)

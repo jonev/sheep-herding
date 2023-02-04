@@ -54,6 +54,12 @@ public class VisualizationCommunication : Hub
         service.StartDrones = !service.StartDrones;
     }
 
+    public void ToggleInterceptCross()
+    {
+        var service = Services[Context.ConnectionId];
+        service.InterceptCross = !service.InterceptCross;
+    }
+
     public void Reset(string nr, string s1, string s2, string s3)
     {
         var service = Services[Context.ConnectionId];

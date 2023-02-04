@@ -4,7 +4,7 @@ namespace SheepHerding.Api.Helpers;
 
 public class PredefinedHerdSetup
 {
-    private static readonly double _intersectionApproachingThreshold = 200.0;
+    private readonly double _intersectionApproachingThreshold = 80.0;
 
     public HerdSetup GetSetup(int nr)
     {

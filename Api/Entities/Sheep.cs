@@ -116,11 +116,16 @@ public class Sheep : Point
             _terrainPath.Ack(PATH_EXECUTER.SHEEP);
 
         var sheepVpath = Converter.ToVector2(Position, _terrainPath.GetCurrent(PATH_EXECUTER.SHEEP));
-        if (enemyClose && sheepVpath.Length() < 200.0)
+        if (enemyClose && _terrainPath.IntersectionApproaching(Position))
         {
+            var currentForSheep = _terrainPath.GetCurrent(PATH_EXECUTER.SHEEP);
+            _logger.LogInformation($"Sheep drawn: {sheepVpath.Length()}, {currentForSheep}");
             var sheepVpathNorm = Vector2.Normalize(sheepVpath);
-            force = Vector2.Add(force, Vector2.Multiply(sheepVpathNorm, 8.0f));
+            force = Vector2.Add(force, Vector2.Multiply(sheepVpathNorm, 9.0f));
         }
+
+        if (enemyClose && sheepVpath.Length() > 100.0 && !_terrainPath.IntersectionApproaching(Position))
+            _terrainPath.Ack(PATH_EXECUTER.SHEEP);
 
         Force = Vector2.Multiply(force, 10); // For visualization purposes only
         Position.Update(Position.X + force.X * forceAdjustment, Position.Y + force.Y * forceAdjustment);

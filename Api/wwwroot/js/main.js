@@ -105,6 +105,13 @@ function startStopDrones() {
     });
 }
 
+function toggleInterceptCross() {
+    console.log("ToggleInterceptCross")
+    connection.invoke("ToggleInterceptCross").catch(function (err) {
+        return console.error(err.toString());
+    });
+}
+
 connection.start().then(function () {
     console.log("Connection started")
 }).catch(function (err) {
@@ -112,19 +119,11 @@ connection.start().then(function () {
 });
 
 function toggleClearCanvas() {
-    if (clearCanvasOn) {
-        clearCanvasOn = false;
-    } else {
-        clearCanvasOn = true;
-    }
+    clearCanvasOn = !clearCanvasOn;
 }
 
 function toggleSendMouse() {
-    if (sendMouseOn) {
-        sendMouseOn = false;
-    } else {
-        sendMouseOn = true;
-    }
+    sendMouseOn = !sendMouseOn;
 }
 
 function clearCanvas() {

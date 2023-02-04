@@ -8,6 +8,7 @@ namespace SheepHerding.Api.Services;
 
 public class HerdService : IDisposable
 {
+    private readonly double _forceAdjustment = 0.25;
     private readonly IHubContext<VisualizationCommunication> _hub;
     private readonly ILogger _logger;
     private readonly int _randomSeed;
@@ -32,6 +33,7 @@ public class HerdService : IDisposable
     public Coordinate MousePosition { get; set; } = new(0, 0);
     public bool Start { get; set; }
     public bool StartDrones { get; set; } = true;
+    public bool InterceptCross { get; set; } = true;
     public bool Reset { get; set; }
     public int NrOfSheeps { get; set; } = 10;
     public string Name { get; set; } = "Unknown";
@@ -63,7 +65,7 @@ public class HerdService : IDisposable
         var listOfHerders = new List<DroneHerder>();
         for (var i = 0; i < 3; i++)
         {
-            var h = new DroneHerder(200, 200, i, 8.0);
+            var h = new DroneHerder(200, 200, i, 12.0);
             h.Set(new Coordinate(100, 100));
             listOfHerders.Add(h);
         }
@@ -151,7 +153,7 @@ public class HerdService : IDisposable
             Sheeps.ForEach(sheep => sheep.UpdatePosition(_forceAdjustment));
 
             var (pathIndex, centroids, current, next, state, oversightPoints, dummy) =
-                droneOversight.UpdatePosition(!StartDrones, _forceAdjustment);
+                droneOversight.UpdatePosition(!StartDrones, _forceAdjustment, InterceptCross);
 
             var cast = new List<Point>();
             cast.AddRange(Sheeps);
