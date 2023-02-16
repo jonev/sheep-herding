@@ -55,7 +55,7 @@ connection.on("ReceiveMessage", function (user, message) {
 
         for (let i = 0; i < vectorCollection.length; i++) {
             let vector = vectorCollection[i].split(",")
-            drawVector(vector[0], vector[1], vector[2], vector[3], 'grey', 0.25)
+            drawVector(vector[0], vector[1], vector[2], vector[3], 'black', 0.25)
         }
     }
     drawPoint(droneOversight[0], droneOversight[1], "lightgrey", 15)

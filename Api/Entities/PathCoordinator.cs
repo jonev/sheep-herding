@@ -221,7 +221,7 @@ public class PathCoordinator
             {
                 if (current.Next is PathCoordinate coordinate)
                     current = coordinate;
-                else if (current.Next is PathCross cross) current = cross.Herders;
+                else if (current.Next is PathCross cross) current = cross.Get(PATH_EXECUTER.HERDER);
 
                 list.Add(new Coordinate(current.ThisCoordinate));
             }
@@ -236,7 +236,7 @@ public class PathCoordinator
             {
                 if (current.Next is PathCoordinate coordinate)
                     current = coordinate;
-                else if (current.Next is PathCross cross) current = cross.Sheeps;
+                else if (current.Next is PathCross cross) current = cross.Get(PATH_EXECUTER.SHEEP);
 
                 list.Add(new Coordinate(current.ThisCoordinate));
             }

@@ -18,19 +18,4 @@ public static class Converter
         return new Vector2(Convert.ToSingle(b.X - a.X),
             Convert.ToSingle(b.Y - a.Y));
     }
-
-    public static Vector2 ToVector2Negated(Coordinate a, Coordinate b)
-    {
-        return Vector2.Negate(ToVector2(a, b));
-    }
-
-    public static Vector2 ToVector2Norm(Coordinate a, Coordinate b)
-    {
-        return Vector2.Normalize(ToVector2(a, b));
-    }
-
-    public static Vector2 ToVector2NormNegated(Coordinate a, Coordinate b)
-    {
-        return Vector2.Negate(Vector2.Normalize(ToVector2(a, b)));
-    }
 }

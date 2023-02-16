@@ -28,49 +28,48 @@ public class Sheep : Point
         _randomSeed = randomSeed;
     }
 
-    public void UpdatePosition(double forceAdjustment)
+    // Max speed => Enemy = 1, PersonalSpace = 0.1, To far from herd = 0.1 => 1.2
+
+    public void UpdatePosition()
     {
         _scanIndex++;
         var force = new Vector2(0, 0);
 
         // Personal space - dont have sheeps walk on top of each other
-        var close = _friendlies.Where(s
+        var neighborsThatAreToClose = _friendlies.Where(s
                 => s.Id != Id && Converter.ToVector2(Position, s.Position).Length() <
                 _settings.NeighborToCloseStartMoveThreshold)
-            .MinBy(s => Converter.ToVector2(Position, s.Position).Length());
+            .ToList();
 
-        if (close != null)
+        foreach (var neighbor in neighborsThatAreToClose)
         {
-            var sheepVclose = Converter.ToVector2Negated(Position, new Coordinate(close.Position.X, close.Position.Y));
-            var normalized = Vector2.Normalize(Vector2.Add(force, sheepVclose));
-            force = Vector2.Multiply(normalized, _settings.PersonalSpaceForce);
-            // force = Calculator.AddWithForceFactor(
-            //     force, 
-            //     sheepVclose, 
-            //     _settings.PersonalSpaceForce);
-            // _logger.LogInformation($"Sheep '{Id}' needs personal space");
+            var flipped = Calculator.NegateLengthWithExponentialDecrease(
+                Converter.ToVector2(Position, neighbor.Position),
+                _settings.NeighborToCloseStartMoveThreshold,
+                _settings.PersonalSpaceForce);
+            force = Vector2.Add(force, flipped);
         }
 
         // Hold together as a herd
         var neighbours = _friendlies
             .Where(s => s.Id != Id
-                        && Converter.ToVector2(Position, s.Position).Length() > 100
-                        && Converter.ToVector2(Position, s.Position).Length() < 200)
+                        && Converter.ToVector2(Position, s.Position).Length() >
+                        _settings.CentroidOfHerdToFarStartMoveTowardHerdThreshold
+                        && Converter.ToVector2(Position, s.Position).Length() <
+                        _settings.CentroidOfHerdToFarEndMoveThreshold)
             .OrderBy(s => Converter.ToVector2(Position, s.Position).Length())
             .Take(5);
         if (neighbours.Any())
         {
             var list = neighbours.Select(s => s.Position).ToList();
             list.Add(Position);
-            var farCentroid = Calculator.Centroid(list);
-            var sheepVfar = Converter.ToVector2(Position, new Coordinate(farCentroid.X, farCentroid.Y));
-            var normalized = Vector2.Normalize(Vector2.Add(force, sheepVfar));
-            force = Vector2.Divide(normalized, 1.0f);
-            // force = Calculator.AddWithForceFactor(
-            //     force, 
-            //     sheepVfar, 
-            //     _settings.HoldTogetherForce);
-            // _logger.LogInformation($"Sheep '{Id}' hold together as a herd");
+            var centroidOfTheClosestSheepHerd = Calculator.Centroid(list);
+            var sheepToCentroidVectorAdjusted = Calculator.LengthWithExponentialDecrease(
+                Converter.ToVector2(Position,
+                    new Coordinate(centroidOfTheClosestSheepHerd.X, centroidOfTheClosestSheepHerd.Y)),
+                _settings.CentroidOfHerdToFarEndMoveThreshold,
+                _settings.HoldTogetherForce);
+            force = Vector2.Add(force, sheepToCentroidVectorAdjusted);
         }
 
         // Grazing
@@ -78,8 +77,9 @@ public class Sheep : Point
         // force = Vector2.Add(force, randomDirection);
 
         // Enemies - Herding
-        var sheepVenemy = _enemies.Select(e => Converter.ToVector2Negated(Position, e.Position));
-        var minLenght = sheepVenemy.Select(v => v.Length()).Min();
+        var toCloseEnemiesList = _enemies
+            .Where(e => Converter.ToVector2(Position, e.Position).Length() < _settings.EnemyToCloseStartMoveThreshold)
+            .ToList();
         // TODO this is not working well after introducing the new path as a tree
         // if (_randomAngle == 0.0 || _scanIndex % _settings.RandomAngleUpdateDelayFactor == 0)
         // {
@@ -87,22 +87,19 @@ public class Sheep : Point
         //     _randomAngle = (new Random(_randomSeed).NextDouble() - 0.5) * _settings.RandomAngleRange;
         //     _logger.LogInformation($"Random angle = {_randomAngle}");
         // }
-        _randomAngle = 0.0;
-        var enemyClose = minLenght <= _settings.EnemyToCloseStartMoveThreshold;
-        if (enemyClose)
-            foreach (var enemy in sheepVenemy)
-            {
-                var flipped = Calculator.FlipExLength(enemy, 100.0);
-                var flippedReduced = Vector2.Divide(flipped, 10);
-                // Add random angle to make the herding more challenging
-                var flippedRandomRotated =
-                    Calculator.RotateVector(flippedReduced, _randomAngle);
-                force = Vector2.Add(force, flippedRandomRotated);
-                // force = Calculator.AddWithForceFactor(
-                //     force, 
-                //     flippedRandomRotated, 
-                //     _settings.RunAwayForce);
-            }
+        // _randomAngle = 0.0;
+        var enemyClose = toCloseEnemiesList.Any();
+        // if (enemyClose)
+        foreach (var enemy in toCloseEnemiesList)
+        {
+            var flipped = Calculator.NegateLengthWithExponentialDecrease(
+                Converter.ToVector2(Position, enemy.Position),
+                _settings.EnemyToCloseStartMoveThreshold,
+                _settings.RunAwayForce);
+            force = Vector2.Add(force, flipped);
+            // _logger.LogInformation(
+            //     $"Enemy: {flipped.Length()},{flipped.X},{flipped.Y}, force: {force.Length()},{force.X},{force.Y}");
+        }
 
         // Drawn towards the path
         _pathCoordinateInRange = Calculator.UnderWithHysteresis(
@@ -119,19 +116,17 @@ public class Sheep : Point
         if (enemyClose && _terrainPath.IntersectionApproaching(Position))
         {
             var currentForSheep = _terrainPath.GetCurrent(PATH_EXECUTER.SHEEP);
-            _logger.LogInformation($"Sheep drawn: {sheepVpath.Length()}, {currentForSheep}");
-            var sheepVpathNorm = Vector2.Normalize(sheepVpath);
-            force = Vector2.Add(force, Vector2.Multiply(sheepVpathNorm, 9.0f));
+            var adjustedSheepVPath = Vector2.Multiply(Vector2.Normalize(sheepVpath), 1.0f);
+            _logger.LogInformation($"Sheep drawn: {adjustedSheepVPath.Length()}, {currentForSheep}");
+            force = Vector2.Add(force, adjustedSheepVPath);
         }
 
         if (enemyClose && sheepVpath.Length() > 100.0 && !_terrainPath.IntersectionApproaching(Position))
             _terrainPath.Ack(PATH_EXECUTER.SHEEP);
 
         Force = Vector2.Multiply(force, 10); // For visualization purposes only
-        Position.Update(Position.X + force.X * forceAdjustment, Position.Y + force.Y * forceAdjustment);
-        // _logger.LogInformation($"Sheep force, {force.Length()}, {force.X}, {force.Y}");
-        // force = Vector2.Multiply(force, _settings.SpeedAdjustment);
-        // Position.Update(Position.X + force.X, Position.Y + force.Y);
+        Position.Update(Position.X + force.X, Position.Y + force.Y);
+        // if (Id == 1) _logger.LogInformation($"Speed 1: {force.Length()}");
     }
 
     public bool IsInsideFinishZone()

@@ -8,7 +8,6 @@ namespace SheepHerding.Api.Services;
 
 public class HerdService : IDisposable
 {
-    private readonly double _forceAdjustment = 0.25;
     private readonly IHubContext<VisualizationCommunication> _hub;
     private readonly ILogger _logger;
     private readonly int _randomSeed;
@@ -37,7 +36,7 @@ public class HerdService : IDisposable
     public bool Reset { get; set; }
     public int NrOfSheeps { get; set; } = 10;
     public string Name { get; set; } = "Unknown";
-    public int VisualizationSpeed { get; set; } = 4;
+    public int VisualizationSpeed { get; set; } = 10;
     public double FailedTimout { get; set; } = 60.0;
     public int PathNr { get; set; } = 6;
     public int RandomAngle { get; set; } = 20;
@@ -65,7 +64,7 @@ public class HerdService : IDisposable
         var listOfHerders = new List<DroneHerder>();
         for (var i = 0; i < 3; i++)
         {
-            var h = new DroneHerder(200, 200, i, 12.0);
+            var h = new DroneHerder(200, 200, i, 1.5);
             h.Set(new Coordinate(100, 100));
             listOfHerders.Add(h);
         }
@@ -75,7 +74,7 @@ public class HerdService : IDisposable
 
     private DroneHerder InitializeMouse()
     {
-        var mouse = new DroneHerder(0, 0, -1, 25.0);
+        var mouse = new DroneHerder(0, 0, -1, 3.0);
         mouse.Set(new Coordinate(1, 1));
         return mouse;
     }
@@ -148,12 +147,13 @@ public class HerdService : IDisposable
             _scanTimeDelay = VisualizationSpeed;
             _sheepSettings.RandomAngleRange = Math.PI / RandomAngle;
             // Mouse
-            mouse.UpdatePosition(_forceAdjustment, MousePosition);
+            mouse.UpdatePosition(MousePosition);
             // Calculate new coordinates
-            Sheeps.ForEach(sheep => sheep.UpdatePosition(_forceAdjustment));
+            Sheeps.ForEach(sheep => sheep.UpdatePosition());
 
+            // This is the "Kontrollalgoritme"
             var (pathIndex, centroids, current, next, state, oversightPoints, dummy) =
-                droneOversight.UpdatePosition(!StartDrones, _forceAdjustment, InterceptCross);
+                droneOversight.UpdatePosition(!StartDrones, InterceptCross);
 
             var cast = new List<Point>();
             cast.AddRange(Sheeps);
