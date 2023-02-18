@@ -9,11 +9,13 @@ public class Sheep : Point
     private readonly Coordinate _finish;
     private readonly IList<Sheep> _friendlies;
     private readonly ILogger _logger;
+    private readonly int[] _randomAngleSeeds = {1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15};
     private readonly int _randomSeed;
     private readonly SheepSettings _settings;
     private readonly PathCoordinator _terrainPath;
     private bool _pathCoordinateInRange;
     private double _randomAngle;
+    private int _randomAngleSeedsIndex;
     private int _scanIndex;
 
     public Sheep(ILogger logger, int id, SheepSettings settings, IList<Sheep> friendlies, IList<DroneHerder> enemies,
@@ -81,15 +83,17 @@ public class Sheep : Point
             .Where(e => Converter.ToVector2(Position, e.Position).Length() < _settings.EnemyToCloseStartMoveThreshold)
             .ToList();
         // TODO this is not working well after introducing the new path as a tree
-        // if (_randomAngle == 0.0 || _scanIndex % _settings.RandomAngleUpdateDelayFactor == 0)
-        // {
-        //     // Dont update so often
-        //     _randomAngle = (new Random(_randomSeed).NextDouble() - 0.5) * _settings.RandomAngleRange;
-        //     _logger.LogInformation($"Random angle = {_randomAngle}");
-        // }
-        // _randomAngle = 0.0;
+        if (_scanIndex % _settings.RandomAngleUpdateDelayFactor == 0)
+        {
+            // Dont update so often
+            _randomAngle = (new Random(_randomAngleSeeds[_randomAngleSeedsIndex % 15]).NextDouble() - 0.5) *
+                           _settings.RandomAngleAddedToForce;
+            _randomAngleSeedsIndex++;
+            if (Id == 1)
+                _logger.LogInformation($"Random angle = {_randomAngle}");
+        }
+
         var enemyClose = toCloseEnemiesList.Any();
-        // if (enemyClose)
         foreach (var enemy in toCloseEnemiesList)
         {
             var flipped = Calculator.NegateLengthWithExponentialDecrease(
@@ -124,9 +128,10 @@ public class Sheep : Point
         if (enemyClose && sheepVpath.Length() > 100.0 && !_terrainPath.IntersectionApproaching(Position))
             _terrainPath.Ack(PATH_EXECUTER.SHEEP);
 
-        Force = Vector2.Multiply(force, 10); // For visualization purposes only
-        Position.Update(Position.X + force.X, Position.Y + force.Y);
-        // if (Id == 1) _logger.LogInformation($"Speed 1: {force.Length()}");
+        var rotated = Calculator.RotateVector(force, _randomAngle);
+
+        Force = Vector2.Multiply(rotated, 10); // For visualization purposes only
+        Position.Update(Position.X + rotated.X, Position.Y + rotated.Y);
     }
 
     public bool IsInsideFinishZone()

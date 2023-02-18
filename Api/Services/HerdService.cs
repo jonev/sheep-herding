@@ -39,7 +39,12 @@ public class HerdService : IDisposable
     public int VisualizationSpeed { get; set; } = 1;
     public double FailedTimout { get; set; } = 60.0;
     public int PathNr { get; set; } = 10;
-    public int RandomAngle { get; set; } = 20;
+
+    /// <summary>
+    ///     Random factor multiplied with PI/100. Min 1, max 100.
+    /// </summary>
+    public int RandomFactor { get; set; } = 100;
+
     public bool Connected { get; set; } = true;
     public bool Finished { get; set; }
     public bool Failed { get; set; }
@@ -145,7 +150,7 @@ public class HerdService : IDisposable
             }
 
             _scanTimeDelay = VisualizationSpeed;
-            _sheepSettings.RandomAngleRange = Math.PI / RandomAngle;
+            _sheepSettings.RandomAngleAddedToForce = Math.PI / 100.0 * RandomFactor;
             // Mouse
             mouse.UpdatePosition(MousePosition);
             // Calculate new coordinates

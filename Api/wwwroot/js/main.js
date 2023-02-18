@@ -84,7 +84,7 @@ connection.on("ReceiveMessage", function (user, message) {
 function reset() {
     var nr = "5"; // document.getElementById("nrOfSheeps").value;
     var s1 = document.getElementById("setting1").value;
-    var s2 = "1"; // document.getElementById("setting2").value;
+    var s2 = document.getElementById("setting2").value;
     var s3 = document.getElementById("setting3").value;
     connection.invoke("Reset", nr, s1, s2, s3).catch(function (err) {
         return console.error(err.toString());

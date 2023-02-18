@@ -21,6 +21,6 @@ public class SheepSettings
     // public float HoldTogetherForce { get; set; } = 0.2f;
     // public float RunAwayForce { get; set; } = 0.4f;
 
-    public double RandomAngleRange { get; set; } = Math.PI / 3;
-    public int RandomAngleUpdateDelayFactor { get; set; } = 100;
+    public double RandomAngleAddedToForce { get; set; } = Math.PI / 3;
+    public int RandomAngleUpdateDelayFactor { get; set; } = 200;
 }
