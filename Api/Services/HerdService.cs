@@ -14,7 +14,7 @@ public class HerdService : IDisposable
     private readonly SheepSettings _sheepSettings;
     private readonly Coordinate Finish = new(870, 770);
 
-    private int _scanTimeDelay = 10;
+    private int _scanTimeDelay = 1;
 
 
     public HerdService(ILogger logger, IHubContext<VisualizationCommunication> hub, string clientId, int randomSeed,
@@ -36,9 +36,9 @@ public class HerdService : IDisposable
     public bool Reset { get; set; }
     public int NrOfSheeps { get; set; } = 10;
     public string Name { get; set; } = "Unknown";
-    public int VisualizationSpeed { get; set; } = 10;
+    public int VisualizationSpeed { get; set; } = 1;
     public double FailedTimout { get; set; } = 60.0;
-    public int PathNr { get; set; } = 6;
+    public int PathNr { get; set; } = 10;
     public int RandomAngle { get; set; } = 20;
     public bool Connected { get; set; } = true;
     public bool Finished { get; set; }

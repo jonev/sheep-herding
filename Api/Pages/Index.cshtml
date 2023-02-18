@@ -83,28 +83,31 @@
 
 </svg>
 <br/>
-<button onclick="startStop()" style="position: absolute;left: 0;top: 901;">Start/Stop</button>
-<button onclick="reset()" style="position: absolute;left: 100;top: 901;">Reset</button>
+<button onclick="startStop()" style="position: absolute;left: 0;top: 901;">Start/Stopp</button>
+<button onclick="reset()" style="position: absolute;left: 100;top: 901;">Restart</button>
 
 <input type="checkbox" onchange="startStopDrones()" id="checkbox-start-drones" style="position: absolute;left: 150;top: 921;"/>
-<label for="checkbox-start-drones" style="position: absolute;left: 0;top: 921;">Stop herders</label>
+<label for="checkbox-start-drones" style="position: absolute;left: 0;top: 921;">Stopp gjetere</label>
 
 <input type="checkbox" onchange="toggleClearCanvas()" id="checkbox-canvas" style="position: absolute;left: 150;top: 941;"/>
-<label for="checkbox-canvas" style="position: absolute;left: 0;top: 941;">Draw movements</label>
+<label for="checkbox-canvas" style="position: absolute;left: 0;top: 941;">Lagre bevegelser</label>
 
 <input type="checkbox" onchange="toggleSendMouse()" id="checkbox-mouse" style="position: absolute;left: 150;top: 961;"/>
-<label for="checkbox-mouse" style="position: absolute;left: 0;top: 961;">Use mouse herder</label>
+<label for="checkbox-mouse" style="position: absolute;left: 0;top: 961;">Bruk mus som gjeter</label>
 
 <input type="checkbox" checked="true" onchange="toggleInterceptCross()" id="checkbox-intercept-cross" style="position: absolute;left: 150;top: 981;"/>
-<label for="checkbox-intercept-cross" style="position: absolute;left: 0;top: 981;">Intercept cross</label>
+<label for="checkbox-intercept-cross" style="position: absolute;left: 0;top: 981;">Send ut gjeter i stikryss</label>
 
 
-<text style="position: absolute;left: 220;top:901;">Path Number</text>
-<input id="setting1" min="0" max="500" value="6" type="number" style="position: absolute;left: 400;top: 901;"/>
-<text style="position: absolute;left: 800;top:901;">Random Angle</text>
-<input id="setting2" min="1" max="500" value="20" type="number" style="position: absolute;left: 900;top: 901;"/>
-<text style="position: absolute;left: 220;top:921;">Visualization Speed</text>
-<input id="setting3" min="1" max="1000" value="10" type="number" style="position: absolute;left: 400;top: 921;"/>
+<text style="position: absolute;left: 220;top:901;">Bane:</text>
+<input id="setting1" min="0" max="500" value="10" type="number" style="position: absolute;left: 400;top: 901;"/>
+
+@* TODO *@
+@* <text style="position: absolute;left: 800;top:901;">Hvilkårlighetsfaktor</text> *@
+@* <input id="setting2" min="1" max="500" value="20" type="number" style="position: absolute;left: 900;top: 901;"/> *@
+
+<text style="position: absolute;left: 220;top:921;">Virtualiseringsforsinkelse:</text>
+<input id="setting3" min="1" max="1000" value="1" type="number" style="position: absolute;left: 400;top: 921;"/>
 
 <script src="~/js/signalr/dist/browser/signalr.js"></script>
 <script src="~/js/main.js"></script>

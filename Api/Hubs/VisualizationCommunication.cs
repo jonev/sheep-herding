@@ -83,7 +83,7 @@ public class VisualizationCommunication : Hub
 
         h = Convert.ToInt32(s3);
         if (h < 0) h = 0;
-        if (h > 1000) h = 10;
+        if (h > 1000) h = 1000;
         service.VisualizationSpeed = h;
     }
 
