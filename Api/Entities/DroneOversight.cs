@@ -263,11 +263,17 @@ public class DroneOversight : Point
                 angleAdjustmentForOutcastSheep = 0.0;
         }
 
+        var rotatAdjustmentForIntersection = Math.PI / 5.0;
+
         // Calculate Vectors to next position for herders
         var h0 = Vector2.Multiply(Vector2.Negate(Vector2.Normalize(_positionCommandVector)), (float) _herdRadius);
-        h0 = Calculator.RotateVector(h0, angleAdjustmentForOutcastSheep * 1.0);
+        h0 = Calculator.RotateVector(h0,
+            angleAdjustmentForOutcastSheep + (_machine.State == State.FollowPathIntersectionLeft
+                ? rotatAdjustmentForIntersection
+                : 0.0));
 
         var h1 = Calculator.RotateVector(h0, _herdAngleInRadians);
+
         // _logger.LogInformation($"h1.1:{h1.Length()}");
         if (_machine.State == State.FollowPathIntersectionLeft)
         {
@@ -277,15 +283,13 @@ public class DroneOversight : Point
             {
                 var nextSheepCoordinateAfterCross = nextCross.GetNext(PATH_EXECUTER.SHEEP).ThisCoordinate;
                 var cross = nextCross.ThisCoordinate;
-                // var next = _pathCoordinator.GetNext(PATH_EXECUTER.SHEEP); // Dette er nå selve krysset
-                // Her trenger jeg punktet som kommer etter krysset hos sauene
                 var vector = Vector2.Multiply(
                     Vector2.Normalize(
                         Converter.ToVector2(
                             cross,
                             nextSheepCoordinateAfterCross)
                     ),
-                    180.0f);
+                    80.0f);
                 h1 = vector;
                 // _logger.LogInformation(
                 //     $"Cross: ${cross}, SheepCoor: {nextSheepCoordinateAfterCross}, Position: {_herders[1].Position}, h1.2:{h1.Length()}");

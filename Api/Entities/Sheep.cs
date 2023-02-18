@@ -116,7 +116,7 @@ public class Sheep : Point
         if (enemyClose && _terrainPath.IntersectionApproaching(Position))
         {
             var currentForSheep = _terrainPath.GetCurrent(PATH_EXECUTER.SHEEP);
-            var adjustedSheepVPath = Vector2.Multiply(Vector2.Normalize(sheepVpath), 1.0f);
+            var adjustedSheepVPath = Vector2.Multiply(Vector2.Normalize(sheepVpath), 1.1f);
             _logger.LogInformation($"Sheep drawn: {adjustedSheepVPath.Length()}, {currentForSheep}");
             force = Vector2.Add(force, adjustedSheepVPath);
         }
