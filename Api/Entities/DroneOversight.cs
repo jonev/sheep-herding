@@ -152,7 +152,8 @@ public class DroneOversight : Point
         if (!sheeps.Any()) return new List<(Coordinate Position, double Radius)>();
         var notFinishedSheeps = sheeps.Where(s => !s.IsInsideFinishZone()).ToList<Point>();
         if (!notFinishedSheeps.Any()) return new List<(Coordinate Position, double Radius)>();
-        var groups = Clustering.Cluster(notFinishedSheeps, 100.0);
+        var groups =
+            Clustering.Cluster(notFinishedSheeps, 100.0); // TODO denne limiten bør være i settings og skrive om
         return groups
             .Select(g =>
             {
