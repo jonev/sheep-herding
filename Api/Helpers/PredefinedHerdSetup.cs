@@ -11,25 +11,31 @@ public class PredefinedHerdSetup
         switch (nr)
         {
             case 0:
-                return FromAToB();
+                return HerdingFromAToB();
             case 1:
-                return PathCrossTesting();
+                return HerdingSimpleRightTurn2();
             case 2:
-                return SmallTurns();
+                return HerdingSimpleLeftTurn();
             case 3:
-                return TwoUTurns();
+                return HerdingHardRightTurn();
             case 4:
-                return s90DegreesLeftTestTurn();
+                return HerdingHardLeftTurn();
             case 5:
-                return SmallAnd90DegreesTurn();
+                return HerdingTwoUTurns();
             case 6:
+                return s90DegreesLeftTestTurn();
+            case 7:
+                return SmallAnd90DegreesTurn();
+            case 8:
                 return FromAToBWithX();
+            case 9:
+                return FetchHerdAndFindClosestPointOfPath();
             default:
-                return FromAToB();
+                return HerdingFromAToB();
         }
     }
 
-    private HerdSetup FromAToB()
+    private HerdSetup HerdingFromAToB()
     {
         var listOfSheepCoordinates = new List<Coordinate>();
         for (var i = 0; i < 5; i++) listOfSheepCoordinates.Add(new Coordinate(200 + i % 10 * 20, 250 + i % 3 * 20));
@@ -62,7 +68,7 @@ public class PredefinedHerdSetup
         return new HerdSetup(p, listOfSheepCoordinates, p);
     }
 
-    private HerdSetup PathCrossTesting()
+    private HerdSetup SimpleRightTurn1()
     {
         var listOfSheepCoordinates = new List<Coordinate>();
         for (var i = 0; i < 5; i++) listOfSheepCoordinates.Add(new Coordinate(200 + i % 10 * 20, 250 + i % 3 * 20));
@@ -76,7 +82,64 @@ public class PredefinedHerdSetup
         return new HerdSetup(p, listOfSheepCoordinates, p);
     }
 
-    private HerdSetup SmallTurns()
+    private HerdSetup HerdingSimpleRightTurn2()
+    {
+        var listOfSheepCoordinates = new List<Coordinate>();
+        for (var i = 0; i < 5; i++) listOfSheepCoordinates.Add(new Coordinate(200 + i % 10 * 20, 250 + i % 3 * 20));
+
+        var p = new PathCoordinator
+        (_intersectionApproachingThreshold,
+            new PathCoordinate(new Coordinate(350, 350),
+                new PathCoordinate(new Coordinate(700, 450),
+                    new PathCoordinate(new Coordinate(950, 850), null))));
+
+        return new HerdSetup(p, listOfSheepCoordinates, p);
+    }
+
+    private HerdSetup HerdingSimpleLeftTurn()
+    {
+        var listOfSheepCoordinates = new List<Coordinate>();
+        for (var i = 0; i < 5; i++) listOfSheepCoordinates.Add(new Coordinate(200 + i % 10 * 20, 250 + i % 3 * 20));
+
+        var p = new PathCoordinator
+        (_intersectionApproachingThreshold,
+            new PathCoordinate(new Coordinate(350, 350),
+                new PathCoordinate(new Coordinate(500, 650),
+                    new PathCoordinate(new Coordinate(950, 850), null))));
+
+        return new HerdSetup(p, listOfSheepCoordinates, p);
+    }
+
+    private HerdSetup HerdingHardRightTurn()
+    {
+        var listOfSheepCoordinates = new List<Coordinate>();
+        for (var i = 0; i < 5; i++) listOfSheepCoordinates.Add(new Coordinate(200 + i % 10 * 20, 250 + i % 3 * 20));
+
+        var p = new PathCoordinator
+        (_intersectionApproachingThreshold,
+            new PathCoordinate(new Coordinate(350, 350),
+                new PathCoordinate(new Coordinate(900, 350),
+                    new PathCoordinate(new Coordinate(950, 850), null))));
+
+        return new HerdSetup(p, listOfSheepCoordinates, p);
+    }
+
+    private HerdSetup HerdingHardLeftTurn()
+    {
+        var listOfSheepCoordinates = new List<Coordinate>();
+        for (var i = 0; i < 5; i++) listOfSheepCoordinates.Add(new Coordinate(200 + i % 10 * 20, 250 + i % 3 * 20));
+
+        var p = new PathCoordinator
+        (_intersectionApproachingThreshold,
+            new PathCoordinate(new Coordinate(350, 350),
+                new PathCoordinate(new Coordinate(350, 800),
+                    new PathCoordinate(new Coordinate(950, 850), null))));
+
+        return new HerdSetup(p, listOfSheepCoordinates, p);
+    }
+
+
+    private HerdSetup FetchHerdAndFindClosestPointOfPath()
     {
         var listOfSheepCoordinates = new List<Coordinate>();
         for (var i = 0; i < 5; i++) listOfSheepCoordinates.Add(new Coordinate(800 + i % 10 * 20, 200 + i % 3 * 20));
@@ -95,17 +158,17 @@ public class PredefinedHerdSetup
         return new HerdSetup(p, listOfSheepCoordinates, p);
     }
 
-    private HerdSetup TwoUTurns()
+    private HerdSetup HerdingTwoUTurns()
     {
         var listOfSheepCoordinates = new List<Coordinate>();
-        for (var i = 0; i < 5; i++) listOfSheepCoordinates.Add(new Coordinate(800 + i % 10 * 20, 200 + i % 3 * 20));
+        for (var i = 0; i < 5; i++) listOfSheepCoordinates.Add(new Coordinate(250 + i % 10 * 20, 200 + i % 3 * 20));
 
         var p = new PathCoordinator
         (_intersectionApproachingThreshold,
-            new PathCoordinate(new Coordinate(150, 200),
-                new PathCoordinate(new Coordinate(600, 200),
-                    new PathCoordinate(new Coordinate(600, 500),
-                        new PathCoordinate(new Coordinate(200, 500),
+            new PathCoordinate(new Coordinate(350, 350),
+                new PathCoordinate(new Coordinate(900, 350),
+                    new PathCoordinate(new Coordinate(900, 550),
+                        new PathCoordinate(new Coordinate(200, 550),
                             new PathCoordinate(new Coordinate(200, 800),
                                 new PathCoordinate(new Coordinate(950, 850), null)))))));
         return new HerdSetup(p, listOfSheepCoordinates, p);
