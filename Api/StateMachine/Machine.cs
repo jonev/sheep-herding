@@ -51,19 +51,15 @@ public class Machine
     public void Fire(State inState, Trigger trigger, Func<bool> guard)
     {
         if (_machine.IsInState(inState) && guard())
-        {
-            _logger.LogInformation($"Trigger fired: {trigger}");
+            // _logger.LogInformation($"Trigger fired: {trigger}");
             _machine.Fire(trigger);
-        }
     }
 
     public void Fire(Trigger trigger, Func<bool> guard)
     {
         if (guard())
-        {
-            _logger.LogInformation($"Trigger fired: {trigger}");
+            // _logger.LogInformation($"Trigger fired: {trigger}");
             _machine.Fire(trigger);
-        }
     }
 
     public void ExecuteOnEntry(State state, Action action)

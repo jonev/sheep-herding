@@ -165,19 +165,23 @@ public class PathCoordinator
         // TODO Denne tar ikke hensyn til retning av banen. Det gjør at det kan bli usving.
         if (closestTo is null) return;
 
-        if (_herd.ThisCoordinate != null
-            || _herd?.GetNext(PATH_EXECUTER.HERDER) != null
-            || _herd?.GetNext(PATH_EXECUTER.HERDER)?.ThisCoordinate != null)
-            while (Converter.ToVector2(_herd.ThisCoordinate, closestTo).Length()
-                   > Converter.ToVector2(_herd?.GetNext(PATH_EXECUTER.HERDER).ThisCoordinate, closestTo).Length())
-                Ack(PATH_EXECUTER.HERDER);
+        if (_herd?.ThisCoordinate == null
+            || _herd?.GetNext(PATH_EXECUTER.HERDER) == null
+            || _herd?.GetNext(PATH_EXECUTER.HERDER)?.ThisCoordinate == null)
+            return;
 
-        if (_sheep.ThisCoordinate != null
-            || _sheep.GetNext(PATH_EXECUTER.SHEEP) != null
-            || _sheep.GetNext(PATH_EXECUTER.SHEEP)?.ThisCoordinate != null)
-            while (Converter.ToVector2(_sheep.ThisCoordinate, closestTo).Length()
-                   > Converter.ToVector2(_sheep.GetNext(PATH_EXECUTER.SHEEP).ThisCoordinate, closestTo).Length())
-                Ack(PATH_EXECUTER.SHEEP);
+        var herdList = GetList(PATH_EXECUTER.HERDER);
+        var closestIndex = 0;
+        for (var i = 1; i < herdList.Count; i++)
+            if (Converter.ToVector2(herdList[i], closestTo).Length() <=
+                Converter.ToVector2(herdList[closestIndex], closestTo).Length())
+                closestIndex = i;
+
+        for (var i = 0; i < closestIndex; i++)
+        {
+            Ack(PATH_EXECUTER.HERDER);
+            Ack(PATH_EXECUTER.SHEEP);
+        }
     }
 
     public string GetStartListAsString()
@@ -221,7 +225,7 @@ public class PathCoordinator
             {
                 if (current.Next is PathCoordinate coordinate)
                     current = coordinate;
-                else if (current.Next is PathCross cross) current = cross.Herders;
+                else if (current.Next is PathCross cross) current = cross.Get(PATH_EXECUTER.HERDER);
 
                 list.Add(new Coordinate(current.ThisCoordinate));
             }
@@ -236,7 +240,7 @@ public class PathCoordinator
             {
                 if (current.Next is PathCoordinate coordinate)
                     current = coordinate;
-                else if (current.Next is PathCross cross) current = cross.Sheeps;
+                else if (current.Next is PathCross cross) current = cross.Get(PATH_EXECUTER.SHEEP);
 
                 list.Add(new Coordinate(current.ThisCoordinate));
             }

@@ -230,4 +230,22 @@ public class PathCoordinatesTest
         p.Start();
         p.IntersectionApproaching(new Coordinate(0, 0)).Should().BeFalse();
     }
+
+    [Fact]
+    public void Test_Update_Path_To_Closest_Point()
+    {
+        var p = new PathCoordinator
+        (1.0,
+            new PathCoordinate(new Coordinate(100, 100),
+                new PathCoordinate(new Coordinate(200, 150),
+                    new PathCoordinate(new Coordinate(200, 400),
+                        new PathCoordinate(new Coordinate(200, 600),
+                            new PathCoordinate(new Coordinate(600, 600),
+                                new PathCoordinate(new Coordinate(950, 850), null)))))));
+        p.Start();
+        p.UpdateToClosest(new Coordinate(650.0, 425.0));
+        var current = p.GetCurrent(PATH_EXECUTER.HERDER);
+        current.X.Should().Be(600);
+        current.Y.Should().Be(600);
+    }
 }

@@ -55,7 +55,7 @@ public class DroneOversight : Point
     {
         _machine.ExecuteOnEntry(State.FetchingFirstHerd, () =>
         {
-            _logger.LogInformation("On entry FetchingFirstHerd");
+            // _logger.LogInformation("On entry FetchingFirstHerd");
             _centroids = GetSheepHerdCentroids(_sheeps);
             _current = _centroids[0].Position;
             // _closestPathPointToSheepCentroid = GetClosesPathPointToClosestSheepCentroid();
@@ -68,7 +68,7 @@ public class DroneOversight : Point
 
         _machine.ExecuteOnEntry(State.Waiting, () =>
         {
-            _logger.LogInformation("On entry Waiting");
+            // _logger.LogInformation("On entry Waiting");
             // if (_current is AckableCoordinate ack)
             // {
             //     // _logger.LogInformation("On entry Waiting ack");
@@ -93,7 +93,7 @@ public class DroneOversight : Point
         // });
         _machine.ExecuteOnEntry(State.FollowPath, () =>
         {
-            _logger.LogInformation("On entry FollowPath");
+            // _logger.LogInformation("On entry FollowPath");
             // _closestPathPoints = GetClosesPathPoint();
             _current = _pathCoordinator.GetCurrent(PATH_EXECUTER.HERDER); // _closestPathPoints[0];
             _next = _pathCoordinator.GetNext(PATH_EXECUTER.HERDER);
@@ -152,7 +152,8 @@ public class DroneOversight : Point
         if (!sheeps.Any()) return new List<(Coordinate Position, double Radius)>();
         var notFinishedSheeps = sheeps.Where(s => !s.IsInsideFinishZone()).ToList<Point>();
         if (!notFinishedSheeps.Any()) return new List<(Coordinate Position, double Radius)>();
-        var groups = Clustering.Cluster(notFinishedSheeps, 100.0);
+        var groups =
+            Clustering.Cluster(notFinishedSheeps, 100.0); // TODO denne limiten bør være i settings og skrive om
         return groups
             .Select(g =>
             {
@@ -169,7 +170,8 @@ public class DroneOversight : Point
     }
 
     public (int pathIndex, List<Coordinate> centroids, Coordinate current, Coordinate next, string state,
-        IList<Coordinate> points, Point dummy) UpdatePosition(bool disableHerders, double forceAdjustment,
+        IList<Coordinate> points, Point dummy) UpdatePosition(
+            bool disableHerders,
             bool interceptCross)
     {
         // -- Calculations
@@ -192,8 +194,8 @@ public class DroneOversight : Point
         var closestPathPointOutOfRange = Calculator.InRange(Position,
             _pathCoordinator.GetCurrent(PATH_EXECUTER.HERDER), 10000.0,
             10.0); //  _closestPathPoints.Count > 0 && Calculator.InRange(Position, _closestPathPoints[0], 10000.0, 10.0);
-        _logger.LogInformation(
-            $"closestPathPointOutOfRange: {closestPathPointOutOfRange}, curretn: {_pathCoordinator.GetCurrent(PATH_EXECUTER.HERDER)}");
+        // _logger.LogInformation(
+        // $"closestPathPointOutOfRange: {closestPathPointOutOfRange}, curretn: {_pathCoordinator.GetCurrent(PATH_EXECUTER.HERDER)}");
 
         var lenghtToNextHerd =
             _centroids.Count < 2 ? int.MaxValue : Converter.ToVector2(Position, _centroids[1].Position).Length();
@@ -236,9 +238,10 @@ public class DroneOversight : Point
 
 
         // Update drone oversight position
-        var force = Vector2.Multiply(Vector2.Normalize(_positionCommandVector), 4.0f);
+        var force = Vector2.Divide(Vector2.Normalize(_positionCommandVector), 2.0f);
         Force = Vector2.Multiply(force, 10); // For visualization purposes only
-        Position.Update(Position.X + force.X * forceAdjustment, Position.Y + force.Y * forceAdjustment);
+        Position.Update(Position.X + force.X, Position.Y + force.Y);
+        // _logger.LogInformation($"Speed O: {force.Length()}");
 
         // Controlling the herd radius relative to how much spreading there is between the sheeps
         _herdRadius = Math.Pow(_centroids[0].Radius, 1.2);
@@ -265,7 +268,7 @@ public class DroneOversight : Point
         h0 = Calculator.RotateVector(h0, angleAdjustmentForOutcastSheep * 1.0);
 
         var h1 = Calculator.RotateVector(h0, _herdAngleInRadians);
-        _logger.LogInformation($"h1.1:{h1.Length()}");
+        // _logger.LogInformation($"h1.1:{h1.Length()}");
         if (_machine.State == State.FollowPathIntersectionLeft)
         {
             // Send ut drone for å blokkere
@@ -284,8 +287,8 @@ public class DroneOversight : Point
                     ),
                     180.0f);
                 h1 = vector;
-                _logger.LogInformation(
-                    $"Cross: ${cross}, SheepCoor: {nextSheepCoordinateAfterCross}, Position: {_herders[1].Position}, h1.2:{h1.Length()}");
+                // _logger.LogInformation(
+                //     $"Cross: ${cross}, SheepCoor: {nextSheepCoordinateAfterCross}, Position: {_herders[1].Position}, h1.2:{h1.Length()}");
             }
         }
 
@@ -296,9 +299,9 @@ public class DroneOversight : Point
                 new List<Coordinate>(), new Point(-100));
 
         // Commands the herders to move to next coordinate
-        _herders[0].UpdatePosition(forceAdjustment, new Coordinate(Position.X + h0.X, Position.Y + h0.Y));
-        _herders[1].UpdatePosition(forceAdjustment, new Coordinate(Position.X + h1.X, Position.Y + h1.Y));
-        _herders[2].UpdatePosition(forceAdjustment, new Coordinate(Position.X + h2.X, Position.Y + h2.Y));
+        _herders[0].UpdatePosition(new Coordinate(Position.X + h0.X, Position.Y + h0.Y));
+        _herders[1].UpdatePosition(new Coordinate(Position.X + h1.X, Position.Y + h1.Y));
+        _herders[2].UpdatePosition(new Coordinate(Position.X + h2.X, Position.Y + h2.Y));
         var pointList = new List<Coordinate> {pathPoint.Position, _nextPoint.Position, _commandPoint.Position};
         pointList.AddRange(_commands);
         return (_pathIndex, _centroids.Select(c => c.Position).ToList(), _command, _next, _machine.State.ToString(),

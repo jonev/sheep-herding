@@ -5,26 +5,6 @@ namespace SheepHerding.Api.Helpers;
 
 public static class Calculator
 {
-    public static double DegreesToRadians(double angle)
-    {
-        return Math.PI / 180 * angle;
-    }
-
-    public static double RadiansToDegrees(double angle)
-    {
-        return 180 / Math.PI * angle;
-    }
-
-    public static double AngleInDegrees(double x1, double y1, double x2, double y2)
-    {
-        return Math.Atan2(y2 - y1, x2 - x1) * 180.0 / Math.PI;
-    }
-
-    public static double AngleInDegrees(Vector2 a, Vector2 b)
-    {
-        return Math.Atan2(b.Y - a.Y, b.X - a.X) * 180.0 / Math.PI;
-    }
-
     public static double AngleInRadiansLimited(Vector2 a, Vector2 b)
     {
         var result = Math.Atan2(b.Y, b.X) - Math.Atan2(a.Y, a.X);
@@ -36,11 +16,6 @@ public static class Calculator
     public static double AngleInRadians(Vector2 a, Vector2 b)
     {
         return Math.Atan2(b.Y, b.X) - Math.Atan2(a.Y, a.X);
-    }
-
-    public static double Length(double x1, double y1, double x2, double y2)
-    {
-        return Math.Sqrt(Math.Pow(x2 - x1, 2) + Math.Pow(y2 - y1, 2));
     }
 
     public static Coordinate Centroid(IList<Coordinate> coordinates)
@@ -58,16 +33,41 @@ public static class Calculator
         return Vector2.Multiply(norm, (float) length);
     }
 
-    public static Vector2 FlipExLength(Vector2 vector, double maxValue)
+    /// <summary>
+    ///     Negates the vector input length with an exponential curve and adjusted according to maxOutputValue.
+    ///     E.g.: maxVectorLenght = 100. maxOutputValue = 10.0: vector in is 75,0, out is -4.8, vector in is 25,0, out is -9.1;
+    ///     Used to create the vector that pushes the sheep away from the enemy.
+    /// </summary>
+    /// <param name="vector">The input vector to adjust</param>
+    /// <param name="maxVectorLength">The input vectors max lenght (to be able to adjust the lenght)</param>
+    /// <param name="maxOutputValue">The return value max threshold. Output is adjusted to this.</param>
+    /// <returns></returns>
+    public static Vector2 NegateLengthWithExponentialDecrease(Vector2 vector, double maxVectorLength,
+        double maxOutputValue)
     {
-        var norm = Vector2.Normalize(vector);
-        var length = ExponentialDecrease(vector.Length() / maxValue, 10.0);
-        if (length < 0.0) return Vector2.Zero;
-        return Vector2.Multiply(norm, (float) (length * maxValue));
+        var lenghtAdjusted = LengthWithExponentialDecrease(vector, maxVectorLength, maxOutputValue);
+        return Vector2.Negate(lenghtAdjusted);
     }
 
+    public static Vector2 LengthWithExponentialDecrease(Vector2 vector, double maxVectorLength,
+        double maxOutputValue)
+    {
+        var length = ExponentialDecrease(vector.Length() / maxVectorLength, 10.0);
+        if (length < 0.0) return Vector2.Zero;
+        var norm = Vector2.Normalize(vector);
+        return Vector2.Multiply(norm, (float) (length * maxOutputValue));
+    }
+
+    /// <summary>
+    ///     On x = 0, return value is 1.0, on x = 1.0 return value is 0.0,
+    ///     This to make the sheep move faster if the enemy is close.
+    /// </summary>
+    /// <param name="x">Input factor from 0.0 to 1.0</param>
+    /// <param name="curve">Input factor on how the curve should look like</param>
+    /// <returns>x after it has been adjusted</returns>
     public static double ExponentialDecrease(double x, double curve)
     {
+        if (x < 0.0 || x > 1.0) throw new ArgumentException("x should be a relative factor from 0-1");
         return -1 * ((Math.Pow(curve, x) - 1) / (curve - 1)) + 1;
     }
 
@@ -81,26 +81,6 @@ public static class Calculator
         var newX = vector.X * Math.Cos(anglesInRadians) - vector.Y * Math.Sin(anglesInRadians);
         var newY = vector.X * Math.Sin(anglesInRadians) + vector.Y * Math.Cos(anglesInRadians);
         return new Vector2((float) newX, (float) newY);
-    }
-
-    public static Vector2 Pull(Vector2 v, double factor, double speed)
-    {
-        if (factor > 1.00) throw new ArgumentException();
-        if (factor < 0.0) throw new ArgumentException();
-
-        var r = ExponentialIncrease(factor, 10.0);
-        var normalized = Vector2.Normalize(v);
-        return Vector2.Multiply(normalized, (float) (r * speed));
-    }
-
-    public static Vector2 Push(Vector2 v, double factor, double speed)
-    {
-        if (factor > 1.00) throw new ArgumentException();
-        if (factor < 0.0) throw new ArgumentException();
-
-        var r = ExponentialDecrease(factor, 10.0);
-        var normalized = Vector2.Normalize(v);
-        return Vector2.Multiply(normalized, (float) (r * speed));
     }
 
     public static bool InRange(Coordinate a, Coordinate b, double under, double over)
@@ -160,17 +140,5 @@ public static class Calculator
         }
 
         return outcast;
-    }
-
-    // TODO start using this when path cross is fixed
-    public static Vector2 AddWithForceFactor(Vector2 previous, Vector2 vectorToAdd, float forceFactor)
-    {
-        if (forceFactor > 1.0f) throw new ArgumentException($"{nameof(forceFactor)} can not be over 1.0f");
-        if (vectorToAdd.Length() < 0.00001f) return previous;
-        var normalized = Vector2.Normalize(Vector2.Add(previous, vectorToAdd));
-        var result = Vector2.Multiply(normalized, forceFactor);
-        if (float.IsNaN(result.X) || float.IsNaN(result.Y)) throw new CalculatorException("Result is NaN");
-
-        return result;
     }
 }

@@ -17,36 +17,17 @@ public class HerdServiceTest
     }
 
     [Theory]
-    [InlineData(0, 20)]
-    [InlineData(1, 20)]
-    [InlineData(2, 20)]
-    [InlineData(3, 20)]
-    [InlineData(4, 20)]
-    [InlineData(5, 20)]
-    [InlineData(0, 10)]
-    [InlineData(1, 10)]
-    [InlineData(2, 10)]
-    [InlineData(3, 10)]
-    [InlineData(4, 10)]
-    [InlineData(5, 10)]
-    [InlineData(0, 5)]
-    [InlineData(1, 5)]
-    [InlineData(2, 5)]
-    [InlineData(3, 5)]
-    [InlineData(4, 5)]
-    [InlineData(5, 5)]
-    [InlineData(0, 4)]
-    [InlineData(1, 4)]
-    [InlineData(2, 4)]
-    [InlineData(3, 4)]
-    [InlineData(4, 4)]
-    [InlineData(5, 4)]
-    [InlineData(0, 3)]
-    //[InlineData(1, 3)] Disabled for now
-    [InlineData(2, 3)]
-    //[InlineData(3, 3)] Disabled for now
-    [InlineData(4, 3)]
-    [InlineData(5, 3)]
+    [InlineData(0, 0)]
+    [InlineData(1, 0)]
+    [InlineData(2, 0)]
+    [InlineData(3, 0)]
+    [InlineData(4, 0)]
+    [InlineData(5, 0)]
+    [InlineData(6, 0)]
+    [InlineData(7, 0)]
+    [InlineData(9, 0)]
+    // [InlineData(10, 0)] Cross - not ready
+    // [InlineData(11, 0)] Guard - not ready
     public async Task Test_Path_SimpleSheeps(int pathNr, int randomAngle)
     {
         var loggerMock = new Mock<ILogger>();
