@@ -133,7 +133,7 @@ public class HerdService : IDisposable
 
         var droneOversight = new DroneOversight(_logger, 1000, 500, -1, herdSetup.PredefinedPathCoordinator,
             listOfHerders,
-            new PathCreator(_logger), Sheeps, Finish);
+            new PointCreator(_logger), Sheeps, Finish);
         droneOversight.Set(new Coordinate(150, 100));
 
         InitializeSheeps(herdSetup, listOfHerders, _sheepSettings);

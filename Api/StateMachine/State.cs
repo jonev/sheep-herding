@@ -10,6 +10,6 @@ public enum State
     FollowPathStraight,
     FollowPathIntersectionLeft,
     RecollectSheep,
-    Waiting,
+    AckPathCoordinator,
     Finished
 }

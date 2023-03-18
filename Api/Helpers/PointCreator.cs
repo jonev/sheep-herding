@@ -3,11 +3,11 @@ using SheepHerding.Api.Entities;
 
 namespace SheepHerding.Api.Helpers;
 
-public class PathCreator
+public class PointCreator
 {
     private readonly ILogger _logger;
 
-    public PathCreator(ILogger logger)
+    public PointCreator(ILogger logger)
     {
         _logger = logger;
     }
@@ -79,41 +79,35 @@ public class PathCreator
 
     public IList<AckableCoordinate> CurvedLineToFollowPath(Coordinate start, Coordinate end, Coordinate next)
     {
-        var pathVector = Converter.ToVector2(start, end);
-        var pathLenght = pathVector.Length();
-        var nextVector = Converter.ToVector2(end, next);
-        var pathAngle = Math.Atan2(pathVector.Y, pathVector.X);
-        var nextAngle = Math.Atan2(nextVector.Y, nextVector.X);
-        var startNextVector = Converter.ToVector2(start, next);
-        var startNextAngle = Math.Atan2(startNextVector.Y, startNextVector.X);
-        var startEndNextAngle =
-            Calculator.AngleInRadiansLimited(Converter.ToVector2(end, start), Converter.ToVector2(end, next));
-        if (startEndNextAngle < 0) startEndNextAngle += 2 * Math.PI;
-
-        var positionNextAngle = Calculator.AngleInRadiansLimited(pathVector, nextVector);
-        var onLastPoint = nextVector.Equals(Vector2.Zero);
-        if (onLastPoint || Math.Abs(positionNextAngle) < Math.PI / 3 || pathLenght < 110.0)
+        var startEndVector = Converter.ToVector2(start, end);
+        var endNextVector = Converter.ToVector2(end, next);
+        var startEndEndNextAngle = Calculator.AngleInRadiansLimited(startEndVector, endNextVector);
+        var onLastPoint = endNextVector.Equals(Vector2.Zero);
+        var startEndLenght = startEndVector.Length();
+        // Exit if
+        if (onLastPoint || Math.Abs(startEndEndNextAngle) < Math.PI / 3 || startEndLenght < 110.0)
             return new List<AckableCoordinate> {new(0, end.X, end.Y)};
 
-        var angleSignPositive = positionNextAngle > 0 ? true : false;
+        // Fix angle to be able to calculate with it
+        var startEndNextAngle =
+            Calculator.AngleInRadiansLimited(Converter.ToVector2(end, start), Converter.ToVector2(end, next));
+        _logger.LogInformation($"{nameof(startEndNextAngle)}:{startEndNextAngle}");
+        if (startEndNextAngle < 0) startEndNextAngle += 2 * Math.PI;
 
-        var bendRadius = 100.0f;
-        var nrOfPointsInBend = (int) (startEndNextAngle / 2 / (Math.PI / 20));
-        var bend = Math.PI / 2 / nrOfPointsInBend;
-
-        var normalizedNextVector = Vector2.Normalize(nextVector);
-        var curveRadiusVector = Vector2.Multiply(normalizedNextVector, bendRadius);
-        var lineLenght = pathLenght - bendRadius;
-        var curveStartVector = Vector2.Multiply(Vector2.Normalize(pathVector), lineLenght);
-        var curveCenterVector = Vector2.Add(curveStartVector, curveRadiusVector);
-
+        // Set up list with starting point
         var list = new List<AckableCoordinate>();
         var startCoordinate = new AckableCoordinate(0, start.X, start.Y);
         startCoordinate.Ack();
         list.Add(startCoordinate);
 
 
+        // Settings
+        var bendRadius = 100.0f;
+
+        // Set up the line before the curve
+        var lineLenght = startEndLenght - bendRadius;
         var nrOfPointsOnLine = (int) (lineLenght / 10);
+        var curveStartVector = Vector2.Multiply(Vector2.Normalize(startEndVector), lineLenght);
         var movementInXPerPoint = curveStartVector.X / nrOfPointsOnLine;
         var movementInYPerPoint = curveStartVector.Y / nrOfPointsOnLine;
         for (var i = 1; i <= nrOfPointsOnLine; i++)
@@ -121,20 +115,34 @@ public class PathCreator
                 start.X + movementInXPerPoint * i,
                 start.Y + movementInYPerPoint * i));
 
-        var adjustmentRegardsToZeroAngle = angleSignPositive ? -Math.PI / 2 : 0;
+
+        // Sette opp kurven
+        // var nrOfPointsInBend = (int) (Math.Abs(startEndNextAngle) * 7.0);
+        var nrOfPointsInBend = (int) (startEndNextAngle / 2 / (Math.PI / 20));
+        // var bend = Math.Abs(startEndNextAngle) / nrOfPointsInBend;
+        var bend = Math.PI / 2 / nrOfPointsInBend;
+        _logger.LogInformation($"{nameof(bend)}:{bend}");
+        var isAngleSignPositive = startEndEndNextAngle > 0 ? true : false;
+        var adjustmentRegardsToZeroAngle = isAngleSignPositive ? -Math.PI / 2 : 0;
+        // Find curve center
+        var normalizedNextVector = Vector2.Normalize(endNextVector);
+        var curveRadiusVector = Vector2.Multiply(normalizedNextVector, bendRadius);
+        var curveCenterVector = Vector2.Add(curveStartVector, curveRadiusVector);
         var curveCenter = new Coordinate(start.X + curveCenterVector.X, start.Y + curveCenterVector.Y);
+        var starEndAngle = Math.Atan2(startEndVector.Y, startEndVector.X);
+        // Calculate the points in the curve
         for (var i = 1; i <= nrOfPointsInBend; i++)
         {
-            var cos = Math.Cos(bend * (i - 1) + adjustmentRegardsToZeroAngle + pathAngle) * bendRadius;
-            var sin = Math.Sin(bend * (i - 1) + adjustmentRegardsToZeroAngle + pathAngle) * bendRadius;
+            var cos = Math.Cos(bend * (i - 1) + adjustmentRegardsToZeroAngle + starEndAngle) * bendRadius;
+            var sin = Math.Sin(bend * (i - 1) + adjustmentRegardsToZeroAngle + starEndAngle) * bendRadius;
             list.Add(new AckableCoordinate(
-                angleSignPositive ? nrOfPointsOnLine + i : nrOfPointsOnLine + nrOfPointsInBend - i + 1,
+                isAngleSignPositive ? nrOfPointsOnLine + i : nrOfPointsOnLine + nrOfPointsInBend - i + 1,
                 curveCenter.X + cos,
                 curveCenter.Y + sin, true));
         }
 
-        _logger.LogInformation(
-            $"New path: {nameof(start)}:{start},{nameof(end)}:{end},{nameof(next)}:{next}, {nameof(pathAngle)}:{pathAngle}, {nameof(nextAngle)}:{nextAngle}, {nameof(positionNextAngle)}:{positionNextAngle},  {nameof(startNextAngle)}:{startNextAngle}");
+        // _logger.LogInformation(
+        //     $"New path: {nameof(start)}:{start},{nameof(end)}:{end},{nameof(next)}:{next}, {nameof(pathAngle)}:{pathAngle}, {nameof(nextAngle)}:{nextAngle}, {nameof(positionNextAngle)}:{positionNextAngle},  {nameof(startNextAngle)}:{startNextAngle}");
         return list.OrderBy(c => c.PathIndex).ToList();
     }
 
@@ -144,9 +152,6 @@ public class PathCreator
         var pathLenght = pathVector.Length();
         var nextVector = Converter.ToVector2(end, next);
         var pathAngle = Math.Atan2(pathVector.Y, pathVector.X);
-        var nextAngle = Math.Atan2(nextVector.Y, nextVector.X);
-        var startNextVector = Converter.ToVector2(start, next);
-        var startNextAngle = Math.Atan2(startNextVector.Y, startNextVector.X);
 
         var startEndNextAngle =
             Calculator.AngleInRadiansLimited(Converter.ToVector2(end, start), Converter.ToVector2(end, next));
@@ -195,8 +200,8 @@ public class PathCreator
                 start.X + movementInXPerPoint * i,
                 start.Y + movementInYPerPoint * i));
 
-        _logger.LogInformation(
-            $"New path: {nameof(start)}:{start},{nameof(end)}:{end},{nameof(next)}:{next}, {nameof(positionNextAngle)}:{positionNextAngle},  {nameof(startEndNextAngle)}:{startEndNextAngle}");
+        // _logger.LogInformation(
+        //     $"New path: {nameof(start)}:{start},{nameof(end)}:{end},{nameof(next)}:{next}, {nameof(positionNextAngle)}:{positionNextAngle},  {nameof(startEndNextAngle)}:{startEndNextAngle}");
         return list.OrderBy(c => c.PathIndex).ToList();
     }
 }

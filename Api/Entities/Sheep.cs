@@ -89,8 +89,8 @@ public class Sheep : Point
             _randomAngle = (new Random(_randomAngleSeeds[_randomAngleSeedsIndex % 15]).NextDouble() - 0.5) *
                            _settings.RandomAngleAddedToForce;
             _randomAngleSeedsIndex++;
-            if (Id == 1)
-                _logger.LogInformation($"Random angle = {_randomAngle}");
+            // if (Id == 1)
+            //     _logger.LogInformation($"Random angle = {_randomAngle}");
         }
 
         var enemyClose = toCloseEnemiesList.Any();
@@ -121,7 +121,7 @@ public class Sheep : Point
         {
             var currentForSheep = _terrainPath.GetCurrent(PATH_EXECUTER.SHEEP);
             var adjustedSheepVPath = Vector2.Multiply(Vector2.Normalize(sheepVpath), 1.1f);
-            _logger.LogInformation($"Sheep drawn: {adjustedSheepVPath.Length()}, {currentForSheep}");
+            // _logger.LogInformation($"Sheep drawn: {adjustedSheepVPath.Length()}, {currentForSheep}");
             force = Vector2.Add(force, adjustedSheepVPath);
         }
 

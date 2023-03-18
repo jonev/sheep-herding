@@ -23,26 +23,28 @@ public class PredefinedHerdSetup
                 return HerdingHardLeftTurn();
             case 5:
                 return HerdingTwoUTurns();
-            // Fetch herd to path
             case 6:
+                return HerdingMultipleDifferentTurns();
+            // Fetch herd to path
+            case 7:
                 return FetchHerdToPath0DegreeRightPath();
             // case 7:
             //     return FetchHerdToPath45DegreeLeftPath();
-            case 7:
+            case 8:
                 return FetchHerdToPath45DegreeRightPath();
             // case 9:
             //     return FetchHerdToPath90DegreeLeftPath();
-            case 8:
+            case 9:
                 return FetchHerdToPath90DegreeRightPath();
             // case 11:
             //     return FetchHerdToPath180DegreeLeftPath(); // Exception
-            case 9:
+            case 10:
                 return FetchHerdToPath180DegreeRightPath();
             // Cross
-            case 10:
+            case 11:
                 return FromAToBWithCross();
             // Guard
-            case 11:
+            case 12:
                 return HerdingFromAToBWithGuard();
             default:
                 return HerdingFromAToB();
@@ -253,6 +255,23 @@ public class PredefinedHerdSetup
                         new PathCoordinate(new Coordinate(200, 550),
                             new PathCoordinate(new Coordinate(200, 800),
                                 new PathCoordinate(new Coordinate(950, 850), null)))))));
+        return new HerdSetup(p, listOfSheepCoordinates, p);
+    }
+
+    private HerdSetup HerdingMultipleDifferentTurns()
+    {
+        var listOfSheepCoordinates = new List<Coordinate>();
+        for (var i = 0; i < 5; i++) listOfSheepCoordinates.Add(new Coordinate(250 + i % 10 * 20, 200 + i % 3 * 20));
+
+        var p = new PathCoordinator
+        (_intersectionApproachingThreshold,
+            new PathCoordinate(new Coordinate(350, 250),
+                new PathCoordinate(new Coordinate(900, 450),
+                    new PathCoordinate(new Coordinate(900, 650),
+                        new PathCoordinate(new Coordinate(600, 650),
+                            new PathCoordinate(new Coordinate(200, 550),
+                                new PathCoordinate(new Coordinate(200, 800),
+                                    new PathCoordinate(new Coordinate(950, 850), null))))))));
         return new HerdSetup(p, listOfSheepCoordinates, p);
     }
 
