@@ -8,17 +8,17 @@ namespace SheepHerding.Api.Services;
 
 public class HerdService : IDisposable
 {
+    private readonly Coordinate _finish = new(870, 770);
     private readonly IHubContext<VisualizationCommunication> _hub;
     private readonly ILogger _logger;
     private readonly int _randomSeed;
     private readonly SheepSettings _sheepSettings;
-    private readonly Coordinate _finish = new(870, 770);
 
     private int _scanTimeDelay = 1;
 
 
     public HerdService(
-        ILogger logger, 
+        ILogger logger,
         IHubContext<VisualizationCommunication> hub,
         string clientId,
         int randomSeed,
@@ -188,7 +188,7 @@ public class HerdService : IDisposable
                 Start = false;
             }
 
-            // Timout
+            // Timeout
             if (stopwatch.Elapsed.TotalSeconds > FailedTimeout)
             {
                 Start = false;

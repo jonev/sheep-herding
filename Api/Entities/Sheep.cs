@@ -30,8 +30,6 @@ public class Sheep : Point
         _randomSeed = randomSeed;
     }
 
-    // Max speed => Enemy = 1, PersonalSpace = 0.1, To far from herd = 0.1 => 1.2
-
     public void UpdatePosition()
     {
         _scanIndex++;
@@ -82,15 +80,14 @@ public class Sheep : Point
         var toCloseEnemiesList = _enemies
             .Where(e => Converter.ToVector2(Position, e.Position).Length() < _settings.EnemyToCloseStartMoveThreshold)
             .ToList();
-        // TODO this is not working well after introducing the new path as a tree
+
         if (_scanIndex % _settings.RandomAngleUpdateDelayFactor == 0)
         {
             // Dont update so often
-            _randomAngle = (new Random(_randomAngleSeeds[_randomAngleSeedsIndex % 15] + _randomSeed).NextDouble() - 0.5) *
-                           _settings.RandomAngleAddedToForce;
+            _randomAngle =
+                (new Random(_randomAngleSeeds[_randomAngleSeedsIndex % 15] + _randomSeed).NextDouble() - 0.5) *
+                _settings.RandomAngleAddedToForce;
             _randomAngleSeedsIndex++;
-            // if (Id == 1)
-            //     _logger.LogInformation($"Random angle = {_randomAngle}");
         }
 
         var enemyClose = toCloseEnemiesList.Any();
@@ -101,8 +98,6 @@ public class Sheep : Point
                 _settings.EnemyToCloseStartMoveThreshold,
                 _settings.RunAwayForce);
             force = Vector2.Add(force, flipped);
-            // _logger.LogInformation(
-            //     $"Enemy: {flipped.Length()},{flipped.X},{flipped.Y}, force: {force.Length()},{force.X},{force.Y}");
         }
 
         // Drawn towards the path
@@ -113,14 +108,13 @@ public class Sheep : Point
             10.0,
             1.0);
         if (_pathCoordinateInRange)
-            // _logger.LogInformation($"Sheep ack path coordinate");
             _terrainPath.Ack(PATH_EXECUTER.SHEEP);
 
         var sheepVpath = Converter.ToVector2(Position, _terrainPath.GetCurrent(PATH_EXECUTER.SHEEP));
         if (enemyClose && _terrainPath.IntersectionApproaching(Position))
         {
-            var adjustedSheepVPath = Vector2.Multiply(Vector2.Normalize(sheepVpath), _settings.IntersectionApproachingForce);
-            // _logger.LogInformation($"Sheep drawn: {adjustedSheepVPath.Length()}, {currentForSheep}");
+            var adjustedSheepVPath =
+                Vector2.Multiply(Vector2.Normalize(sheepVpath), _settings.IntersectionApproachingForce);
             force = Vector2.Add(force, adjustedSheepVPath);
         }
 

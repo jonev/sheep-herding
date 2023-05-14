@@ -12,71 +12,6 @@ public class PointCreator
         _logger = logger;
     }
 
-    public IList<AckableCoordinate> Create90DegreesTurn(Coordinate start, Coordinate end, int startId,
-        int nrOfCoordinates) // TODO add value to IsPartOfCurve
-    {
-        var list = new List<AckableCoordinate>();
-        var movementInX = (end.X - start.X) / nrOfCoordinates;
-        var movementInY = (end.Y - start.Y) / nrOfCoordinates;
-        list.Add(new AckableCoordinate(startId, start.X, start.Y));
-        for (var i = 1; i < nrOfCoordinates; i++)
-            list.Add(new AckableCoordinate(startId + i, start.X + movementInX * i, start.Y + movementInY * i));
-
-        list.Add(new AckableCoordinate(startId + nrOfCoordinates, end.X, end.Y));
-        return list;
-    }
-
-    public IList<AckableCoordinate> CurvedLine(Coordinate start, Coordinate end, Coordinate next)
-    {
-        var nextVector = Converter.ToVector2(end, next);
-        var nextAngle = Math.Atan2(next.Y, next.X);
-        if (nextAngle < Math.PI / 6) return new List<AckableCoordinate> {new(0, end.X, end.Y)};
-
-        var rotatedNormNextVector = Vector2.Normalize(Calculator.RotateVector(nextVector, Math.PI));
-        var adjustedNextVector = Vector2.Multiply(rotatedNormNextVector, 50.0f);
-        var adjustedEnd = new Coordinate(end.X + adjustedNextVector.X, end.Y + adjustedNextVector.Y);
-
-        var pathLenght = Converter.ToVector2(start.X, start.Y, adjustedEnd.X, adjustedEnd.Y).Length();
-        var nrOfPoints = Convert.ToInt32(pathLenght / 25.0);
-        var movementInXPerPoint = (adjustedEnd.X - start.X) / nrOfPoints;
-        var movementInYPerPoint = (adjustedEnd.Y - start.Y) / nrOfPoints;
-        var movementInX = adjustedEnd.X - start.X;
-        var movementInY = adjustedEnd.Y - start.Y;
-
-        var angle = Math.Atan2(adjustedNextVector.Y, adjustedNextVector.X);
-        var curveFactor = 6;
-        var radius = pathLenght / curveFactor;
-        var bend = Math.PI / 2 / (nrOfPoints - 2);
-
-        var list = new List<AckableCoordinate>();
-        var startCoordinate = new AckableCoordinate(0, start.X, start.Y);
-        startCoordinate.Ack();
-        list.Add(startCoordinate);
-
-
-        var nrOfPointsOnLine = 4;
-
-
-        for (var i = 1; i < nrOfPoints; i++)
-        {
-            var cos = Math.Cos(bend * (i - 1) + angle) * radius;
-            var sin = Math.Sin(bend * (i - 1) + angle) * radius;
-            list.Add(new AckableCoordinate(nrOfPointsOnLine + i,
-                start.X + cos + movementInX / curveFactor * (curveFactor - 1),
-                start.Y + sin + movementInY / curveFactor * (curveFactor - 1)));
-        }
-
-        var endLine = list[1];
-        movementInXPerPoint = (endLine.X - start.X) / nrOfPointsOnLine;
-        movementInYPerPoint = (endLine.Y - start.Y) / nrOfPointsOnLine;
-        for (var i = 1; i <= nrOfPointsOnLine; i++)
-            list.Add(new AckableCoordinate(i, start.X + movementInXPerPoint * i,
-                start.Y + movementInYPerPoint * i));
-
-        list.Add(new AckableCoordinate(nrOfPointsOnLine + nrOfPoints, adjustedEnd.X, adjustedEnd.Y));
-        return list.OrderBy(c => c.PathIndex).ToList();
-    }
-
     public IList<AckableCoordinate> CurvedLineToFollowPath(Coordinate start, Coordinate end, Coordinate next)
     {
         var startEndVector = Converter.ToVector2(start, end);
@@ -146,8 +81,7 @@ public class PointCreator
 
         return list;
     }
-    
-    
+
 
     public IList<AckableCoordinate> CurvedLineToFetchHerd(Coordinate start, Coordinate end, Coordinate next)
     {
@@ -203,8 +137,6 @@ public class PointCreator
                 start.X + movementInXPerPoint * i,
                 start.Y + movementInYPerPoint * i));
 
-        // _logger.LogInformation(
-        //     $"New path: {nameof(start)}:{start},{nameof(end)}:{end},{nameof(next)}:{next}, {nameof(positionNextAngle)}:{positionNextAngle},  {nameof(startEndNextAngle)}:{startEndNextAngle}");
         return list.OrderBy(c => c.PathIndex).ToList();
     }
 }

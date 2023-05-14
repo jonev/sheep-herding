@@ -7,15 +7,13 @@ namespace SheepHerding.Api.Entities;
 public class DroneOversight : Point
 {
     private readonly Point _commandPoint = new(0, double.MaxValue, double.MaxValue);
-    private readonly double _herdAngleInRadians = Math.PI / 2.5; //3.1 - For when sheep movement are adjusted
+    private readonly double _herdAngleInRadians = Math.PI / 2.5;
     private readonly List<DroneHerder> _herders;
     private readonly ILogger _logger;
     private readonly Machine _machine;
     private readonly PathCoordinator _pathCoordinator;
     private readonly int _pathIndex = 0; // TODO fix this
 
-    // private List<AckableCoordinate> _closestPathPoints;
-    // private List<AckableCoordinate> _closestPathPointToSheepCentroid;
     private readonly PointCreator _pointCreator;
     private readonly List<Sheep> _sheeps;
 
@@ -26,7 +24,6 @@ public class DroneOversight : Point
     private Coordinate _current = new(double.MaxValue, double.MaxValue);
     private bool _herdInPosesion;
     private double _herdRadius = 75.0;
-    private MaxRateOfChange _mrcAngle = new();
     private Coordinate _next = new(double.MaxValue, double.MaxValue);
     private Point _nextPoint = new(0, double.MaxValue, double.MaxValue);
     private bool _pathAngleCalculationActivated = false;
@@ -57,7 +54,7 @@ public class DroneOversight : Point
             _centroids = GetSheepHerdCentroids(_sheeps);
             _current = _centroids[0].Position;
             _pathCoordinator.UpdateToClosest(_centroids[0].Position);
-            _next = _pathCoordinator.GetCurrent(PATH_EXECUTER.HERDER); // _closestPathPointToSheepCentroid[0];
+            _next = _pathCoordinator.GetCurrent(PATH_EXECUTER.HERDER);
             _commands = _pointCreator.CurvedLineToFetchHerd(Position, _current, _next);
         });
         _machine.ExecuteOnEntry(State.FollowPath, () =>
@@ -72,44 +69,13 @@ public class DroneOversight : Point
             // _logger.LogInformation("On entry Waiting");
             _pathCoordinator.Ack(PATH_EXECUTER.HERDER);
         });
-        // _machine.ExecuteOnEntry(State.FollowPathStraight, () => _logger.LogInformation("On entry FollowPathStraight"));
-        // _machine.ExecuteOnEntry(State.FollowPathCorner, () => _logger.LogInformation("On entry FollowPathCorner"));
-        // _machine.ExecuteOnEntry(State.FollowPathIntersectionLeft,
-        //     () => _logger.LogInformation("On entry FollowPathIntersectionLeft"));
-        // _machine.ExecuteOnEntry(State.Finished, () => { _logger.LogInformation("On entry Finished"); });
-
-        // _machine.ExecuteOnEntry(State.FetchingNewHerd, () =>
-        // {
-        //     // _logger.LogInformation("On entry FetchingNewHerd");
-        //     _centroids = GetSheepHerdCentroids(_sheeps);
-        //     _current = _centroids.Count > 1 ? _centroids[1].Position : _centroids[0].Position;
-        //     // _closestPathPointToSheepCentroid = GetClosesPathPointToClosestSheepCentroid();
-        //     _predefinedPathPoints.UpdateToClosest(_centroids[0].Position);
-        //     _next = _predefinedPathPoints.GetCurrent(PATH_EXECUTER.HERDER); // _closestPathPointToSheepCentroid[0];
-        //     // _commandPoint = GetCommandPointV3(_command, _current, _next, 100.0);
-        //     // _command = _current; //centroids.Count > 1 ? _commandPoint.Position : _current;
-        // });
-
-        // _machine.ExecuteOnEntry(State.RecollectSheep, () =>
-        // {
-        //     // _logger.LogInformation("On entry RecollectSheep");
-        //     _centroids = GetSheepHerdCentroids(_sheeps);
-        //     _current = _centroids[0].Position;
-        //     // _closestPathPointToSheepCentroid = GetClosesPathPointToClosestSheepCentroid();
-        //     _predefinedPathPoints.UpdateToClosest(_centroids[0].Position);
-        //     _next = _predefinedPathPoints.GetCurrent(PATH_EXECUTER.HERDER); //  _closestPathPointToSheepCentroid[0];
-        //     // _command = _current;
-        // });
     }
 
     private void StartupCalculations()
     {
         _centroids = GetSheepHerdCentroids(_sheeps);
-        // _closestPathPoints = GetClosesPathPoint();
-        // _closestPathPointToSheepCentroid = GetClosesPathPointToClosestSheepCentroid();
     }
 
-   
 
     private List<(Coordinate Position, double Radius)> GetSheepHerdCentroids(List<Sheep> sheeps)
     {
@@ -134,12 +100,12 @@ public class DroneOversight : Point
     }
 
     public (
-        int pathIndex, 
-        List<Coordinate> centroids, 
-        Coordinate current, 
-        Coordinate next, 
-        string state, 
-        IList<Coordinate> points, 
+        int pathIndex,
+        List<Coordinate> centroids,
+        Coordinate current,
+        Coordinate next,
+        string state,
+        IList<Coordinate> points,
         Point dummy) UpdatePosition(bool disableHerders, bool interceptCross)
     {
         // -- Calculations
@@ -152,16 +118,12 @@ public class DroneOversight : Point
 
         // Move the drone
 
-        // _closestPathPointToSheepCentroid = GetClosesPathPointToClosestSheepCentroid();
-
         // -- Setting states
         _commandInRange = Calculator.UnderWithHysteresis(_commandInRange, Position, _command, 5.0, 1.0);
         var currentInRange = Calculator.InRange(Position, _current, 45.0, 0.0);
-        // var sheepCentroidInRange = Calculator.InRange(Position, _centroids[0].Position, 45.0, 0.0);
-        // var sheepCentroidOutOfRange = Calculator.InRange(Position, _centroids[0].Position, 100.0, 50.0);
         var closestPathPointOutOfRange = Calculator.InRange(Position,
             _pathCoordinator.GetCurrent(PATH_EXECUTER.HERDER), 10000.0,
-            10.0); //  _closestPathPoints.Count > 0 && Calculator.InRange(Position, _closestPathPoints[0], 10000.0, 10.0);
+            10.0);
 
 
         _machine.Fire(State.FetchingFirstHerd, Trigger.NewHerdCollected, () => currentInRange);
@@ -171,22 +133,6 @@ public class DroneOversight : Point
         _machine.Fire(Trigger.AllSheepsAtFinish, () => _sheeps.All(s => s.IsInsideFinishZone()));
         _machine.Fire(State.FollowPathStraight, Trigger.IntersectionApproaching,
             () => _pathCoordinator.IntersectionApproaching(Position) && interceptCross);
-        // _logger.LogInformation(
-        // $"closestPathPointOutOfRange: {closestPathPointOutOfRange}, curretn: {_pathCoordinator.GetCurrent(PATH_EXECUTER.HERDER)}");
-        // var lenghtToNextHerd =
-        //     _centroids.Count < 2 ? int.MaxValue : Converter.ToVector2(Position, _centroids[1].Position).Length();
-        // var lenghtToNextPathPoint = Converter.ToVector2(Position, _closestPathPoints[0]).Length();
-        // var lenghtFromCurrentToHerd =
-        //     _centroids.Count < 2 ? int.MaxValue : Converter.ToVector2(_current, _centroids[1].Position).Length();
-        // var lenghtFromNextToHerd =
-        //     _centroids.Count < 2 ? int.MaxValue : Converter.ToVector2(_next, _centroids[1].Position).Length();
-        // _machine.Fire(State.FetchingNewHerd, Trigger.NewHerdCollected, () => currentInRange);
-        // _machine.Fire(State.FollowPath, Trigger.SheepEscaped, () => sheepCentroidOutOfRange);
-        // _machine.Fire(State.FollowPath, Trigger.NewHerdInRange, () => lenghtFromCurrentToHerd < lenghtFromNextToHerd);
-        // _machine.Fire(State.RecollectSheep, Trigger.SheepCaptured, () => sheepCentroidInRange);
-        // _machine.Fire(State.FollowPathStraight, Trigger.CornerApproaching, () => _command.IsPartOfCurve);
-        // _machine.Fire(State.FollowPathCorner, Trigger.IntersectionApproaching,
-        //     () => _pathCoordinator.IntersectionApproaching(Position) && interceptCross);
 
         // Write out
         if (_commandInRange) _command.Ack();
@@ -241,10 +187,9 @@ public class DroneOversight : Point
 
         var h1 = Calculator.RotateVector(h0, _herdAngleInRadians);
 
-        // _logger.LogInformation($"h1.1:{h1.Length()}");
         if (_machine.State == State.FollowPathIntersectionLeft)
         {
-            // Send ut drone for å blokkere
+            // Send drone to block
             var nextCross = _pathCoordinator.GetNextCross();
             if (nextCross != null)
             {
@@ -258,8 +203,6 @@ public class DroneOversight : Point
                     ),
                     80.0f);
                 h1 = vector;
-                // _logger.LogInformation(
-                //     $"Cross: ${cross}, SheepCoor: {nextSheepCoordinateAfterCross}, Position: {_herders[1].Position}, h1.2:{h1.Length()}");
             }
         }
 
@@ -283,84 +226,4 @@ public class DroneOversight : Point
     {
         return _herdRadius;
     }
-
-    private Point GetCommandPointV1(Vector2 pathVector, Coordinate current, Coordinate next, double reductionStart)
-    {
-        var nextVector = Converter.ToVector2(current, next);
-        var currentVector = Converter.ToVector2(Position, current);
-        var pathVectorNorm = Vector2.Normalize(pathVector);
-        double reduction;
-        if (currentVector.Length() > reductionStart && pathVector.Length() > reductionStart)
-            reduction = reductionStart;
-        else if (currentVector.Length() > pathVector.Length())
-            reduction = pathVector.Length();
-        else
-            reduction = currentVector.Length();
-
-        var rotatedNormNextVector = Vector2.Normalize(Calculator.RotateVector(nextVector, Math.PI / 2));
-        var adjustedNextVector = Vector2.Multiply(Vector2.Normalize(rotatedNormNextVector), (float) reduction);
-
-        var command = new Point(0, current.X + adjustedNextVector.X, current.Y + adjustedNextVector.Y);
-        command.Force = Vector2.Negate(adjustedNextVector);
-        return command;
-    }
-
-    private Point GetCommandPointV2(Vector2 pathVector, Coordinate current, Coordinate next, double reductionStart)
-    {
-        var currentNextVector = Converter.ToVector2(current, next);
-        var positionCurrentVector = Converter.ToVector2(Position, current);
-
-        var angles = Calculator.AngleInRadiansLimited(positionCurrentVector, currentNextVector);
-
-        var pathVectorNorm = Vector2.Normalize(pathVector);
-        double reduction;
-        if (positionCurrentVector.Length() * 2 > reductionStart && pathVector.Length() * 2 > reductionStart)
-            reduction = reductionStart;
-        else if (positionCurrentVector.Length() > pathVector.Length())
-            reduction = pathVector.Length() * 2;
-        else
-            reduction = positionCurrentVector.Length() * 2;
-
-        var rotatedNormNextVector = Vector2.Normalize(Calculator.RotateVector(currentNextVector, angles));
-        var adjustedNextVector = Vector2.Multiply(Vector2.Normalize(rotatedNormNextVector), (float) reduction);
-
-        var command = new Point(0, current.X + adjustedNextVector.X, current.Y + adjustedNextVector.Y);
-        command.Force = Vector2.Negate(adjustedNextVector);
-        return command;
-    }
-
-    private Point GetCommandPointV3(Coordinate previousCommand, Coordinate current, Coordinate next,
-        double reductionStart)
-    {
-        var commandVector = Vector2.Multiply(Calculator.GetCommandVector(Position, current, next), 100.0f);
-
-        var command = new Point(0, current.X + commandVector.X, current.Y + commandVector.Y);
-        command.Force = Vector2.Negate(commandVector);
-        return command;
-    }
-    
-    // private List<AckableCoordinate> GetClosesPathPoint()
-    // {
-    //     var points = _predefinedPathPoints
-    //         .Where(p => (!p.Accessed && p.PathIndex >= _pathIndex) || (p.Accessed && p.PathIndex > _pathIndex))
-    //         .OrderBy(p => p.PathIndex)
-    //         .ToList();
-    //     _pathIndex = points == null || points.Count < 1
-    //         ? _predefinedPathPoints.Count - 1
-    //         : points[0].PathIndex;
-    //     return points;
-    // }
-    //
-    // private List<AckableCoordinate> GetClosesPathPointToClosestSheepCentroid()
-    // {
-    //     if (!_centroids.Any()) return new List<AckableCoordinate>();
-    //     var points = _predefinedPathPoints
-    //         .Where(p => (!p.Accessed && p.PathIndex >= _pathIndex) || (p.Accessed && p.PathIndex > _pathIndex))
-    //         .OrderBy(p => Converter.ToVector2(p, _centroids[0].Position).Length())
-    //         .ToList();
-    //     _pathIndex = points == null || points.Count < 1
-    //         ? _predefinedPathPoints.Count - 1
-    //         : points[0].PathIndex;
-    //     return points;
-    // }
 }
