@@ -42,7 +42,7 @@ public class HerdService : IDisposable
     public string Name { get; set; } = "Unknown";
     public int VisualizationSpeed { get; set; } = 1;
     public double FailedTimeout { get; set; } = 60.0;
-    public int PathNr { get; set; } = 10;
+    public int PathNr { get; set; } = 0;
 
     /// <summary>
     ///     Random factor multiplied with PI/100. Min 1, max 100.
