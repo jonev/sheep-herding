@@ -12,12 +12,16 @@ public class HerdService : IDisposable
     private readonly ILogger _logger;
     private readonly int _randomSeed;
     private readonly SheepSettings _sheepSettings;
-    private readonly Coordinate Finish = new(870, 770);
+    private readonly Coordinate _finish = new(870, 770);
 
     private int _scanTimeDelay = 1;
 
 
-    public HerdService(ILogger logger, IHubContext<VisualizationCommunication> hub, string clientId, int randomSeed,
+    public HerdService(
+        ILogger logger, 
+        IHubContext<VisualizationCommunication> hub,
+        string clientId,
+        int randomSeed,
         SheepSettings sheepSettings)
     {
         _logger = logger;
@@ -34,16 +38,16 @@ public class HerdService : IDisposable
     public bool StartDrones { get; set; } = true;
     public bool InterceptCross { get; set; } = true;
     public bool Reset { get; set; }
-    public int NrOfSheeps { get; set; } = 10;
+    public int NrOfSheeps { get; set; } = 5;
     public string Name { get; set; } = "Unknown";
     public int VisualizationSpeed { get; set; } = 1;
-    public double FailedTimout { get; set; } = 60.0;
+    public double FailedTimeout { get; set; } = 60.0;
     public int PathNr { get; set; } = 10;
 
     /// <summary>
     ///     Random factor multiplied with PI/100. Min 1, max 100.
     /// </summary>
-    public int RandomFactor { get; set; } = 100;
+    public int RandomFactor { get; set; } = 1;
 
     public bool Connected { get; set; } = true;
     public bool Finished { get; set; }
@@ -88,7 +92,7 @@ public class HerdService : IDisposable
     {
         for (var i = 0; i < herdSetup.SheepStartCoordinates.Count; i++)
         {
-            var sheep = new Sheep(_logger, i, settings, Sheeps, listOfHerders, Finish, herdSetup.TerrainPath,
+            var sheep = new Sheep(_logger, i, settings, Sheeps, listOfHerders, _finish, herdSetup.TerrainPath,
                 _randomSeed);
             sheep.Set(herdSetup.SheepStartCoordinates[i]);
             Sheeps.Add(sheep);
@@ -133,7 +137,7 @@ public class HerdService : IDisposable
 
         var droneOversight = new DroneOversight(_logger, 1000, 500, -1, herdSetup.PredefinedPathCoordinator,
             listOfHerders,
-            new PointCreator(_logger), Sheeps, Finish);
+            new PointCreator(_logger), Sheeps, _finish);
         droneOversight.Set(new Coordinate(150, 100));
 
         InitializeSheeps(herdSetup, listOfHerders, _sheepSettings);
@@ -185,7 +189,7 @@ public class HerdService : IDisposable
             }
 
             // Timout
-            if (stopwatch.Elapsed.TotalSeconds > FailedTimout)
+            if (stopwatch.Elapsed.TotalSeconds > FailedTimeout)
             {
                 Start = false;
                 Reset = false;

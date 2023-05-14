@@ -14,13 +14,13 @@ public class SheepSettings
     public float HoldTogetherForce { get; set; } = 0.1f;
     public float RunAwayForce { get; set; } = 1.0f;
 
-    public float IntersectionApproachingForce { get; set; } = 0.2f;
+    public float IntersectionApproachingForce { get; set; } = 1.1f;
     // --- End Force input ------<<<<
 
     // public float PersonalSpaceForce { get; set; } = 0.4f;
     // public float HoldTogetherForce { get; set; } = 0.2f;
     // public float RunAwayForce { get; set; } = 0.4f;
 
-    public double RandomAngleAddedToForce { get; set; } = Math.PI / 3;
+    public double RandomAngleAddedToForce { get; set; } = Math.PI / 100.0;
     public int RandomAngleUpdateDelayFactor { get; set; } = 200;
 }

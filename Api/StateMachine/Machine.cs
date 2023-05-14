@@ -22,17 +22,17 @@ public class Machine
         _machine.Configure(State.FollowPath)
             // .Permit(Trigger.NewHerdInRange, State.FetchingNewHerd)
             // .Permit(Trigger.SheepEscaped, State.RecollectSheep)
-            .Permit(Trigger.CommandsExecuted, State.Waiting)
+            .Permit(Trigger.CommandsExecuted, State.AckPathCoordinator)
             .Permit(Trigger.AllSheepsAtFinish, State.Finished)
             .InitialTransition(State.FollowPathStraight);
 
-        _machine.Configure(State.FollowPathCorner)
-            .SubstateOf(State.FollowPath)
-            .Permit(Trigger.LeftCorner, State.FollowPathStraight);
+        // _machine.Configure(State.FollowPathCorner)
+        //     .SubstateOf(State.FollowPath)
+        //     .Permit(Trigger.LeftCorner, State.FollowPathStraight);
 
         _machine.Configure(State.FollowPathStraight)
             .SubstateOf(State.FollowPath)
-            .Permit(Trigger.CornerApproaching, State.FollowPathCorner)
+            // .Permit(Trigger.CornerApproaching, State.FollowPathCorner)
             .Permit(Trigger.IntersectionApproaching, State.FollowPathIntersectionLeft);
 
         _machine.Configure(State.FollowPathIntersectionLeft)
@@ -42,7 +42,7 @@ public class Machine
         // _machine.Configure(State.RecollectSheep)
         //     .Permit(Trigger.SheepCaptured, State.FollowPath);
 
-        _machine.Configure(State.Waiting)
+        _machine.Configure(State.AckPathCoordinator)
             .Permit(Trigger.PathPointOutOfRange, State.FollowPath);
     }
 

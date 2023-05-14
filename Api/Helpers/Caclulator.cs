@@ -12,27 +12,14 @@ public static class Calculator
         while (result > Math.PI) result -= 2 * Math.PI;
         return result;
     }
-
-    public static double AngleInRadians(Vector2 a, Vector2 b)
-    {
-        return Math.Atan2(b.Y, b.X) - Math.Atan2(a.Y, a.X);
-    }
-
+    
     public static Coordinate Centroid(IList<Coordinate> coordinates)
     {
         var sumX = coordinates.Select(c => c.X).Sum();
         var sumY = coordinates.Select(c => c.Y).Sum();
         return new Coordinate(sumX / coordinates.Count, sumY / coordinates.Count);
     }
-
-    public static Vector2 FlipLength(Vector2 vector, double maxValue)
-    {
-        var norm = Vector2.Normalize(vector);
-        var length = maxValue - vector.Length();
-        if (length < 0.0) return Vector2.Zero;
-        return Vector2.Multiply(norm, (float) length);
-    }
-
+    
     /// <summary>
     ///     Negates the vector input length with an exponential curve and adjusted according to maxOutputValue.
     ///     E.g.: maxVectorLenght = 100. maxOutputValue = 10.0: vector in is 75,0, out is -4.8, vector in is 25,0, out is -9.1;
@@ -70,12 +57,7 @@ public static class Calculator
         if (x < 0.0 || x > 1.0) throw new ArgumentException("x should be a relative factor from 0-1");
         return -1 * ((Math.Pow(curve, x) - 1) / (curve - 1)) + 1;
     }
-
-    public static double ExponentialIncrease(double x, double curve)
-    {
-        return (Math.Pow(curve, x) - 1) / (curve - 1);
-    }
-
+    
     public static Vector2 RotateVector(Vector2 vector, double anglesInRadians)
     {
         var newX = vector.X * Math.Cos(anglesInRadians) - vector.Y * Math.Sin(anglesInRadians);
@@ -88,7 +70,7 @@ public static class Calculator
         var v = Converter.ToVector2(a, b);
         return Math.Abs(v.Length()) < under && Math.Abs(v.Length()) > over;
     }
-
+    
     public static bool UnderWithHysteresis(bool value, Coordinate a, Coordinate b, double under, double hysteresis)
     {
         var lenght = Math.Abs(Converter.ToVector2(a, b).Length());
@@ -98,30 +80,7 @@ public static class Calculator
 
         return value;
     }
-
-    public static Vector2 GetCommandVector(Coordinate position, Coordinate current, Coordinate next)
-    {
-        var positionCurrentVector = Converter.ToVector2(position, current);
-        var currentNextVector = Converter.ToVector2(current, next);
-
-        var angleInRadians = AngleInRadians(positionCurrentVector, currentNextVector);
-
-        if (angleInRadians < Math.PI / 4) // If the angle is under 90 degrees we do now want any adjustments
-            return Vector2.Zero;
-
-        var rotatedNormNextVector = Vector2.Normalize(RotateVector(currentNextVector,
-            angleInRadians));
-
-        return rotatedNormNextVector;
-    }
-
-    public static double IncreaseWhenUnder(double master, double threshold, double valueToIncrease)
-    {
-        if (master > threshold) return valueToIncrease;
-
-        return valueToIncrease + Math.PI / 4;
-    }
-
+    
     public static Coordinate Outcast(IList<Coordinate> coordinates, Coordinate center)
     {
         if (coordinates.Count < 1)
@@ -141,4 +100,41 @@ public static class Calculator
 
         return outcast;
     }
+    
+    
+    #region Deprecated
+
+    // Deprecated
+    public static double AngleInRadians(Vector2 a, Vector2 b)
+    {
+        return Math.Atan2(b.Y, b.X) - Math.Atan2(a.Y, a.X);
+    }
+    
+    // Deprecated
+    public static Vector2 FlipLength(Vector2 vector, double maxValue)
+    {
+        var norm = Vector2.Normalize(vector);
+        var length = maxValue - vector.Length();
+        if (length < 0.0) return Vector2.Zero;
+        return Vector2.Multiply(norm, (float) length);
+    }
+
+    // Deprecated
+    public static Vector2 GetCommandVector(Coordinate position, Coordinate current, Coordinate next)
+    {
+        var positionCurrentVector = Converter.ToVector2(position, current);
+        var currentNextVector = Converter.ToVector2(current, next);
+
+        var angleInRadians = AngleInRadians(positionCurrentVector, currentNextVector);
+
+        if (angleInRadians < Math.PI / 4) // If the angle is under 90 degrees we do now want any adjustments
+            return Vector2.Zero;
+
+        var rotatedNormNextVector = Vector2.Normalize(RotateVector(currentNextVector,
+            angleInRadians));
+
+        return rotatedNormNextVector;
+    }
+    
+    #endregion // end Deprecated
 }

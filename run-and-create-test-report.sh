@@ -1,0 +1,1 @@
+dotnet test --filter  SheepHerding.Api.Tests.HerdServiceTest --logger "html;LogFileName=TestResults.html"

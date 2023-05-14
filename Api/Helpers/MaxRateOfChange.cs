@@ -1,5 +1,6 @@
 namespace SheepHerding.Api.Helpers;
 
+// Deprecated - no longer in use
 public class MaxRateOfChange
 {
     private double _nowValue;
@@ -8,7 +9,7 @@ public class MaxRateOfChange
     {
         _nowValue = init;
     }
-
+    
     public double Limit(double input, double max)
     {
         if (Math.Abs(_nowValue - input) > max)

@@ -86,7 +86,7 @@ public class Sheep : Point
         if (_scanIndex % _settings.RandomAngleUpdateDelayFactor == 0)
         {
             // Dont update so often
-            _randomAngle = (new Random(_randomAngleSeeds[_randomAngleSeedsIndex % 15]).NextDouble() - 0.5) *
+            _randomAngle = (new Random(_randomAngleSeeds[_randomAngleSeedsIndex % 15] + _randomSeed).NextDouble() - 0.5) *
                            _settings.RandomAngleAddedToForce;
             _randomAngleSeedsIndex++;
             // if (Id == 1)
@@ -119,8 +119,7 @@ public class Sheep : Point
         var sheepVpath = Converter.ToVector2(Position, _terrainPath.GetCurrent(PATH_EXECUTER.SHEEP));
         if (enemyClose && _terrainPath.IntersectionApproaching(Position))
         {
-            var currentForSheep = _terrainPath.GetCurrent(PATH_EXECUTER.SHEEP);
-            var adjustedSheepVPath = Vector2.Multiply(Vector2.Normalize(sheepVpath), 1.1f);
+            var adjustedSheepVPath = Vector2.Multiply(Vector2.Normalize(sheepVpath), _settings.IntersectionApproachingForce);
             // _logger.LogInformation($"Sheep drawn: {adjustedSheepVPath.Length()}, {currentForSheep}");
             force = Vector2.Add(force, adjustedSheepVPath);
         }
